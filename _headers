@@ -1,17 +1,10 @@
-# Cloudflare Pages cache + security headers
-# 依据实施计划 §10: HTML 不长期缓存(支持 PWA 可控更新),SW/manifest 短缓存
-# 单文件架构: SW 和 manifest 都在 index.html 内以 Blob URL 注册,
-#   实际上"index.html 必须重验证"就同时覆盖了 SW/manifest 的更新
+# Cloudflare Pages headers — no inline comments inside rule blocks
+# Apply PWA-friendly revalidation to all paths
 
 /*
-  # PWA 更新策略: 每次请求都向源站验证 — 用户总能拿到新版本
   Cache-Control: public, max-age=0, must-revalidate
-  # 安全头
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   X-Frame-Options: DENY
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  # CSP: 严格但保留必要白名单
-  # - 'unsafe-inline' 用于内联 script(整个 index.html 是单文件)
-  # - data:/blob: 用于 Blob URL manifest 和 SW
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' data: blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' data: blob:; manifest-src 'self' data: blob:; worker-src 'self' data: blob:; font-src 'self' data:
