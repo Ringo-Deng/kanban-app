@@ -3166,7 +3166,8 @@ button:focus-visible,
   padding: 20px;
   animation: modalIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.modal.hidden { display: none; }
+.modal.hidden,
+.modal[hidden] { display: none !important; }
 @keyframes modalIn {
   from { opacity: 0; }
   to { opacity: 1; }
