@@ -4866,6 +4866,82 @@ input, select, textarea, button, [contenteditable] {
   /* 工时单:横向滚动表格改为日期分组卡片(由 JS 检测后重渲染) */
   .timesheet-table, .ts-table-card { display: none !important; }
   .timesheet-mobile { display: block !important; }
+  .ts-mobile-list[hidden] { display: none !important; }
+  .ts-mobile-list { display: flex !important; flex-direction: column; gap: 14px; }
+  .ts-mob-list { display: flex; flex-direction: column; gap: 14px; }
+  .ts-mob-day {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .ts-mob-day-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: 8px;
+    padding: 0 2px;
+  }
+  .ts-mob-day-main {
+    font-size: 16px; font-weight: 700; color: var(--text);
+    padding-left: 8px;
+    border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  .ts-mob-day-head.today .ts-mob-day-main {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .ts-mob-day-sub { font-size: 11.5px; color: var(--muted); }
+  .ts-mob-day-meta { font-size: 11px; color: var(--muted); text-align: right; }
+  .ts-mob-day-total {
+    font-size: 14px; font-weight: 700; color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .ts-mob-entries { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .ts-mob-entry {
+    background: var(--card-bg-solid);
+    border: 1px solid var(--border);
+    border-left-width: 4px;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .ts-mob-entry-top {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .ts-mob-entry-project {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: color-mix(in srgb, var(--proj-color, var(--accent)) 10%, transparent);
+    color: color-mix(in srgb, var(--proj-color, var(--accent)) 80%, var(--text));
+    padding: 1px 7px; border-radius: 4px;
+    font-size: 11.5px; font-weight: 600;
+  }
+  .ts-mob-entry-project .ts-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--proj-color, var(--accent)); }
+  .ts-mob-entry-board {
+    font-size: 11px; color: var(--muted);
+    background: var(--task-bg); padding: 1px 6px; border-radius: 4px;
+  }
+  .ts-mob-entry-title { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.45; word-break: break-word; }
+  .ts-mob-entry-notes { font-size: 12px; color: var(--muted); line-height: 1.5; padding-top: 2px; }
+  .ts-mob-entry-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    margin-top: 4px;
+    border-top: 1px dashed var(--border);
+    padding-top: 6px;
+  }
+  .ts-mob-entry-time {
+    font-size: 13px; font-weight: 700; color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .ts-mob-entry-actions { display: flex; gap: 4px; }
+  .ts-mob-entry-actions button {
+    background: var(--task-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; padding: 6px 9px;
+    font: inherit; font-size: 11.5px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ts-mob-entry-actions button:active { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .ts-mob-entry-actions button[data-restore] { color: var(--blue); }
+  .ts-mob-entry-actions button[data-del] { color: var(--red); }
 
   /* 诉讼:案件折叠 + 纵向时间轴(由 JS 改写) */
   .litigation-table { display: none !important; }
@@ -5292,6 +5368,109 @@ input, select, textarea, button, [contenteditable] {
   }
 }
 
+/* 3.1.1 月历 agenda 模式(桌面 + 移动共享,移动体验优先) */
+.cal-agenda { display: flex; flex-direction: column; gap: 14px; padding: 4px 0; }
+.cal-agenda-empty {
+  padding: 60px 20px; text-align: center; color: var(--muted);
+  background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
+}
+.cal-agenda-group { display: flex; flex-direction: column; gap: 6px; }
+.cal-agenda-date {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 0 2px;
+  border-left: 3px solid transparent;
+}
+.cal-agenda-date-main {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  padding-left: 8px;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  margin-left: -11px;
+}
+.cal-agenda-date-sub { font-size: 11.5px; color: var(--muted); font-weight: 500; }
+.cal-agenda-date.today .cal-agenda-date-main {
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+.cal-agenda-group.cal-agenda-overdue .cal-agenda-date-main {
+  color: var(--red);
+  border-left-color: var(--red);
+}
+.cal-agenda-count {
+  margin-left: auto; font-size: 11px; color: var(--muted);
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  padding: 2px 8px; border-radius: 999px; font-variant-numeric: tabular-nums;
+}
+.cal-agenda-items {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.cal-agenda-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card-bg-solid);
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 44px;
+}
+.cal-agenda-item.done { opacity: 0.6; background: var(--task-bg); }
+.cal-agenda-item.archived { opacity: 0.5; background: var(--task-bg); border-left-style: dashed; }
+.cal-agenda-item.cross-board .cal-agenda-board { color: var(--accent); }
+.cal-agenda-check {
+  width: 18px; height: 18px;
+  accent-color: var(--green);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.cal-agenda-body { flex: 1; min-width: 0; }
+.cal-agenda-title {
+  font-size: 14px; color: var(--text);
+  word-break: break-word; line-height: 1.45;
+  font-weight: 500;
+}
+.cal-agenda-item.done .cal-agenda-title { text-decoration: line-through; color: var(--muted); }
+.cal-agenda-meta {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  margin-top: 3px;
+  font-size: 11.5px; color: var(--muted);
+}
+.cal-agenda-project {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: color-mix(in srgb, var(--accent) 80%, var(--text));
+  padding: 1px 7px; border-radius: 4px;
+  font-size: 11px; font-weight: 500;
+}
+.cal-agenda-board { font-size: 13px; line-height: 1; }
+.cal-agenda-archived-tag {
+  background: color-mix(in srgb, var(--green) 15%, transparent);
+  color: var(--green);
+  padding: 1px 6px; border-radius: 4px;
+  font-size: 10.5px; font-weight: 600;
+}
+.cal-agenda-edit {
+  flex-shrink: 0;
+  background: transparent; border: 1px solid transparent;
+  color: var(--muted); font-size: 16px; line-height: 1;
+  width: 32px; height: 32px; border-radius: 6px;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  opacity: 0; transition: opacity 0.15s;
+}
+.cal-agenda-item:hover .cal-agenda-edit,
+.cal-agenda-item:focus-within .cal-agenda-edit { opacity: 1; }
+.cal-agenda-edit:hover { background: var(--task-bg); color: var(--accent); }
+/* 移动端: 始终显示编辑按钮(无 hover) + 增大触控区 */
+@media (max-width: 767px) {
+  .cal-agenda-edit { opacity: 1; }
+  .cal-agenda-item { padding: 12px 14px; }
+  .cal-agenda-title { font-size: 14.5px; }
+  .cal-agenda-date-main { font-size: 16px; }
+}
+/* 未排期组弱化 */
+.cal-agenda-group.cal-agenda-unscheduled .cal-agenda-date-main {
+  border-left-color: color-mix(in srgb, var(--muted) 60%, transparent);
+  color: var(--muted);
+}
+
 /* ---------- 极窄屏 (max-width: 380px):iPhone SE 1 等 ---------- */
 @media (max-width: 380px) {
   body { font-size: 13.5px; padding: 8px 8px calc(72px + env(safe-area-inset-bottom)) 8px; }
@@ -5610,6 +5789,8 @@ input, select, textarea, button, [contenteditable] {
       </div>
       <div id="tsTableBody"></div>
     </div>
+    <!-- 3.1.1 移动端: 工时单按日期分组的卡片列表(由 renderTsTable 在 mobile 模式写入) -->
+    <div class="ts-mobile-list" id="tsMobileList" hidden></div>
     <div id="tsEmpty" class="ts-empty hidden">
       <h2>暂无归档数据</h2>
       <p>完成任务后会自动写入这里。<br>先回看板打几个勾试试看 →</p>
@@ -7405,6 +7586,10 @@ function renderTsInsights(entries, totalMs, totalDays) {
 }
 
 function renderTsTable(entries) {
+  // 3.1.1 移动端: 走简化卡片版(不显示 AI 翻译/编辑框,只保留核心信息 + 编辑/恢复/删除)
+  if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
+    return renderTsMobileList(entries);
+  }
   const body = document.getElementById('tsTableBody');
   const empty = document.getElementById('tsEmpty');
   if (!body || !empty) return;
@@ -7471,6 +7656,124 @@ function renderTsTable(entries) {
   html += '</div>';
   body.innerHTML = html;
   // 行内按钮的 click 委托在初始化时绑一次(下方)
+}
+
+// 3.1.1 移动端工时单: 按日期分组的卡片列表(简化版,隐藏 AI 翻译/编辑控件)
+function renderTsMobileList(entries) {
+  const body = document.getElementById('tsMobileList');
+  const empty = document.getElementById('tsEmpty');
+  if (!body) return;
+  body.hidden = false;
+  // 复用桌面版的搜索/过滤逻辑
+  const q = (tsSearchQuery || '').toLowerCase().trim();
+  let filtered = entries;
+  if (q) {
+    filtered = entries.filter(e =>
+      (e.title || '').toLowerCase().includes(q) ||
+      Object.values(e.translations || {}).some(t => String(t?.text || '').toLowerCase().includes(q)) ||
+      (e.projectName || '').toLowerCase().includes(q) ||
+      (e.notes || '').toLowerCase().includes(q) ||
+      (e.completedAt || '').toLowerCase().includes(q)
+    );
+  }
+  if (filtered.length === 0) {
+    body.innerHTML = '';
+    if (empty) {
+      empty.classList.remove('hidden');
+      if (q) {
+        empty.querySelector('h2').textContent = '没有匹配的任务';
+        empty.querySelector('p').textContent = `搜索 "${q}" 无结果`;
+      } else {
+        empty.querySelector('h2').textContent = '暂无归档数据';
+        empty.querySelector('p').innerHTML = '完成任务后会自动写入这里。<br>先回看板打几个勾试试看 →';
+      }
+    }
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+  // 按日期分组
+  const groups = tsGroupByDate(filtered);
+  let html = '<div class="ts-mob-list">';
+  for (const [date, list] of groups) {
+    const dayMs = list.reduce((s, e) => s + (e.totalTimeMs || 0), 0);
+    const dayProjects = new Set(list.map(e => e.projectId || e.projectName)).size;
+    const isToday = date === today();
+    const dateLabel = isToday ? '今天' : (tsFmtDateShort(date) || date);
+    const weekday = tsFmtWeekday(date);
+    html += `<section class="ts-mob-day">
+      <header class="ts-mob-day-head ${isToday ? 'today' : ''}">
+        <div class="ts-mob-day-date">
+          <div class="ts-mob-day-main">${escapeHtml(dateLabel)}</div>
+          <div class="ts-mob-day-sub">${escapeHtml(weekday || '')}</div>
+        </div>
+        <div class="ts-mob-day-meta">${list.length} 项 · ${dayProjects} 项目</div>
+        <div class="ts-mob-day-total">${fmtDuration(dayMs)}</div>
+      </header>
+      <ul class="ts-mob-entries">`;
+    for (const e of list) {
+      const board = e.boardKey ? store.boards[e.boardKey] : null;
+      const boardName = board ? `${board.icon || '📋'} ${board.name}` : '默认工作区';
+      const color = e.projectColor || 'var(--accent)';
+      html += `<li class="ts-mob-entry" data-task-id="${e.taskId}" style="border-left-color:${color}">
+        <div class="ts-mob-entry-top">
+          <span class="ts-mob-entry-project" style="--proj-color:${color}"><span class="ts-dot"></span>${escapeHtml(e.projectName || '')}</span>
+          <span class="ts-mob-entry-board" title="${escapeHtml(boardName)}">${escapeHtml(boardName)}</span>
+        </div>
+        <div class="ts-mob-entry-title">${escapeHtml(e.title || '(无标题)')}</div>
+        ${e.notes ? `<div class="ts-mob-entry-notes">${escapeHtml(e.notes)}</div>` : ''}
+        <div class="ts-mob-entry-foot">
+          <span class="ts-mob-entry-time">${e.totalTimeMs > 0 ? fmtDuration(e.totalTimeMs) : '—'}</span>
+          <div class="ts-mob-entry-actions">
+            <button data-edit="${e.taskId}" type="button" aria-label="编辑工时" title="编辑工时">✎ 工时</button>
+            <button data-restore="${e.taskId}" type="button" aria-label="恢复" title="恢复到看板上">↻</button>
+            <button data-del="${e.taskId}" type="button" aria-label="删除" title="彻底删除">×</button>
+          </div>
+        </div>
+      </li>`;
+    }
+    html += '</ul></section>';
+  }
+  html += '</div>';
+  body.innerHTML = html;
+  // 让 body 里的 contenteditable 不生效(简化版没有编辑框,但防止事件冒泡干扰)
+}
+
+// 移动端工时单事件委托: 直接调桌面版的函数(避免查询不存在的桌面按钮)
+function bindTsMobileDelegates() {
+  const body = document.getElementById('tsMobileList');
+  if (!body || body.__tsMobDelegated) return;
+  body.__tsMobDelegated = true;
+  body.addEventListener('click', e => {
+    const editBtn = e.target.closest('[data-edit]');
+    if (editBtn) {
+      if (typeof openTsEditModal === 'function') openTsEditModal(editBtn.dataset.edit);
+      return;
+    }
+    const restoreBtn = e.target.closest('[data-restore]');
+    if (restoreBtn) {
+      const tid = restoreBtn.dataset.restore;
+      const r = unarchiveTaskFromArchive(tid);
+      if (r) {
+        save();
+        if (store.currentBoard !== r.boardKey) {
+          switchBoard(r.boardKey);
+        }
+        renderTimesheet();
+        if (typeof showToast === 'function') showToast('已恢复到看板上');
+      }
+      return;
+    }
+    const delBtn = e.target.closest('[data-del]');
+    if (delBtn) {
+      const tid = delBtn.dataset.del;
+      if (!confirm('从归档中彻底删除此记录?(不会恢复到看板)')) return;
+      deleteArchiveEntry(tid);
+      save();
+      renderTimesheet();
+      if (typeof showToast === 'function') showToast('已删除');
+      return;
+    }
+  });
 }
 
 // 工时单表格按钮的事件委托(在初始化时绑一次,避免 re-render 重复绑)
@@ -8740,6 +9043,9 @@ function updatePageTitle() {
 
 // ============== 月历渲染 ==============
 function renderCalendar() {
+  // 3.1.1: agenda 模式(日程列表)优先于网格模式,既给移动端用也给桌面用
+  const calMode = document.body.dataset.calMode || 'grid';
+  if (calMode === 'agenda') return renderCalendarAgenda();
   const cal = document.getElementById('calendar');
   const { year, month } = calState;
   const firstDay = new Date(year, month, 1);
@@ -8902,6 +9208,158 @@ function renderCalendar() {
       </div>
     </div>
   `;
+}
+
+// 3.1.1 月历 agenda 模式: 按日期分组的有序任务列表(跨月份聚合 + 搜索过滤 + 未排期收集)
+// 与 grid 模式共享 store 数据;切到 grid 模式时 renderCalendar() 走原月视图分支
+function renderCalendarAgenda() {
+  const cal = document.getElementById('calendar');
+  if (!cal) return;
+  // 1) 收集所有有 due 的任务(跨月 + 跨看板 + 含已归档),统一格式
+  const allTasks = [];
+  const liveTaskIds = new Set();
+  // 1a) live 任务
+  allProjects().forEach(({ project: p, boardKey, board }) => {
+    if (!projectMatchesSearch(p)) return;
+    p.tasks.forEach(t => {
+      if (!t.due) return;
+      if (!taskMatchesSearch(t)) return;
+      liveTaskIds.add(t.id);
+      allTasks.push({
+        id: t.id, title: t.title, done: !!t.done, due: t.due, startDate: t.startDate || null,
+        project: p, boardKey, board, archived: false,
+      });
+    });
+  });
+  // 1b) 已归档任务(同 grid 模式,补月历已完成的可见性)
+  if (store.archive) {
+    Object.values(store.archive).forEach(arr => {
+      (arr || []).forEach(a => {
+        if (!a || !a.due) return;
+        if (liveTaskIds.has(a.taskId)) return;
+        if (currentSearch) {
+          const q = currentSearch.toLowerCase();
+          if (!(a.title || '').toLowerCase().includes(q) && !(a.projectName || '').toLowerCase().includes(q)) return;
+        }
+        const liveBoard = a.boardKey && store.boards[a.boardKey] ? store.boards[a.boardKey] : null;
+        allTasks.push({
+          id: a.taskId, title: a.title || '(无标题)', done: true, due: a.due, completedAt: a.completedAt,
+          project: { id: a.projectId, name: a.projectName || '已归档项目' },
+          boardKey: a.boardKey || '',
+          board: liveBoard || { icon: '📦', name: a.boardName || '已归档' },
+          archived: true,
+        });
+      });
+    });
+  }
+  // 2) 按日期分组 + 排序(日期升序,同日期按 done 状态:未完成在前)
+  const byDate = {};
+  for (const t of allTasks) {
+    (byDate[t.due] = byDate[t.due] || []).push(t);
+  }
+  for (const k of Object.keys(byDate)) {
+    byDate[k].sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
+  }
+  const sortedDates = Object.keys(byDate).sort();
+  // 3) 收集未排期任务
+  const unscheduledTasks = [];
+  allProjects().forEach(({ project: p, boardKey, board }) => {
+    if (!projectMatchesSearch(p)) return;
+    p.tasks.forEach(t => {
+      if (!t.due && !t.done && taskMatchesSearch(t)) {
+        unscheduledTasks.push({ ...t, project: p, boardKey, board });
+      }
+    });
+  });
+  // 4) 辅助:日期展示
+  const todayStr = today();
+  const weekNames = ['日', '一', '二', '三', '四', '五', '六'];
+  const formatDateLabel = (dateStr) => {
+    if (dateStr === todayStr) return { main: '今天', sub: '', cls: 'today' };
+    const d = new Date(dateStr + 'T00:00:00');
+    const yearDiff = new Date().getFullYear() - d.getFullYear();
+    const datePart = yearDiff === 0
+      ? `${d.getMonth() + 1}月${d.getDate()}日`
+      : `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+    const wd = weekNames[d.getDay()];
+    return { main: datePart, sub: '周' + wd, cls: '' };
+  };
+  const cmpDate = (a, b) => new Date(a + 'T00:00:00').getTime() - new Date(b + 'T00:00:00').getTime();
+  // 5) 渲染:按"过期 / 今天 / 未来"分组显示,日期之间有分隔
+  const renderDateGroup = (dateStr) => {
+    const items = byDate[dateStr];
+    const label = formatDateLabel(dateStr);
+    const isOverdue = cmpDate(dateStr, todayStr) < 0;
+    const groupClass = isOverdue ? 'cal-agenda-overdue' : '';
+    return `
+      <section class="cal-agenda-group ${groupClass}" data-date="${dateStr}">
+        <header class="cal-agenda-date ${label.cls}">
+          <span class="cal-agenda-date-main">${label.main}</span>
+          <span class="cal-agenda-date-sub">${label.sub}</span>
+          <span class="cal-agenda-count">${items.length} 项</span>
+        </header>
+        <ul class="cal-agenda-items">
+          ${items.map(t => {
+            const isCrossBoard = t.boardKey !== store.currentBoard;
+            return `
+              <li class="cal-agenda-item ${t.done ? 'done' : ''} ${isCrossBoard ? 'cross-board' : ''} ${t.archived ? 'archived' : ''}"
+                  data-task-id="${t.id}" data-project-id="${t.project.id}" data-board-key="${t.boardKey}"
+                  style="border-left-color:${projectColor(t.project)}"
+                  aria-label="${escapeHtml(t.project.name)} · ${escapeHtml(t.title)}">
+                <input type="checkbox" class="cal-agenda-check" ${t.done ? 'checked' : ''} data-action="${t.archived ? 'cal-task-archived' : 'cal-task-toggle'}">
+                <div class="cal-agenda-body">
+                  <div class="cal-agenda-title">${escapeHtml(t.title)}</div>
+                  <div class="cal-agenda-meta">
+                    <span class="cal-agenda-project">${escapeHtml(t.project.name)}</span>
+                    ${isCrossBoard ? `<span class="cal-agenda-board" title="来自 ${formatBoardLabel(t.board)}">${t.board?.icon || '📋'}</span>` : ''}
+                    ${t.archived ? '<span class="cal-agenda-archived-tag">已完成</span>' : ''}
+                  </div>
+                </div>
+                <button class="cal-agenda-edit" data-action="cal-task-edit" aria-label="编辑任务">✎</button>
+              </li>
+            `;
+          }).join('')}
+        </ul>
+      </section>
+    `;
+  };
+  // 6) 未排期任务列表
+  const renderUnscheduled = () => {
+    if (unscheduledTasks.length === 0) return '';
+    return `
+      <section class="cal-agenda-group cal-agenda-unscheduled" data-unscheduled>
+        <header class="cal-agenda-date">
+          <span class="cal-agenda-date-main">📦 未排期</span>
+          <span class="cal-agenda-date-sub">${unscheduledTasks.length} 项</span>
+        </header>
+        <ul class="cal-agenda-items">
+          ${unscheduledTasks.map(t => `
+            <li class="cal-agenda-item cross-board" data-task-id="${t.id}" data-project-id="${t.project.id}" data-board-key="${t.boardKey}"
+                style="border-left-color:${projectColor(t.project)}">
+              <div class="cal-agenda-body">
+                <div class="cal-agenda-title">${escapeHtml(t.title)}</div>
+                <div class="cal-agenda-meta">
+                  <span class="cal-agenda-project">${escapeHtml(t.project.name)}</span>
+                </div>
+              </div>
+            </li>
+          `).join('')}
+        </ul>
+      </section>
+    `;
+  };
+  // 7) 拼装: 过期 → 今天 → 未来(无过期组时跳过)→ 未排期
+  let html = '';
+  const overdueDates = sortedDates.filter(d => cmpDate(d, todayStr) < 0);
+  const futureDates = sortedDates.filter(d => cmpDate(d, todayStr) >= 0);
+  if (overdueDates.length === 0 && futureDates.length === 0) {
+    html = '<div class="cal-agenda-empty">📭 暂无任务 — 回到看板建几个试试 →</div>';
+  } else {
+    overdueDates.forEach(d => { html += renderDateGroup(d); });
+    futureDates.forEach(d => { html += renderDateGroup(d); });
+  }
+  html += renderUnscheduled();
+  cal.innerHTML = `<div class="cal-agenda">${html}</div>`;
 }
 
 function enterCalEdit(cell) {
@@ -11871,6 +12329,8 @@ document.getElementById('litigationAdd')?.addEventListener('click', () => {
 });
 // 3.1.1 移动端: 一次性绑定折叠卡 + 纵向时间轴的事件委托
 bindLitigationMobileEvents();
+// 3.1.1 移动端: 一次性绑定工时单卡片列表的事件委托(转发到桌面版同 taskId 按钮)
+bindTsMobileDelegates();
 
 function exportJSON() {
   // 导出整个 store(所有月份),不再是单月
@@ -15879,8 +16339,24 @@ self.addEventListener('fetch', e => {
     bindModalClass();
     ensureMobileCalendarToggle();
     maybeShowIOSInstallHint();
+    bindMobileKeyboardScroll();
     window.addEventListener('resize', handleResize);
     handleResize();
+  }
+
+  // ---- 13) 软键盘弹起时: focusin 主动滚动到可见位置(防 iOS 键盘遮挡)
+  function bindMobileKeyboardScroll() {
+    document.addEventListener('focusin', e => {
+      if (!IS_MOBILE()) return;
+      const t = e.target;
+      if (!t || !t.matches || !t.matches('input, textarea, [contenteditable="true"], select')) return;
+      // 等软键盘弹起(300ms 通常够);也避免输入刚聚焦时立即跳动
+      setTimeout(() => {
+        try {
+          t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch {}
+      }, 300);
+    });
   }
 
   if (document.readyState === 'loading') {
