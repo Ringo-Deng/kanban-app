@@ -788,6 +788,76 @@ body[data-view="timesheet"] .board-layout {
   justify-content: space-between;
 }
 .timer-header-caption { color: var(--muted); font-size: 10px; font-weight: 500; letter-spacing: .8px; }
+/* 3.1.1 计时器设置齿轮 + popover */
+.timer-gear {
+  border: 0; background: transparent; color: var(--muted);
+  width: 24px; height: 24px; border-radius: 6px;
+  font-size: 14px; cursor: pointer; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.timer-gear:hover { background: var(--task-bg); color: var(--text); }
+.timer-gear.active { background: var(--accent); color: #fff; }
+.timer-prefs-popover {
+  background: var(--card-bg-solid);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.timer-prefs-popover[hidden] { display: none !important; }
+.timer-prefs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+.timer-prefs-hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+}
+/* iOS 风格开关 */
+.timer-prefs-switch {
+  position: relative;
+  display: inline-block;
+  width: 38px; height: 22px;
+  flex-shrink: 0;
+}
+.timer-prefs-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.timer-prefs-switch-slider {
+  position: absolute; inset: 0;
+  background: var(--border);
+  border-radius: 22px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.timer-prefs-switch-slider::before {
+  content: '';
+  position: absolute;
+  left: 2px; top: 2px;
+  width: 18px; height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+.timer-prefs-switch input:checked + .timer-prefs-switch-slider {
+  background: var(--accent);
+}
+.timer-prefs-switch input:checked + .timer-prefs-switch-slider::before {
+  transform: translateX(16px);
+}
 .timer-task-picker { margin-bottom: 12px; }
 .timer-task-combobox { position: relative; }
 .timer-task-search {
@@ -5942,6 +6012,17 @@ input, select, textarea, button, [contenteditable] {
       <div class="timer-panel-header">
         <span><span class="timer-icon">⏱</span> <span class="timer-title">计时器</span></span>
         <span class="timer-header-caption">TODAY FOCUS</span>
+        <button class="timer-gear" id="timerGear" type="button" title="计时器设置" aria-label="计时器设置">⚙</button>
+      </div>
+      <div class="timer-prefs-popover hidden" id="timerPrefsPopover" role="dialog" aria-label="计时器默认设置">
+        <label class="timer-prefs-row">
+          <span>按小闹钟自动开始计时</span>
+          <span class="timer-prefs-switch">
+            <input type="checkbox" id="prefBellAutoStartTimer" />
+            <span class="timer-prefs-switch-slider"></span>
+          </span>
+        </label>
+        <div class="timer-prefs-hint">开启后,诉讼页面按 🔔 提醒会同时启动正向计时(需先在计时器里选任务)</div>
       </div>
       <div class="timer-active-block">
         <div class="timer-task-picker">
@@ -6651,7 +6732,7 @@ try {
     localStorage.setItem(TIMER_PREFS_KEY, localStorage.getItem('kanban_v24_bot_timer_prefs'));
   }
 } catch {}
-let timerPrefs = { focusMin: 25, restMin: 5 };
+let timerPrefs = { focusMin: 25, restMin: 5, bellAutoStartTimer: false };
 try {
   timerPrefs = { ...timerPrefs, ...(JSON.parse(localStorage.getItem(TIMER_PREFS_KEY) || '{}')) };
 } catch {}
@@ -11806,6 +11887,55 @@ function getLitMobExpandedIds() {
 function setLitMobExpandedIds(set) {
   try { localStorage.setItem(LIT_MOB_EXPANDED_KEY, JSON.stringify(Array.from(set))); } catch {}
 }
+
+// 3.1.1: 诉讼 bell 触发时, 如开启"按小闹钟自动开始计时", 启动正向计时
+// 关联到计时器面板里已选的任务;未选任务时, 弹 toast 提示
+function tryStartTimerOnBell() {
+  if (!timerPrefs || !timerPrefs.bellAutoStartTimer) return;
+  if (!selectedTaskId) {
+    if (typeof showToast === 'function') {
+      showToast('请先在计时器里选任务', 'pomodoro');
+    } else {
+      alert('请先在计时器里选任务');
+    }
+    return;
+  }
+  // 已有计时器在跑 → 不重复启动(避免覆盖当前)
+  if (activeTimer) return;
+  if (typeof startActiveTimer === 'function') {
+    startActiveTimer();
+  }
+}
+
+// 3.1.1: 计时器面板的齿轮按钮 + 偏好 popover 交互
+function bindTimerPrefs() {
+  const gear = document.getElementById('timerGear');
+  const popover = document.getElementById('timerPrefsPopover');
+  const toggle = document.getElementById('prefBellAutoStartTimer');
+  if (!gear || !popover || !toggle) return;
+
+  // 恢复偏好
+  toggle.checked = !!timerPrefs.bellAutoStartTimer;
+
+  gear.addEventListener('click', e => {
+    e.stopPropagation();
+    const open = popover.classList.toggle('hidden');
+    gear.classList.toggle('active', !open);
+  });
+
+  toggle.addEventListener('change', () => {
+    timerPrefs.bellAutoStartTimer = !!toggle.checked;
+    try { localStorage.setItem(TIMER_PREFS_KEY, JSON.stringify(timerPrefs)); } catch {}
+  });
+
+  // 点 popover 外面关闭
+  document.addEventListener('pointerdown', e => {
+    if (popover.classList.contains('hidden')) return;
+    if (popover.contains(e.target) || gear.contains(e.target)) return;
+    popover.classList.add('hidden');
+    gear.classList.remove('active');
+  });
+}
 function findLitTimelineByIdLocal(timelineId) {
   for (const rec of (store.litigationRecords || [])) {
     const line = (rec.timeline || []).find(l => l.id === timelineId);
@@ -11947,6 +12077,8 @@ function bindLitigationMobileEvents() {
         break;
       }
       case 'lit-mob-bell': {
+        // 3.1.1: 计时器偏好开启"按小闹钟自动开始计时"时, 同步启动正向计时
+        tryStartTimerOnBell();
         // 复用桌面版的提醒 modal(签名: timelineId, anchor element)
         if (typeof openLitigationReminderModal === 'function') {
           openLitigationReminderModal(lineId, actionEl);
@@ -16852,6 +16984,7 @@ self.addEventListener('fetch', e => {
     bindFab();
     bindMobileMenu();
     bindModalClass();
+    bindTimerPrefs();
     ensureMobileCalendarToggle();
     maybeShowIOSInstallHint();
     bindMobileKeyboardScroll();
