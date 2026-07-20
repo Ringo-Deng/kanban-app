@@ -4115,6 +4115,8 @@ button:focus-visible,
   gap: 10px; flex-wrap: wrap;
 }
 .ts-table-title { font-size: 15px; font-weight: 600; }
+/* 3.1.1 桌面+移动 统一: 隐藏工时单副标题(信息密度太高) */
+.ts-table-header > div > .ts-summary-meta { display: none; }
 .ts-table-tools { display: flex; gap: 6px; align-items: center; }
 .ts-search-input {
   padding: 5px 12px; border: 1px solid var(--border); background: var(--card-bg-solid);
@@ -4122,6 +4124,92 @@ button:focus-visible,
   width: 200px; transition: all 0.18s;
 }
 .ts-search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
+.ts-search-input.hidden { display: none !important; }
+
+/* 搜索框快捷入口(看起来像 input,点击或 ⌘K 触发) */
+.ts-search-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 11px;
+  border: 1px solid var(--border);
+  background: var(--card-bg-solid);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+  min-width: 200px;
+  transition: all 0.18s;
+}
+.ts-search-shortcut:hover { border-color: var(--accent); }
+.ts-search-shortcut-icon { font-size: 13px; line-height: 1; }
+.ts-search-shortcut-hint { flex: 1; text-align: left; }
+.ts-search-shortcut-kbd {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--task-bg);
+  font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--muted);
+}
+
+/* AI 工具下拉菜单(<details> 实现) */
+.ts-ai-menu { position: relative; }
+.ts-ai-menu > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  user-select: none;
+}
+.ts-ai-menu > summary::-webkit-details-marker { display: none; }
+.ts-ai-menu > summary::after {
+  content: '▾';
+  margin-left: 4px;
+  font-size: 9px;
+  color: var(--muted);
+  transition: transform 0.18s;
+}
+.ts-ai-menu[open] > summary::after { transform: rotate(180deg); }
+.ts-ai-menu-body {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  min-width: 200px;
+  background: var(--card-bg-solid);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+  z-index: 50;
+}
+.ts-ai-menu-item {
+  text-align: left !important;
+  width: 100%;
+  padding: 7px 10px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  border-radius: 6px !important;
+  font: inherit !important;
+  font-size: 12.5px !important;
+  cursor: pointer;
+}
+.ts-ai-menu-item:hover { background: var(--task-bg) !important; }
+.ts-ai-menu-status {
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--muted);
+  border-top: 1px dashed var(--border);
+  margin-top: 4px;
+  padding-top: 8px;
+}
 
 .ts-table-card table { width: 100%; border-collapse: collapse; }
 .ts-table-card thead th {
@@ -5655,10 +5743,10 @@ input, select, textarea, button, [contenteditable] {
   .cal-agenda-title { font-size: 14.5px; }
   .cal-agenda-date-main { font-size: 16px; }
 
-  /* 工时单顶部工具条: 移动端极简化(去掉副标题/AI 翻译/术语库/API/搜索框,只留'全部看板'下拉) */
-  .ts-table-header > div > .ts-summary-meta { display: none !important; }
+  /* 工时单顶部工具条: 移动端极简化(副标题已在全局隐藏,这里只藏 AI 工具+搜索,只留'全部看板'下拉) */
   .ts-translate-controls > *:not(#tsBoardFilter) { display: none !important; }
   .ts-table-header .ts-search-input { display: none !important; }
+  .ts-table-header .ts-search-shortcut { display: none !important; }
   .ts-table-header { padding: 10px 14px 12px; gap: 8px; }
   .ts-table-title { font-size: 14px; font-weight: 700; }
   .ts-table-tools { flex: 1; justify-content: flex-end; }
@@ -5970,7 +6058,6 @@ input, select, textarea, button, [contenteditable] {
       <div class="ts-table-header">
         <div>
           <div class="ts-table-title">每日工时明细</div>
-          <div class="ts-summary-meta">按完成日期归集 · 工作区 / 客户 → 项目 / 案件 → 任务</div>
         </div>
         <div class="ts-table-tools">
           <div class="ts-translate-controls">
@@ -5982,12 +6069,22 @@ input, select, textarea, button, [contenteditable] {
               <option value="JA">日文描述</option>
               <option value="EN">英文描述</option>
             </select>
-            <button class="btn ts-view-bar-btn" id="tsTranslateAll" type="button" title="一键优化当前看板范围(覆盖已有内容)">AI一键优化全部</button>
-            <button class="btn ts-view-bar-btn" id="tsTermLibrary" type="button">术语库</button>
-            <button class="btn ts-view-bar-btn" id="tsDeepSeekSettings" type="button" title="DeepSeek API 设置">API设置</button>
-            <span class="ts-ai-status" id="tsDeepSeekStatus">未设置 API</span>
+            <details class="ts-ai-menu" id="tsAiMenu">
+              <summary class="ts-view-bar-btn" title="AI 工具 (一键优化 / 术语库 / API 设置)">⚙ AI</summary>
+              <div class="ts-ai-menu-body">
+                <button class="btn ts-ai-menu-item" id="tsTranslateAll" type="button" title="一键优化当前看板范围(覆盖已有内容)">AI 一键优化全部</button>
+                <button class="btn ts-ai-menu-item" id="tsTermLibrary" type="button">术语库</button>
+                <button class="btn ts-ai-menu-item" id="tsDeepSeekSettings" type="button">API 设置</button>
+                <div class="ts-ai-menu-status" id="tsDeepSeekStatus">未设置 API</div>
+              </div>
+            </details>
           </div>
-          <input type="search" class="ts-search-input" id="tsSearchInput" placeholder="搜索任务 / 译名 / 项目 / 备注" autocomplete="off" />
+          <button class="ts-search-shortcut" id="tsSearchShortcut" type="button" title="搜索 (按 Ctrl/⌘+K)" aria-label="搜索">
+            <span class="ts-search-shortcut-icon">🔍</span>
+            <span class="ts-search-shortcut-hint">搜索…</span>
+            <kbd class="ts-search-shortcut-kbd" id="tsSearchKbd">⌘K</kbd>
+          </button>
+          <input type="search" class="ts-search-input hidden" id="tsSearchInput" placeholder="搜索任务 / 译名 / 项目 / 备注" autocomplete="off" />
         </div>
       </div>
       <div id="tsTableBody"></div>
@@ -15609,6 +15706,40 @@ if (_tsSearch) {
     if (e.key === 'Escape') { e.target.value = ''; tsSearchQuery = ''; renderTimesheet(); }
   });
 }
+
+// 3.1.1 桌面端搜索框快捷入口(替代常驻 input):点击按钮或按 ⌘K/Ctrl+K 弹层激活搜索
+function openTsSearchOverlay() {
+  // 检查视图: 只在工时单视图激活
+  if (document.body.dataset.view !== 'timesheet') return;
+  const input = document.getElementById('tsSearchInput');
+  if (!input) return;
+  input.classList.remove('hidden');
+  input.focus();
+  input.select?.();
+  // 用 Enter 关闭
+  input.addEventListener('keydown', function once(ev) {
+    if (ev.key === 'Enter' || ev.key === 'Escape') {
+      input.classList.add('hidden');
+      document.getElementById('tsSearchShortcut')?.focus();
+      input.removeEventListener('keydown', once);
+    }
+  });
+}
+document.getElementById('tsSearchShortcut')?.addEventListener('click', openTsSearchOverlay);
+// ⌘K / Ctrl+K 唤起搜索
+document.addEventListener('keydown', e => {
+  const isModK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k' && !e.shiftKey && !e.altKey;
+  if (!isModK) return;
+  e.preventDefault();
+  openTsSearchOverlay();
+});
+// 平台感知: Windows 显示 Ctrl+K, Mac 显示 ⌘K
+(function syncKbdHint() {
+  const kbd = document.getElementById('tsSearchKbd');
+  if (!kbd) return;
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform || '') || /Mac/.test(navigator.userAgent || '');
+  kbd.textContent = isMac ? '⌘K' : 'Ctrl+K';
+})();
 
 // 跨 tab 同步(同 localStorage key 时,另一 tab 修改后本 tab 自动刷新)
 window.addEventListener('storage', e => {
