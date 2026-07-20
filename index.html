@@ -4876,6 +4876,16 @@ input, select, textarea, button, [contenteditable] {
   }
   .task-reorder button:active { background: var(--task-bg); color: var(--accent); }
   .task-reorder button:disabled { opacity: 0.25; cursor: not-allowed; }
+  /* 3.1.1 mobile 任务标题: 2 行截断(避免长 task 撑高卡片) */
+  .task-title:not([contenteditable="true"]) {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+  }
 
   /* board-layout 单列 */
   .board-layout { flex-direction: column !important; gap: 12px !important; }
@@ -4999,6 +5009,44 @@ input, select, textarea, button, [contenteditable] {
   .ts-mob-entry-actions button:active { background: color-mix(in srgb, var(--accent) 14%, transparent); }
   .ts-mob-entry-actions button[data-restore] { color: var(--blue); }
   .ts-mob-entry-actions button[data-del] { color: var(--red); }
+  /* 3.1.1 mobile 主题选择器("更多" 抽屉内) */
+  .mobile-theme-picker {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 10px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .mobile-theme-label {
+    font-size: 11.5px; color: var(--muted); font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .mobile-theme-label #mobileThemeCurrent {
+    color: var(--accent);
+    text-transform: none;
+    margin-left: 4px;
+  }
+  .mobile-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .mobile-theme-chip {
+    aspect-ratio: 1;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 0;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.12s, border-color 0.12s;
+  }
+  .mobile-theme-chip:active { transform: scale(0.92); }
+  .mobile-theme-chip.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
 
   /* 诉讼:案件折叠 + 纵向时间轴(由 JS 改写) */
   .litigation-table { display: none !important; }
@@ -16043,7 +16091,11 @@ document.addEventListener('keydown', e => {
     </div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:8px;">
       <button class="btn" id="mobileNewProject" type="button">＋ 新建项目</button>
-      <button class="btn" id="mobileTheme" type="button">🎨 切换主题</button>
+      <!-- 3.1.1 mobile 主题: 9 套主题色块直接显示,点哪个换哪个 -->
+      <div class="mobile-theme-picker" id="mobileThemePicker" data-field="theme">
+        <div class="mobile-theme-label">🎨 主题 · 当前 <span id="mobileThemeCurrent">—</span></div>
+        <div class="mobile-theme-grid" id="mobileThemeGrid"></div>
+      </div>
       <button class="btn" id="mobileTrash" type="button">🗑 回收站</button>
       <button class="btn" id="mobileExport" type="button">⬇ 导出 JSON 备份</button>
       <button class="btn" id="mobileImport" type="button">⬆ 导入 JSON 备份</button>
@@ -16334,6 +16386,8 @@ self.addEventListener('fetch', e => {
     if (!fab || !modal) return;
     fab.classList.add('show');  // 始终显示(在所有视图)
     fab.addEventListener('click', () => {
+      // 3.1.1: 打开抽屉时刷新主题网格
+      renderMobileThemeGrid();
       modal.hidden = false;
       document.body.classList.add('modal-open');
     });
@@ -16343,15 +16397,23 @@ self.addEventListener('fetch', e => {
         document.body.classList.remove('modal-open');
       }
     });
+    // 3.1.1 主题色块点击: 直接调 setTheme(不关抽屉,让用户连选)
+    const grid = document.getElementById('mobileThemeGrid');
+    if (grid) {
+      grid.addEventListener('click', e => {
+        const btn = e.target.closest('[data-theme-key]');
+        if (!btn) return;
+        if (typeof setTheme === 'function') setTheme(btn.dataset.themeKey);
+        renderMobileThemeGrid();
+      });
+    }
     // 转发到桌面按钮(复用现有逻辑)
     function proxy(id) {
       document.getElementById(id)?.addEventListener('click', () => {
         modal.hidden = true;
         document.body.classList.remove('modal-open');
         document.getElementById(id.replace(/^mobile/, c => {
-          // mobileNewProject → newProject, mobileTheme → 触发 themeTrigger
           if (id === 'mobileNewProject') return 'newProject';
-          if (id === 'mobileTheme') return 'themeTrigger';
           if (id === 'mobileTrash') return 'trashBtn';
           if (id === 'mobileExport') return 'export';
           if (id === 'mobileImport') return 'import';
@@ -16360,7 +16422,38 @@ self.addEventListener('fetch', e => {
         }))?.click();
       });
     }
-    ['mobileNewProject', 'mobileTheme', 'mobileTrash', 'mobileExport', 'mobileImport', 'mobileVault'].forEach(proxy);
+    ['mobileNewProject', 'mobileTrash', 'mobileExport', 'mobileImport', 'mobileVault'].forEach(proxy);
+  }
+
+  // 3.1.1 渲染 mobile 主题选择网格(色块 + 当前主题高亮)
+  function renderMobileThemeGrid() {
+    const grid = document.getElementById('mobileThemeGrid');
+    const label = document.getElementById('mobileThemeCurrent');
+    if (!grid || typeof VALID_THEMES === 'undefined') return;
+    // 9 套主题的中文短名(用于显示)
+    const THEME_LABEL = {
+      light: '纸张', dark: '午夜', warm: '沙丘', forest: '森林',
+      mint: '赛博', lavender: '极光', sunset: '咖啡', ocean: '深海', sakura: '樱花'
+    };
+    // 9 套主题的预览渐变(色块用)
+    const THEME_PREVIEW = {
+      light:   'linear-gradient(135deg,#f8f3e9,#7fb0aa)',
+      dark:    'linear-gradient(135deg,#080c15,#77549d)',
+      warm:    'linear-gradient(135deg,#fff0cc,#b95f4f)',
+      forest:  'linear-gradient(135deg,#eef1de,#345046)',
+      mint:    'linear-gradient(135deg,#02030b,#ff168f 40%,#16c9ff)',
+      lavender:'linear-gradient(135deg,#00d4aa,#b466ff)',
+      sunset:  'linear-gradient(135deg,#f5e6d3,#b8410e)',
+      ocean:   'linear-gradient(135deg,#dff5f2,#07334f)',
+      sakura:  'linear-gradient(135deg,#fff6f2,#a985a5)',
+    };
+    if (label) {
+      const cur = (document.documentElement.dataset.theme) || (typeof currentTheme !== 'undefined' ? currentTheme : 'light');
+      label.textContent = THEME_LABEL[cur] || cur;
+    }
+    grid.innerHTML = VALID_THEMES.map(t =>
+      `<button type="button" data-theme-key="${t}" class="mobile-theme-chip ${t === (document.documentElement.dataset.theme) ? 'active' : ''}" style="background:${THEME_PREVIEW[t] || 'var(--accent)'}" title="${THEME_LABEL[t] || t}" aria-label="切换到 ${THEME_LABEL[t] || t}"></button>`
+    ).join('');
   }
 
   // ---- 10) modal 打开时挂 modal-open class(用于隐藏底部 nav) ----
@@ -16369,6 +16462,26 @@ self.addEventListener('fetch', e => {
       const anyOpen = [...document.querySelectorAll('.modal')]
         .some(modal => !modal.hidden && !modal.classList.contains('hidden'));
       document.body.classList.toggle('modal-open', anyOpen);
+      // 3.1.1 锁 body 滚动(防 iOS 弹动 + 桌面背景跟着滚)
+      if (anyOpen) {
+        if (!document.body.dataset.lockY) {
+          document.body.dataset.lockY = String(window.scrollY || 0);
+        }
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${document.body.dataset.lockY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.overflow = 'hidden';
+      } else {
+        const y = parseInt(document.body.dataset.lockY || '0', 10);
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.overflow = '';
+        if (y) window.scrollTo(0, y);
+        delete document.body.dataset.lockY;
+      }
     });
     obs.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['hidden', 'class'], childList: true });
   }
