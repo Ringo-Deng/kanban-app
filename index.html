@@ -4756,16 +4756,16 @@ body[data-view="litigation"] #litigationAdd { display:inline-flex; margin-left:4
 /* v3.1: 诉讼提醒 popover — 紧邻铃铛的小日历 */
 .lit-reminder-modal { position:fixed; z-index:11000; width:min(350px, calc(100vw - 20px)); }
 .lit-reminder-content { background:var(--card-bg-solid); border:1px solid var(--border); border-radius:14px; padding:14px; width:100%; max-height:calc(100vh - 20px); overflow:auto; box-shadow:0 18px 50px rgba(0,0,0,.18); }
-.lit-cal-top { display:flex; align-items:center; gap:6px; margin-bottom:12px; flex-wrap:nowrap; }
-.lit-cal-time { font-size:13px; font-weight:800; color:var(--text); display:flex; align-items:baseline; gap:6px; flex:0 1 auto; min-width:0; white-space:nowrap; }
+.lit-cal-top { display:flex; align-items:center; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+.lit-cal-time { font-size:13px; font-weight:800; color:var(--text); display:flex; align-items:baseline; gap:6px; flex:1 1 auto; min-width:0; white-space:nowrap; }
 .lit-cal-time .lit-cal-count { color:var(--muted); font-weight:500; font-size:11.5px; }
-.lit-cal-event-date { display:inline; margin-top:0; color:var(--muted); font-size:11px; font-weight:600; margin-left:4px; }
+.lit-cal-event-date { flex:1 0 100%; display:block; margin-top:2px; color:var(--muted); font-size:11px; font-weight:600; }
 .lit-cal-prev7, .lit-cal-prev3, .lit-cal-prev1 { flex:0 0 auto; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:7px; padding:5px 9px; font-size:11.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
 .lit-cal-prev7:hover, .lit-cal-prev3:hover, .lit-cal-prev1:hover { border-color:var(--accent); color:var(--accent); }
 .lit-cal-prev7.active, .lit-cal-prev3.active, .lit-cal-prev1.active { border-color:var(--accent); background:var(--accent); color:#fff; }
 @media (max-width: 480px) {
   /* 极窄屏: 隐藏事项日期,只留 '设置提醒' + 3 个按钮 */
-  .lit-cal-time .lit-cal-event-date { display:none; }
+  .lit-cal-event-date { display:none; }
 }
 .lit-cal { user-select:none; }
 .lit-cal-header { display:flex; align-items:center; justify-content:space-between; padding:4px 4px 8px; font-weight:700; font-size:13px; }
@@ -12239,10 +12239,11 @@ function openLitigationReminderModal(timelineId, anchorEl) {
   modal.innerHTML = `
     <div class="lit-reminder-content">
       <div class="lit-cal-top">
-        <div class="lit-cal-time">设置提醒<span class="lit-cal-count">${existing.length > 0 ? `· 已设 ${existing.length} 个日期` : ''}</span><span class="lit-cal-event-date">事项日期：${escapeHtml(rowDateStr)}</span></div>
+        <div class="lit-cal-time">设置提醒<span class="lit-cal-count">${existing.length > 0 ? `· 已设 ${existing.length} 个日期` : ''}</span></div>
         <button class="lit-cal-prev7 ${reminderDateSet.has(prev7Str) ? 'active' : ''}" type="button" data-cal-date-toggle="${prev7Str}" title="在 ${prev7Str} 提醒">前一周</button>
         <button class="lit-cal-prev3 ${reminderDateSet.has(prev3Str) ? 'active' : ''}" type="button" data-cal-date-toggle="${prev3Str}" title="在 ${prev3Str} 提醒">前三天</button>
         <button class="lit-cal-prev1 ${reminderDateSet.has(prev1Str) ? 'active' : ''}" type="button" data-cal-date-toggle="${prev1Str}" title="在 ${prev1Str} 提醒">前一天</button>
+        <div class="lit-cal-event-date">事项日期：${escapeHtml(rowDateStr)}</div>
       </div>
       <div class="lit-cal" data-row-date="${escapeHtml(rowDateStr)}" data-view-date="${escapeHtml(localDateStr(initialView))}">
         ${buildLitMiniCalendar(initialView, rowDateStr, reminderDateSet)}
