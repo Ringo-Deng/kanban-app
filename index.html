@@ -15023,7 +15023,8 @@ self.addEventListener('fetch', e => {
   // ---- 10) modal 打开时挂 modal-open class(用于隐藏底部 nav) ----
   function bindModalClass() {
     const obs = new MutationObserver(() => {
-      const anyOpen = !!document.querySelector('.modal:not([hidden])');
+      const anyOpen = [...document.querySelectorAll('.modal')]
+        .some(modal => !modal.hidden && !modal.classList.contains('hidden'));
       document.body.classList.toggle('modal-open', anyOpen);
     });
     obs.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['hidden', 'class'], childList: true });
