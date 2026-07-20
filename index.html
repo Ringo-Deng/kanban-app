@@ -5514,13 +5514,24 @@ input, select, textarea, button, [contenteditable] {
   .mobile-fab:hover { transform: translateY(-2px); }
   .mobile-fab:active { transform: scale(0.95); }
 
-  /* AI fab 上移,避免遮挡导航 */
+  /* AI fab 上移,避免遮挡导航; mobile 上折叠为纯圆点,避免长条遮挡 */
   .bot-fab {
     right: 14px !important;
     bottom: calc(70px + env(safe-area-inset-bottom)) !important;
-    padding: 9px 12px !important;
+    padding: 0 !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
     font-size: 12px !important;
+    justify-content: center !important;
   }
+  .bot-fab .bot-fab-label { display: none !important; }
+  .bot-fab .bot-fab-dot { width: 10px; height: 10px; }
+
+  /* AI 面板: mobile 上禁止输入框纵向 resize(避免被拖得过长) */
+  .bot-input { resize: none !important; }
+  .bot-op textarea { resize: none !important; }
+  .bot-shortcut-editor textarea { resize: none !important; }
 
   /* PWA 提示上移,避免被底部导航挡 */
   .pwa-notice {
