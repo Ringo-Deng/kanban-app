@@ -7263,7 +7263,6 @@ document.addEventListener('keydown', e => {
 function setView(view) {
   if (!['board', 'calendar', 'timesheet', 'litigation'].includes(view)) return;
   if (currentView === view) return;
-  console.log('[setView]', view, 'from', currentView, 'hash=', location.hash);
   currentView = view;
   document.querySelectorAll('#viewPills .pill').forEach(p => p.classList.toggle('active', p.dataset.view === view));
   document.body.dataset.view = view;
@@ -7278,6 +7277,16 @@ function setView(view) {
     else history.replaceState(null, '', location.pathname + location.search + '#view=' + view);
   } catch (e) { /* ignore */ }
   render();
+  // 3.1.1 防御:首次切换到月历偶现不显示(猜测是 render() 早 return + grid.innerHTML='' 时机)
+  // 用 rAF 强制再渲染一次,确保 #calendar 填充内容
+  if (view === 'calendar') {
+    requestAnimationFrame(() => {
+      const c = document.getElementById('calendar');
+      if (c && !c.classList.contains('hidden') && c.innerHTML.trim() === '') {
+        renderCalendar();
+      }
+    });
+  }
 }
 
 // v2.4: 顶部视图工具条支持拖动排序，顺序只保存在本机浏览器
@@ -9245,7 +9254,6 @@ function render() {
   grid.innerHTML = '';
   updatePageTitle();
   if (currentView === 'calendar') {
-    console.log('[render] calendar branch, cal element:', !!cal, 'cal hidden:', cal?.classList.contains('hidden'));
     grid.classList.add('hidden');
     cal.classList.remove('hidden');
     empty.classList.add('hidden');
@@ -9253,7 +9261,6 @@ function render() {
     if (timesheet) timesheet.classList.add('hidden');
     if (litigation) litigation.classList.add('hidden');
     renderCalendar();
-    console.log('[render] after renderCalendar, cal innerHTML length:', cal?.innerHTML?.length);
     return;
   }
   if (currentView === 'timesheet') {
@@ -9349,7 +9356,6 @@ function updatePageTitle() {
 function renderCalendar() {
   // 3.1.1: agenda 模式(日程列表)优先于网格模式,既给移动端用也给桌面用
   const calMode = document.body.dataset.calMode || 'grid';
-  console.log('[renderCalendar] called, calMode =', calMode, 'calState =', JSON.stringify(calState));
   if (calMode === 'agenda') return renderCalendarAgenda();
   const cal = document.getElementById('calendar');
   const { year, month } = calState;
@@ -16782,6 +16788,11 @@ self.addEventListener('fetch', e => {
   // ---- 11) 移动端日历:默认日程列表,顶部"日程/网格"切换 ----
   function ensureMobileCalendarToggle() {
     if (document.getElementById('calModeToggle')) return;
+    // 只在 mobile 上挂日程/网格切换,desktop 走 grid
+    if (!window.matchMedia('(max-width: 767px)').matches) {
+      document.body.dataset.calMode = 'grid';
+      return;
+    }
     const calNav = document.getElementById('calNav');
     if (!calNav) return;
     const wrap = document.createElement('div');
