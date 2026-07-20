@@ -1,0 +1,25 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node / build tools (future-proof)
+node_modules/
+dist/
+.cache/
+
+# Real data — never commit (per implementation plan §10)
+*.real.json
+backups/
+snapshots/
+exports/
+!index.html
+!IMPLEMENTATION_PLAN.md
+!README.md
