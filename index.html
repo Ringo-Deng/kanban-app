@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
+<meta name="build-hash" content="c42ba89">
 <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -16427,13 +16428,17 @@ document.addEventListener('keydown', e => {
   }
 
   // ---- 2) Service Worker(内联,Blob 注册) ----
-  const SW_VERSION = 'kanban-shell-v1';
+  // 3.1.1 修复 PWA 缓存旧 HTML 看不到更新的问题:
+  //  - SW_VERSION 每次部署都变(用 BUILD_HASH),触发旧缓存清理
+  //  - HTML/导航走 network-first(确保刷新立刻看到新版本)
+  //  - 静态资源走 cache-first(利用缓存提速)
+  //  - 离线时 fallback 到缓存
+  const BUILD_HASH = (document.querySelector('meta[name="build-hash"]')?.content) || ('dev-' + Date.now());
+  const SW_VERSION = 'kanban-shell-' + BUILD_HASH;
   const SW_SOURCE = `
 const CACHE_NAME = '${SW_VERSION}';
-const APP_SHELL = ['./'];
 self.addEventListener('install', e => {
   self.skipWaiting();
-  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL).catch(() => {})));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(
@@ -16446,19 +16451,33 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  // 只缓存同源 GET
+  // 只处理同源 GET
   if (url.origin !== self.location.origin) return;
-  // 不缓存业务数据(localStorage / IndexedDB 不在 SW 层)
-  e.respondWith(
-    caches.match(req).then(cached => {
-      const network = fetch(req).then(resp => {
+  // HTML / 导航请求: network-first(确保新版本立刻生效),离线 fallback 到缓存
+  const isHTML = req.mode === 'navigate' || req.destination === 'document' || (req.headers.get('accept') || '').includes('text/html');
+  if (isHTML) {
+    e.respondWith(
+      fetch(req).then(resp => {
         if (resp && resp.status === 200) {
           const copy = resp.clone();
           caches.open(CACHE_NAME).then(c => c.put(req, copy));
         }
         return resp;
-      }).catch(() => cached);
-      return cached || network;
+      }).catch(() => caches.match(req).then(c => c || new Response('Offline', { status: 503 })))
+    );
+    return;
+  }
+  // 静态资源: cache-first(提速),失败走网络
+  e.respondWith(
+    caches.match(req).then(cached => {
+      if (cached) return cached;
+      return fetch(req).then(resp => {
+        if (resp && resp.status === 200) {
+          const copy = resp.clone();
+          caches.open(CACHE_NAME).then(c => c.put(req, copy));
+        }
+        return resp;
+      });
     })
   );
 });
