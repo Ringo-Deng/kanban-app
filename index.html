@@ -798,6 +798,19 @@ body[data-view="timesheet"] .board-layout {
 }
 .timer-gear:hover { background: var(--task-bg); color: var(--text); }
 .timer-gear.active { background: var(--accent); color: #fff; }
+/* 3.1.1 小闹钟按钮: 计时器标题旁, 按下直接开始正向计时 */
+.timer-alarm-btn {
+  border: 0; background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  width: 26px; height: 26px; border-radius: 8px;
+  font-size: 14px; cursor: pointer; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background 0.15s, transform 0.12s;
+  margin-right: 2px;
+}
+.timer-alarm-btn:hover { background: color-mix(in srgb, var(--accent) 24%, transparent); }
+.timer-alarm-btn:active { transform: scale(0.92); }
+.timer-alarm-btn[hidden] { display: none !important; }
 .timer-prefs-popover {
   background: var(--card-bg-solid);
   border: 1px solid var(--border);
@@ -6012,17 +6025,18 @@ input, select, textarea, button, [contenteditable] {
       <div class="timer-panel-header">
         <span><span class="timer-icon">⏱</span> <span class="timer-title">计时器</span></span>
         <span class="timer-header-caption">TODAY FOCUS</span>
+        <button class="timer-alarm-btn hidden" id="timerAlarmBtn" type="button" title="小闹钟 — 按下开始正向计时" aria-label="小闹钟 — 开始正向计时">⏰</button>
         <button class="timer-gear" id="timerGear" type="button" title="计时器设置" aria-label="计时器设置">⚙</button>
       </div>
       <div class="timer-prefs-popover hidden" id="timerPrefsPopover" role="dialog" aria-label="计时器默认设置">
         <label class="timer-prefs-row">
-          <span>按小闹钟自动开始计时</span>
+          <span>显示小闹钟按钮</span>
           <span class="timer-prefs-switch">
             <input type="checkbox" id="prefBellAutoStartTimer" />
             <span class="timer-prefs-switch-slider"></span>
           </span>
         </label>
-        <div class="timer-prefs-hint">开启后,诉讼页面按 🔔 提醒会同时启动正向计时(需先在计时器里选任务)</div>
+        <div class="timer-prefs-hint">开启后,计时器标题旁显示 ⏰ 小闹钟按钮。点一下直接开始正向计时(需先选任务)。</div>
       </div>
       <div class="timer-active-block">
         <div class="timer-task-picker">
@@ -11888,10 +11902,9 @@ function setLitMobExpandedIds(set) {
   try { localStorage.setItem(LIT_MOB_EXPANDED_KEY, JSON.stringify(Array.from(set))); } catch {}
 }
 
-// 3.1.1: 诉讼 bell 触发时, 如开启"按小闹钟自动开始计时", 启动正向计时
+// 3.1.1: 计时器面板"小闹钟"按钮 — 按了直接开始正向计时
 // 关联到计时器面板里已选的任务;未选任务时, 弹 toast 提示
-function tryStartTimerOnBell() {
-  if (!timerPrefs || !timerPrefs.bellAutoStartTimer) return;
+function tryStartTimerOnAlarm() {
   if (!selectedTaskId) {
     if (typeof showToast === 'function') {
       showToast('请先在计时器里选任务', 'pomodoro');
@@ -11926,6 +11939,8 @@ function bindTimerPrefs() {
   toggle.addEventListener('change', () => {
     timerPrefs.bellAutoStartTimer = !!toggle.checked;
     try { localStorage.setItem(TIMER_PREFS_KEY, JSON.stringify(timerPrefs)); } catch {}
+    // 同步小闹钟按钮的可见性
+    refreshAlarmButtonVisibility();
   });
 
   // 点 popover 外面关闭
@@ -11935,6 +11950,23 @@ function bindTimerPrefs() {
     popover.classList.add('hidden');
     gear.classList.remove('active');
   });
+
+  // 3.1.1: 小闹钟按钮 — 按下启动正向计时
+  const alarmBtn = document.getElementById('timerAlarmBtn');
+  if (alarmBtn) {
+    alarmBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      tryStartTimerOnAlarm();
+    });
+    refreshAlarmButtonVisibility();
+  }
+}
+
+// 3.1.1: 根据偏好决定小闹钟按钮的可见性
+function refreshAlarmButtonVisibility() {
+  const alarmBtn = document.getElementById('timerAlarmBtn');
+  if (!alarmBtn) return;
+  alarmBtn.hidden = !timerPrefs.bellAutoStartTimer;
 }
 function findLitTimelineByIdLocal(timelineId) {
   for (const rec of (store.litigationRecords || [])) {
@@ -12077,8 +12109,6 @@ function bindLitigationMobileEvents() {
         break;
       }
       case 'lit-mob-bell': {
-        // 3.1.1: 计时器偏好开启"按小闹钟自动开始计时"时, 同步启动正向计时
-        tryStartTimerOnBell();
         // 复用桌面版的提醒 modal(签名: timelineId, anchor element)
         if (typeof openLitigationReminderModal === 'function') {
           openLitigationReminderModal(lineId, actionEl);
