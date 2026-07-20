@@ -5302,10 +5302,15 @@ input, select, textarea, button, [contenteditable] {
   }
   .lit-mob-todo {
     display: grid;
-    grid-template-columns: 90px 1fr 110px 24px;
+    grid-template-columns: 78px 1fr 24px;
+    grid-template-rows: auto auto;
     gap: 4px;
     align-items: start;
   }
+  .lit-mob-todo > .lit-mob-todo-status { grid-column: 1; grid-row: 1; }
+  .lit-mob-todo > .lit-mob-todo-text  { grid-column: 2; grid-row: 1; }
+  .lit-mob-todo > .lit-mob-todo-del   { grid-column: 3; grid-row: 1; }
+  .lit-mob-todo > .lit-mob-todo-due   { grid-column: 1 / -1; grid-row: 2; }
   .lit-mob-todo.is-done .lit-mob-todo-text {
     text-decoration: line-through;
     color: var(--muted);
@@ -5378,9 +5383,69 @@ input, select, textarea, button, [contenteditable] {
     border-color: var(--red);
     background: color-mix(in srgb, var(--red) 8%, transparent);
   }
+
+  /* 3.1.1 案件信息折叠卡:基础字段默认收起,展开后直接看到时间线 */
+  .lit-mob-fields-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--task-bg) 30%, var(--card-bg));
+    overflow: hidden;
+  }
+  .lit-mob-fields-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent;
+    border: 0;
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lit-mob-fields-trigger:active { background: var(--task-bg); }
+  .lit-mob-fields-trigger-icon { font-size: 14px; line-height: 1; }
+  .lit-mob-fields-summary {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 12px;
+    margin-left: 4px;
+  }
+  .lit-mob-fields-chevron {
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+  .lit-mob-fields-toggle.expanded .lit-mob-fields-chevron { transform: rotate(180deg); }
+  .lit-mob-fields-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 4px 12px 12px;
+    border-top: 1px dashed var(--border);
+  }
+  .lit-mob-fields-body[hidden] { display: none !important; }
+  /* 案件信息展开后把基础字段的 label 视觉降噪,让上方时间线仍占焦点 */
+  .lit-mob-fields-body .lit-mob-field label { font-size: 10.5px; }
+
   @media (max-width: 380px) {
-    .lit-mob-todo { grid-template-columns: 80px 1fr 24px; }
-    .lit-mob-todo input[type="date"] { grid-column: 1 / -1; }
+    .lit-mob-todo { grid-template-columns: 70px 1fr 22px; }
+    .lit-mob-todo > .lit-mob-todo-status { grid-column: 1; grid-row: 1; }
+    .lit-mob-todo > .lit-mob-todo-text  { grid-column: 2; grid-row: 1; }
+    .lit-mob-todo > .lit-mob-todo-del   { grid-column: 3; grid-row: 1; }
+    .lit-mob-todo > .lit-mob-todo-due   { grid-column: 1 / -1; grid-row: 2; }
   }
 
   /* 底部导航 */
@@ -11487,37 +11552,56 @@ function renderLitMobileCard(record, bellBadgeMap) {
     </button>
   `;
 
+  // 3.1.1: 基础信息默认折叠(展开后先看时间线, 不被 5 字段表单挤占)
+  const fieldsHtml = `
+    <div class="lit-mob-fields-toggle">
+      <button type="button" class="lit-mob-fields-trigger" data-action="lit-mob-fields-toggle" data-record-id="${escapeHtml(record.id)}" aria-expanded="false">
+        <span class="lit-mob-fields-trigger-icon">📝</span>
+        <span>案件信息</span>
+        <span class="lit-mob-fields-summary">
+          ${record.caseNumber ? '📋 ' + escapeHtml(record.caseNumber) : ''}
+          ${record.court ? ' · 🏛 ' + escapeHtml(record.court) : ''}
+          ${(!record.caseNumber && !record.court) ? '点击编辑' : ''}
+        </span>
+        <span class="lit-mob-fields-chevron" aria-hidden="true">▾</span>
+      </button>
+      <div class="lit-mob-fields-body" data-fields-for="${escapeHtml(record.id)}" hidden>
+        <div class="lit-mob-field">
+          <label>案件名称</label>
+          <input type="text" data-field="caseName" data-record-id="${escapeHtml(record.id)}" value="${escapeHtml(record.caseName || '')}" placeholder="如 王某合同纠纷">
+        </div>
+        <div class="lit-mob-field">
+          <label>案号</label>
+          <input type="text" data-field="caseNumber" data-record-id="${escapeHtml(record.id)}" value="${escapeHtml(record.caseNumber || '')}" placeholder="如 (2024)沪0115民初12345号">
+        </div>
+        <div class="lit-mob-field">
+          <label>管辖法院</label>
+          <input type="text" data-field="court" data-record-id="${escapeHtml(record.id)}" value="${escapeHtml(record.court || '')}" placeholder="如 上海市浦东新区人民法院">
+        </div>
+        <div class="lit-mob-field">
+          <label>联系方式</label>
+          <textarea data-field="contact" data-record-id="${escapeHtml(record.id)}" rows="2" placeholder="律师/当事人/法院电话等">${escapeHtml(record.contact || '')}</textarea>
+        </div>
+        <div class="lit-mob-field">
+          <label>备注</label>
+          <textarea data-field="note" data-record-id="${escapeHtml(record.id)}" rows="3" placeholder="背景说明、关键节点、注意事项">${escapeHtml(record.note || '')}</textarea>
+        </div>
+      </div>
+    </div>
+  `;
+
   const detail = `
     <div class="lit-mob-card-detail" data-detail-for="${escapeHtml(record.id)}" hidden>
-      <div class="lit-mob-field">
-        <label>案件名称</label>
-        <input type="text" data-field="caseName" data-record-id="${escapeHtml(record.id)}" value="${escapeHtml(record.caseName || '')}" placeholder="如 王某合同纠纷">
-      </div>
-      <div class="lit-mob-field">
-        <label>案号</label>
-        <input type="text" data-field="caseNumber" data-record-id="${escapeHtml(record.id)}" value="${escapeHtml(record.caseNumber || '')}" placeholder="如 (2024)沪0115民初12345号">
-      </div>
-      <div class="lit-mob-field">
-        <label>管辖法院</label>
-        <input type="text" data-field="court" data-record-id="${escapeHtml(record.id)}" value="${escapeHtml(record.court || '')}" placeholder="如 上海市浦东新区人民法院">
-      </div>
-      <div class="lit-mob-field">
-        <label>联系方式</label>
-        <textarea data-field="contact" data-record-id="${escapeHtml(record.id)}" rows="2" placeholder="律师/当事人/法院电话等">${escapeHtml(record.contact || '')}</textarea>
-      </div>
-      <div class="lit-mob-field">
-        <label>备注</label>
-        <textarea data-field="note" data-record-id="${escapeHtml(record.id)}" rows="3" placeholder="背景说明、关键节点、注意事项">${escapeHtml(record.note || '')}</textarea>
-      </div>
+      ${fieldsHtml}
       <div class="lit-mob-section-title">
         <span>时间线</span>
         <div>
-          <button data-action="lit-mob-add-line" data-record-id="${escapeHtml(record.id)}" type="button">+ 新增进展</button>
-          <button data-action="lit-mob-sort" data-record-id="${escapeHtml(record.id)}" type="button" title="按日期从早到晚整理">⇅ 一键整理</button>
+          <button data-action="lit-mob-add-line" data-record-id="${escapeHtml(record.id)}" type="button">+ 新增</button>
+          <button data-action="lit-mob-sort" data-record-id="${escapeHtml(record.id)}" type="button" title="按日期从早到晚整理">⇅ 整理</button>
         </div>
       </div>
       <div class="lit-mob-timeline">
-        ${record.timeline.length === 0 ? '<div class="lit-mob-empty">暂无进展，点击"新增进展"开始</div>' : ''}
+        ${record.timeline.length === 0 ? '<div class="lit-mob-empty">暂无进展，点击"+ 新增"开始</div>' : ''}
         ${record.timeline.map(line => renderLitMobileLine(record, line, bellBadgeMap)).join('')}
       </div>
       <div class="lit-mob-card-actions">
@@ -11619,6 +11703,16 @@ function bindLitigationMobileEvents() {
     const todoId = actionEl.dataset.todoId;
 
     switch (action) {
+      case 'lit-mob-fields-toggle': {
+        // 案件信息折叠/展开(只控制 body 显示,不重渲染)
+        const wrap = actionEl.closest('.lit-mob-fields-toggle');
+        const body = wrap?.querySelector('.lit-mob-fields-body');
+        if (!wrap || !body) return;
+        const isOpen = wrap.classList.toggle('expanded');
+        body.hidden = !isOpen;
+        actionEl.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        break;
+      }
       case 'lit-mob-toggle': {
         const expanded = getLitMobExpandedIds();
         const card = actionEl.closest('.lit-mob-card');
