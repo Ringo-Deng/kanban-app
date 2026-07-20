@@ -5654,6 +5654,19 @@ input, select, textarea, button, [contenteditable] {
   .cal-agenda-item { padding: 12px 14px; }
   .cal-agenda-title { font-size: 14.5px; }
   .cal-agenda-date-main { font-size: 16px; }
+
+  /* 工时单顶部工具条: 移动端极简化(去掉副标题/AI 翻译/术语库/API/搜索框,只留'全部看板'下拉) */
+  .ts-table-header > div > .ts-summary-meta { display: none !important; }
+  .ts-translate-controls > *:not(#tsBoardFilter) { display: none !important; }
+  .ts-table-header .ts-search-input { display: none !important; }
+  .ts-table-header { padding: 10px 14px 12px; gap: 8px; }
+  .ts-table-title { font-size: 14px; font-weight: 700; }
+  .ts-table-tools { flex: 1; justify-content: flex-end; }
+  .ts-translate-controls #tsBoardFilter {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 7px;
+  }
 }
 /* 未排期组弱化 */
 .cal-agenda-group.cal-agenda-unscheduled .cal-agenda-date-main {
