@@ -4870,6 +4870,337 @@ input, select, textarea, button, [contenteditable] {
   /* 诉讼:案件折叠 + 纵向时间轴(由 JS 改写) */
   .litigation-table { display: none !important; }
   .litigation-mobile { display: block !important; }
+  .litigation-table-card { background: transparent; border: 0; box-shadow: none; overflow: visible; }
+  .litigation-empty { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; }
+  /* 3.1.1: 移动端诉讼 — 案件折叠卡 */
+  .litigation-mobile { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+  .litigation-mobile[hidden] { display: none !important; }
+  .lit-mob-card {
+    background: var(--card-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+  .lit-mob-card-head {
+    display: block;
+    width: 100%;
+    padding: 14px 16px;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text);
+    font-family: inherit;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lit-mob-card-head:active { background: var(--task-bg); }
+  .lit-mob-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    padding-right: 24px;
+  }
+  .lit-mob-card-title em { color: var(--muted); font-style: italic; }
+  .lit-mob-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .lit-mob-card-recent {
+    font-size: 12px;
+    color: var(--text);
+    background: var(--task-bg);
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .lit-mob-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .lit-mob-next-todo {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--orange);
+  }
+  .lit-mob-next-todo.done { color: var(--green); }
+  .lit-mob-bell {
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--red) 12%, transparent);
+    color: var(--red);
+    border: 1px solid color-mix(in srgb, var(--red) 35%, transparent);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .lit-mob-chevron {
+    position: absolute;
+    right: 16px;
+    top: 18px;
+    font-size: 14px;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+  .lit-mob-card.expanded .lit-mob-chevron { transform: rotate(180deg); }
+  .lit-mob-card-detail {
+    border-top: 1px solid var(--border);
+    padding: 14px 16px 18px;
+    background: color-mix(in srgb, var(--card-bg-solid) 50%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .lit-mob-card-detail[hidden] { display: none !important; }
+  .lit-mob-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .lit-mob-field label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .lit-mob-field input,
+  .lit-mob-field textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 14px;
+    background: var(--card-bg-solid);
+    color: var(--text);
+    resize: vertical;
+  }
+  .lit-mob-field input:focus,
+  .lit-mob-field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .lit-mob-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .lit-mob-section-title > div { display: flex; gap: 6px; }
+  .lit-mob-section-title button {
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    background: var(--card-bg-solid);
+    color: var(--text);
+    border-radius: 7px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .lit-mob-section-title button:active { background: var(--task-bg); }
+  .lit-mob-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    padding-left: 4px;
+  }
+  .lit-mob-timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .lit-mob-timeline-item {
+    background: var(--card-bg-solid);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px 10px 30px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .lit-mob-timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 16px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--card-bg-solid);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+  .lit-mob-line-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .lit-mob-line-date input[type="date"] {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--card-bg);
+    color: var(--text);
+    color-scheme: light dark;
+  }
+  .lit-mob-bell-btn {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--muted);
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lit-mob-bell-btn.has-reminders {
+    background: color-mix(in srgb, var(--red) 12%, transparent);
+    border-color: color-mix(in srgb, var(--red) 40%, transparent);
+    color: var(--red);
+  }
+  .lit-mob-line-text {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font: inherit;
+    font-size: 13.5px;
+    background: var(--card-bg);
+    color: var(--text);
+    resize: vertical;
+    min-height: 36px;
+  }
+  .lit-mob-line-text:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .lit-mob-todos {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 8px;
+    background: color-mix(in srgb, var(--task-bg) 50%, transparent);
+    border-radius: 6px;
+  }
+  .lit-mob-todo {
+    display: grid;
+    grid-template-columns: 90px 1fr 110px 24px;
+    gap: 4px;
+    align-items: start;
+  }
+  .lit-mob-todo.is-done .lit-mob-todo-text {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+  .lit-mob-todo select,
+  .lit-mob-todo input,
+  .lit-mob-todo textarea {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 4px 6px;
+    font: inherit;
+    font-size: 12px;
+    background: var(--card-bg-solid);
+    color: var(--text);
+    min-width: 0;
+  }
+  .lit-mob-todo select { color-scheme: light dark; }
+  .lit-mob-todo input[type="date"] { color-scheme: light dark; }
+  .lit-mob-todo-text { resize: vertical; min-height: 28px; }
+  .lit-mob-todo-del {
+    border: 0; background: transparent; color: var(--muted);
+    font-size: 16px; line-height: 1; padding: 0; cursor: pointer;
+    width: 24px; height: 24px;
+  }
+  .lit-mob-todo-del:hover { color: var(--red); }
+  .lit-mob-empty {
+    font-size: 11.5px;
+    color: var(--muted);
+    text-align: center;
+    padding: 4px 0;
+    font-style: italic;
+  }
+  .lit-mob-line-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+  .lit-mob-line-actions button {
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+  }
+  .lit-mob-line-actions button:active { background: var(--task-bg); }
+  .lit-mob-line-actions button[data-variant="add"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+  .lit-mob-line-actions button[data-variant="remove"]:hover { color: var(--red); border-color: var(--red); }
+  .lit-mob-card-actions {
+    display: flex;
+    gap: 8px;
+    border-top: 1px dashed var(--border);
+    padding-top: 12px;
+  }
+  .lit-mob-card-actions button {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .lit-mob-card-actions button[data-variant="remove"]:hover {
+    color: var(--red);
+    border-color: var(--red);
+    background: color-mix(in srgb, var(--red) 8%, transparent);
+  }
+  @media (max-width: 380px) {
+    .lit-mob-todo { grid-template-columns: 80px 1fr 24px; }
+    .lit-mob-todo input[type="date"] { grid-column: 1 / -1; }
+  }
 
   /* 底部导航 */
   .mobile-nav {
@@ -5292,6 +5623,8 @@ input, select, textarea, button, [contenteditable] {
       </table>
       <div class="litigation-empty hidden" id="litigationEmpty">暂无诉讼进度记录，点击“新增记录”开始。</div>
     </div>
+    <!-- 3.1.1 移动端: 案件折叠卡 + 纵向时间轴(由 renderLitigationMobile 渲染) -->
+    <div class="litigation-mobile" id="litigationMobileList" hidden></div>
   </section>
   <!-- v1.6.6: 编辑工时 modal -->
   <div class="modal hidden" id="tsEditModal">
@@ -10461,6 +10794,10 @@ function syncAllLitigationLinks() {
   if (changed) _writeStorage();
 }
 function renderLitigation() {
+  // 3.1.1 移动端: 检测 viewport, 走专门的折叠卡 + 纵向时间轴渲染
+  if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
+    return renderLitigationMobile();
+  }
   const body = document.getElementById('litigationTableBody');
   const empty = document.getElementById('litigationEmpty');
   if (!body) return;
@@ -10490,6 +10827,440 @@ function renderLitigation() {
   }).join('');
   // v3.0: 渲染完后让所有诉讼 textarea 撑高到内容高度
   body.querySelectorAll('.lit-tl-text, .lit-todo-text').forEach(autoGrowTextarea);
+}
+
+// 3.1.1 移动端诉讼:案件折叠卡 + 纵向时间轴(数据与桌面完全共享 store.litigationRecords)
+function renderLitigationMobile() {
+  const body = document.getElementById('litigationMobileList');
+  const empty = document.getElementById('litigationEmpty');
+  if (!body) return;
+  const records = Array.isArray(store.litigationRecords) ? store.litigationRecords : [];
+  empty?.classList.toggle('hidden', records.length > 0);
+  const bellBadgeMap = computeLitigationBellBadges();
+  body.hidden = false;
+  body.innerHTML = records.map(record => renderLitMobileCard(record, bellBadgeMap)).join('') || '';
+  // textarea 自动撑高
+  body.querySelectorAll('.lit-mob-line-text, .lit-mob-todo-text').forEach(autoGrowTextarea);
+}
+
+function renderLitMobileCard(record, bellBadgeMap) {
+  if (!Array.isArray(record.timeline)) record.timeline = [];
+  // 活跃提醒数(已 dismissed 不算)
+  const reminderCount = (store.litigationReminders || []).filter(r =>
+    r && r.recordId === record.id && !r.dismissedAt
+  ).length;
+  // 下一项待办: 所有 timeline 中 status !== '已完成' 且 text 非空, 按日期升序
+  const openTodos = [];
+  for (const line of record.timeline) {
+    for (const todo of (line.todos || [])) {
+      if (todo.status !== '已完成' && (todo.text || '').trim()) {
+        openTodos.push({ ...todo, _date: line.date || '', _lineId: line.id });
+      }
+    }
+  }
+  openTodos.sort((a, b) => (a._date || '9999-99-99').localeCompare(b._date || '9999-99-99'));
+  const nextTodo = openTodos[0];
+  // 最近一条进展(按日期降序, 无日期的排最后)
+  const sortedLines = [...record.timeline].sort((a, b) =>
+    (b.date || '0000-00-00').localeCompare(a.date || '0000-00-00')
+  );
+  const recent = sortedLines[0];
+  const recentHtml = recent
+    ? `<div class="lit-mob-card-recent">最近：${escapeHtml(recent.text || '（无内容）')}${recent.date ? ` · ${escapeHtml(recent.date)}` : ''}</div>`
+    : '';
+  const todoHtml = nextTodo
+    ? `<span class="lit-mob-next-todo">📌 ${escapeHtml(nextTodo.text)}${nextTodo._date ? ' · ' + escapeHtml(nextTodo._date) : ''}</span>`
+    : `<span class="lit-mob-next-todo done">✓ 暂无待办</span>`;
+  const bellHtml = reminderCount > 0
+    ? `<span class="lit-mob-bell">🔔 ${reminderCount}</span>`
+    : '';
+
+  const head = `
+    <button class="lit-mob-card-head" type="button" data-action="lit-mob-toggle" data-record-id="${escapeHtml(record.id)}" aria-expanded="false">
+      <div class="lit-mob-card-title">${record.caseName ? escapeHtml(record.caseName) : '<em>未命名案件（点击编辑）</em>'}</div>
+      <div class="lit-mob-card-meta">
+        ${record.caseNumber ? `<span>📋 ${escapeHtml(record.caseNumber)}</span>` : ''}
+        ${record.court ? `<span>🏛 ${escapeHtml(record.court)}</span>` : ''}
+      </div>
+      ${recentHtml}
+      <div class="lit-mob-card-footer">${todoHtml}${bellHtml}</div>
+      <span class="lit-mob-chevron" aria-hidden="true">▾</span>
+    </button>
+  `;
+
+  const detail = `
+    <div class="lit-mob-card-detail" data-detail-for="${escapeHtml(record.id)}" hidden>
+      <div class="lit-mob-field">
+        <label>案件名称</label>
+        <input type="text" data-field="caseName" data-record-id="${escapeHtml(record.id)}" value="${escapeHtml(record.caseName || '')}" placeholder="如 王某合同纠纷">
+      </div>
+      <div class="lit-mob-field">
+        <label>案号</label>
+        <input type="text" data-field="caseNumber" data-record-id="${escapeHtml(record.id)}" value="${escapeHtml(record.caseNumber || '')}" placeholder="如 (2024)沪0115民初12345号">
+      </div>
+      <div class="lit-mob-field">
+        <label>管辖法院</label>
+        <input type="text" data-field="court" data-record-id="${escapeHtml(record.id)}" value="${escapeHtml(record.court || '')}" placeholder="如 上海市浦东新区人民法院">
+      </div>
+      <div class="lit-mob-field">
+        <label>联系方式</label>
+        <textarea data-field="contact" data-record-id="${escapeHtml(record.id)}" rows="2" placeholder="律师/当事人/法院电话等">${escapeHtml(record.contact || '')}</textarea>
+      </div>
+      <div class="lit-mob-field">
+        <label>备注</label>
+        <textarea data-field="note" data-record-id="${escapeHtml(record.id)}" rows="3" placeholder="背景说明、关键节点、注意事项">${escapeHtml(record.note || '')}</textarea>
+      </div>
+      <div class="lit-mob-section-title">
+        <span>时间线</span>
+        <div>
+          <button data-action="lit-mob-add-line" data-record-id="${escapeHtml(record.id)}" type="button">+ 新增进展</button>
+          <button data-action="lit-mob-sort" data-record-id="${escapeHtml(record.id)}" type="button" title="按日期从早到晚整理">⇅ 一键整理</button>
+        </div>
+      </div>
+      <div class="lit-mob-timeline">
+        ${record.timeline.length === 0 ? '<div class="lit-mob-empty">暂无进展，点击"新增进展"开始</div>' : ''}
+        ${record.timeline.map(line => renderLitMobileLine(record, line, bellBadgeMap)).join('')}
+      </div>
+      <div class="lit-mob-card-actions">
+        <button data-action="lit-mob-delete" data-record-id="${escapeHtml(record.id)}" type="button" data-variant="remove">删除案件</button>
+      </div>
+    </div>
+  `;
+
+  return `<div class="lit-mob-card" data-record-id="${escapeHtml(record.id)}">${head}${detail}</div>`;
+}
+
+function renderLitMobileLine(record, line, bellBadgeMap) {
+  if (!Array.isArray(line.todos)) line.todos = [];
+  // 至少一个 todo 槽位
+  if (line.todos.length === 0) {
+    line.todos.push({ id: 'ltd_' + uid(), text: '', status: '待处理', due: '', taskId: null });
+  }
+  const todosHtml = line.todos.map(todo => `
+    <div class="lit-mob-todo ${todo.status === '已完成' ? 'is-done' : ''}" data-todo-id="${escapeHtml(todo.id)}">
+      <select class="lit-mob-todo-status" data-line-id="${escapeHtml(line.id)}" data-todo-id="${escapeHtml(todo.id)}" aria-label="状态">
+        <option value="待处理" ${!todo.status || todo.status === '待处理' ? 'selected' : ''}>待处理</option>
+        <option value="进行中" ${todo.status === '进行中' ? 'selected' : ''}>进行中</option>
+        <option value="已完成" ${todo.status === '已完成' ? 'selected' : ''}>已完成</option>
+      </select>
+      <textarea class="lit-mob-todo-text" rows="1" placeholder="待办事项" data-line-id="${escapeHtml(line.id)}" data-todo-id="${escapeHtml(todo.id)}" aria-label="待办事项">${escapeHtml(todo.text || '')}</textarea>
+      <input class="lit-mob-todo-due" type="date" value="${escapeHtml(todo.due || '')}" data-line-id="${escapeHtml(line.id)}" data-todo-id="${escapeHtml(todo.id)}" aria-label="待办截止日">
+      <button class="lit-mob-todo-del" type="button" data-action="lit-mob-todo-del" data-line-id="${escapeHtml(line.id)}" data-todo-id="${escapeHtml(todo.id)}" aria-label="删除待办">×</button>
+    </div>
+  `).join('');
+
+  const bellInfo = bellBadgeMap.get(line.id) || { count: 0, hasActive: false };
+  return `
+    <div class="lit-mob-timeline-item" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}">
+      <div class="lit-mob-line-date">
+        <input class="lit-mob-line-date-input" type="date" value="${escapeHtml(line.date || '')}" data-line-id="${escapeHtml(line.id)}" data-field="date" aria-label="进展日期">
+        <button class="lit-mob-bell-btn ${bellInfo.count > 0 ? 'has-reminders' : ''}" type="button" data-action="lit-mob-bell" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}" title="设置提醒${bellInfo.count > 0 ? ' · 已设 ' + bellInfo.count + ' 条' : ''}" aria-label="设置提醒">🔔${bellInfo.count > 0 ? ' ' + bellInfo.count : ''}</button>
+      </div>
+      <textarea class="lit-mob-line-text" rows="1" placeholder="诉讼进展（例：法院已立案，进入诉前调解）" data-line-id="${escapeHtml(line.id)}" data-field="text" aria-label="诉讼进展">${escapeHtml(line.text || '')}</textarea>
+      <div class="lit-mob-todos">${todosHtml}</div>
+      <div class="lit-mob-line-actions">
+        <button type="button" data-variant="add" data-action="lit-mob-add-todo" data-line-id="${escapeHtml(line.id)}">+ 待办</button>
+        <button type="button" data-variant="remove" data-action="lit-mob-del-line" data-line-id="${escapeHtml(line.id)}">删除进展</button>
+      </div>
+    </div>
+  `;
+}
+
+// 3.1.1 移动端诉讼事件委托 + 工具函数
+const LIT_MOB_EXPANDED_KEY = 'kanban_lit_mob_expanded_v31';
+function getLitMobExpandedIds() {
+  try {
+    const raw = localStorage.getItem(LIT_MOB_EXPANDED_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch { return new Set(); }
+}
+function setLitMobExpandedIds(set) {
+  try { localStorage.setItem(LIT_MOB_EXPANDED_KEY, JSON.stringify(Array.from(set))); } catch {}
+}
+function findLitTimelineByIdLocal(timelineId) {
+  for (const rec of (store.litigationRecords || [])) {
+    const line = (rec.timeline || []).find(l => l.id === timelineId);
+    if (line) return { record: rec, line };
+  }
+  return null;
+}
+
+function bindLitigationMobileEvents() {
+  const root = document.getElementById('litigationMobileList');
+  if (!root) return;
+
+  // 进入诉讼视图时, 恢复折叠状态
+  function syncExpandedStates() {
+    const expanded = getLitMobExpandedIds();
+    root.querySelectorAll('.lit-mob-card').forEach(card => {
+      const id = card.dataset.recordId;
+      const detail = card.querySelector('.lit-mob-card-detail');
+      const head = card.querySelector('.lit-mob-card-head');
+      if (!detail || !head) return;
+      const isExp = expanded.has(id);
+      detail.hidden = !isExp;
+      card.classList.toggle('expanded', isExp);
+      head.setAttribute('aria-expanded', isExp ? 'true' : 'false');
+    });
+  }
+
+  // 每次渲染后恢复
+  const observer = new MutationObserver(() => syncExpandedStates());
+  observer.observe(root, { childList: true, subtree: true });
+  syncExpandedStates();
+
+  // 事件委托
+  root.addEventListener('click', e => {
+    const actionEl = e.target.closest('[data-action]');
+    if (!actionEl) return;
+    const action = actionEl.dataset.action;
+    const recordId = actionEl.dataset.recordId;
+    const lineId = actionEl.dataset.lineId;
+    const todoId = actionEl.dataset.todoId;
+
+    switch (action) {
+      case 'lit-mob-toggle': {
+        const expanded = getLitMobExpandedIds();
+        const card = actionEl.closest('.lit-mob-card');
+        const detail = card?.querySelector('.lit-mob-card-detail');
+        if (!card || !detail) return;
+        const isExp = !expanded.has(recordId);
+        if (isExp) expanded.add(recordId); else expanded.delete(recordId);
+        setLitMobExpandedIds(expanded);
+        detail.hidden = !isExp;
+        card.classList.toggle('expanded', isExp);
+        actionEl.setAttribute('aria-expanded', isExp ? 'true' : 'false');
+        break;
+      }
+      case 'lit-mob-add-line': {
+        const rec = (store.litigationRecords || []).find(r => r.id === recordId);
+        if (!rec) return;
+        if (!Array.isArray(rec.timeline)) rec.timeline = [];
+        rec.timeline.push({
+          id: 'line_' + uid(),
+          date: localDateStr(new Date()),
+          text: '',
+          todos: [{ id: 'ltd_' + uid(), text: '', status: '待处理', due: '', taskId: null }],
+        });
+        rec.updatedAt = Date.now();
+        save({ immediate: true });
+        renderLitigation();
+        break;
+      }
+      case 'lit-mob-del-line': {
+        const found = findLitTimelineByIdLocal(lineId);
+        if (!found) return;
+        if (!confirm('删除这条诉讼进展？')) return;
+        // 关联提醒也删
+        if (Array.isArray(store.litigationReminders)) {
+          store.litigationReminders = store.litigationReminders.filter(r => r.timelineId !== lineId);
+        }
+        found.record.timeline = found.record.timeline.filter(l => l.id !== lineId);
+        found.record.updatedAt = Date.now();
+        save({ immediate: true });
+        renderLitigation();
+        break;
+      }
+      case 'lit-mob-add-todo': {
+        const found = findLitTimelineByIdLocal(lineId);
+        if (!found) return;
+        if (!Array.isArray(found.line.todos)) found.line.todos = [];
+        found.line.todos.push({ id: 'ltd_' + uid(), text: '', status: '待处理', due: '', taskId: null });
+        found.record.updatedAt = Date.now();
+        save({ immediate: true });
+        renderLitigation();
+        break;
+      }
+      case 'lit-mob-todo-del': {
+        const found = findLitTimelineByIdLocal(lineId);
+        if (!found) return;
+        const len = (found.line.todos || []).length;
+        if (len <= 1) {
+          alert('每条进展至少保留 1 个待办槽位');
+          return;
+        }
+        found.line.todos = found.line.todos.filter(t => t.id !== todoId);
+        found.record.updatedAt = Date.now();
+        save({ immediate: true });
+        renderLitigation();
+        break;
+      }
+      case 'lit-mob-sort': {
+        const rec = (store.litigationRecords || []).find(r => r.id === recordId);
+        if (!rec) return;
+        rec.timeline.sort((a, b) => (a.date || '9999-99-99').localeCompare(b.date || '9999-99-99'));
+        rec.updatedAt = Date.now();
+        save({ immediate: true });
+        renderLitigation();
+        break;
+      }
+      case 'lit-mob-delete': {
+        if (!confirm('删除这个案件（含全部时间线、待办、提醒）？此操作不可撤销。')) return;
+        store.litigationRecords = (store.litigationRecords || []).filter(r => r.id !== recordId);
+        if (Array.isArray(store.litigationReminders)) {
+          store.litigationReminders = store.litigationReminders.filter(r => r.recordId !== recordId);
+        }
+        const expanded = getLitMobExpandedIds();
+        expanded.delete(recordId);
+        setLitMobExpandedIds(expanded);
+        save({ immediate: true });
+        renderLitigation();
+        break;
+      }
+      case 'lit-mob-bell': {
+        // 复用桌面版的提醒 modal(签名: timelineId, anchor element)
+        if (typeof openLitigationReminderModal === 'function') {
+          openLitigationReminderModal(lineId, actionEl);
+        } else {
+          alert('提醒功能未实现');
+        }
+        break;
+      }
+    }
+  });
+
+  // 字段输入(input/textarea/select) - 实时保存
+  root.addEventListener('input', e => {
+    const el = e.target;
+    const field = el.dataset.field;
+    const recordId = el.dataset.recordId;
+    const lineId = el.dataset.lineId;
+    const todoId = el.dataset.todoId;
+
+    // 案件基础字段
+    if (field && recordId && !lineId) {
+      const rec = (store.litigationRecords || []).find(r => r.id === recordId);
+      if (rec) {
+        rec[field] = el.value;
+        rec.updatedAt = Date.now();
+        save();
+        // 案件名/案号/法院 变化时, 折叠卡头部要刷新
+        if (['caseName', 'caseNumber', 'court'].includes(field)) {
+          // 局部更新头部(避免整个 card 重建导致光标丢失)
+          const card = el.closest('.lit-mob-card');
+          const titleEl = card?.querySelector('.lit-mob-card-title');
+          const metaEl = card?.querySelector('.lit-mob-card-meta');
+          if (titleEl && field === 'caseName') {
+            titleEl.textContent = el.value || '';
+            if (!el.value) titleEl.innerHTML = '<em>未命名案件（点击编辑）</em>';
+          }
+          if (metaEl && (field === 'caseNumber' || field === 'court')) {
+            // 重建 meta
+            const rec2 = (store.litigationRecords || []).find(r => r.id === recordId);
+            metaEl.innerHTML =
+              (rec2?.caseNumber ? `<span>📋 ${escapeHtml(rec2.caseNumber)}</span>` : '') +
+              (rec2?.court ? `<span>🏛 ${escapeHtml(rec2.court)}</span>` : '');
+          }
+        }
+      }
+      return;
+    }
+
+    // timeline 字段 (date / text)
+    if (field && lineId && (field === 'date' || field === 'text')) {
+      const found = findLitTimelineByIdLocal(lineId);
+      if (found) {
+        found.line[field] = el.value;
+        found.record.updatedAt = Date.now();
+        save();
+        // text 变化时更新"最近进展"摘要
+        if (field === 'text') {
+          const card = el.closest('.lit-mob-card');
+          const rec = found.record;
+          const sorted = [...rec.timeline].sort((a, b) =>
+            (b.date || '0000-00-00').localeCompare(a.date || '0000-00-00')
+          );
+          const recent = sorted[0];
+          const recentEl = card?.querySelector('.lit-mob-card-recent');
+          if (recentEl && recent) {
+            recentEl.textContent = `最近：${recent.text || '（无内容）'}${recent.date ? ' · ' + recent.date : ''}`;
+          }
+        }
+        if (field === 'date') {
+          // 日期变化后, 折叠卡头部的"最近进展"摘要 + "下一项待办"都应重排
+          const card = el.closest('.lit-mob-card');
+          const rec = found.record;
+          const sorted = [...rec.timeline].sort((a, b) =>
+            (b.date || '0000-00-00').localeCompare(a.date || '0000-00-00')
+          );
+          const recent = sorted[0];
+          const recentEl = card?.querySelector('.lit-mob-card-recent');
+          if (recentEl && recent) {
+            recentEl.textContent = `最近：${recent.text || '（无内容）'}${recent.date ? ' · ' + recent.date : ''}`;
+          }
+          // 下一项待办
+          const todos = [];
+          for (const l of rec.timeline) {
+            for (const t of (l.todos || [])) {
+              if (t.status !== '已完成' && (t.text || '').trim()) {
+                todos.push({ ...t, _date: l.date || '' });
+              }
+            }
+          }
+          todos.sort((a, b) => (a._date || '9999-99-99').localeCompare(b._date || '9999-99-99'));
+          const nextTodo = todos[0];
+          const todoEl = card?.querySelector('.lit-mob-next-todo');
+          if (todoEl) {
+            if (nextTodo) {
+              todoEl.className = 'lit-mob-next-todo';
+              todoEl.textContent = `📌 ${nextTodo.text}${nextTodo._date ? ' · ' + nextTodo._date : ''}`;
+            } else {
+              todoEl.className = 'lit-mob-next-todo done';
+              todoEl.textContent = '✓ 暂无待办';
+            }
+          }
+        }
+      }
+      return;
+    }
+
+    // todo 字段(text / due / status)
+    if (lineId && todoId) {
+      const found = findLitTimelineByIdLocal(lineId);
+      if (!found) return;
+      const todo = (found.line.todos || []).find(t => t.id === todoId);
+      if (!todo) return;
+      const isStatus = el.tagName === 'SELECT';
+      const fieldKey = isStatus ? 'status' : (el.type === 'date' ? 'due' : 'text');
+      todo[fieldKey] = el.value;
+      // 已完成 → 划线
+      const todoEl = el.closest('.lit-mob-todo');
+      if (todoEl) todoEl.classList.toggle('is-done', todo.status === '已完成');
+      // 同步卡片头部的"下一项待办"摘要
+      const card = el.closest('.lit-mob-card');
+      const rec = found.record;
+      const todos = [];
+      for (const l of rec.timeline) {
+        for (const t of (l.todos || [])) {
+          if (t.status !== '已完成' && (t.text || '').trim()) {
+            todos.push({ ...t, _date: l.date || '' });
+          }
+        }
+      }
+      todos.sort((a, b) => (a._date || '9999-99-99').localeCompare(b._date || '9999-99-99'));
+      const nextTodo = todos[0];
+      const todoElHead = card?.querySelector('.lit-mob-next-todo');
+      if (todoElHead) {
+        if (nextTodo) {
+          todoElHead.className = 'lit-mob-next-todo';
+          todoElHead.textContent = `📌 ${nextTodo.text}${nextTodo._date ? ' · ' + nextTodo._date : ''}`;
+        } else {
+          todoElHead.className = 'lit-mob-next-todo done';
+          todoElHead.textContent = '✓ 暂无待办';
+        }
+      }
+      found.record.updatedAt = Date.now();
+      save();
+    }
+  });
+
+  // textarea 自动撑高
+  root.addEventListener('input', e => {
+    if (e.target.matches('textarea.lit-mob-line-text, textarea.lit-mob-todo-text')) {
+      autoGrowTextarea(e.target);
+    }
+  });
 }
 
 // v3.0: 诉讼提醒 — 计算每个时间线条目的铃铛状态(已触发未读数 + 是否有活跃提醒)
@@ -11077,10 +11848,29 @@ document.addEventListener('pointercancel', () => { clearLitigationCaseDragVisual
 document.getElementById('litigationAdd')?.addEventListener('click', () => {
   pushHistory();
   const record = { id:'lit_' + uid(), caseName:'', caseNumber:'', court:'', contact:'', note:'', timeline:[], projectId:null, createdAt:Date.now(), updatedAt:Date.now() };
-  store.litigationRecords.unshift(record); save({ immediate:true }); renderLitigation();
-  const firstCell = document.querySelector(`#litigationTableBody tr[data-record-id="${record.id}"] td[data-field="caseName"]`);
-  beginLitigationEdit(firstCell);
+  store.litigationRecords.unshift(record); save({ immediate:true });
+  // 3.1.1 移动端: 新建后默认展开, 滚动到新卡片, 让用户直接编辑案件名
+  if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
+    const expanded = getLitMobExpandedIds();
+    expanded.add(record.id);
+    setLitMobExpandedIds(expanded);
+    renderLitigation();
+    setTimeout(() => {
+      const card = document.querySelector(`#litigationMobileList .lit-mob-card[data-record-id="${record.id}"]`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const nameInput = card.querySelector('input[data-field="caseName"]');
+        if (nameInput) nameInput.focus();
+      }
+    }, 50);
+  } else {
+    renderLitigation();
+    const firstCell = document.querySelector(`#litigationTableBody tr[data-record-id="${record.id}"] td[data-field="caseName"]`);
+    beginLitigationEdit(firstCell);
+  }
 });
+// 3.1.1 移动端: 一次性绑定折叠卡 + 纵向时间轴的事件委托
+bindLitigationMobileEvents();
 
 function exportJSON() {
   // 导出整个 store(所有月份),不再是单月

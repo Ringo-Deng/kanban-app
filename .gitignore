@@ -15,6 +15,9 @@ node_modules/
 dist/
 .cache/
 
+# Wrangler deploy cache (auto-regenerated, never commit)
+.wrangler/
+
 # Real data — never commit (per implementation plan §10)
 *.real.json
 backups/
