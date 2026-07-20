@@ -15630,6 +15630,16 @@ document.addEventListener('keydown', e => {
   }
 
   function applyFabPosition(){
+    // 3.1.1 mobile 上禁用 fab 拖动位置持久化:清掉 localStorage 旧值 + 用 CSS 默认位置
+    if(isMobile()){
+      try { localStorage.removeItem(FAB_POSITION_KEY); } catch {}
+      fab.classList.remove('docked');
+      fab.style.removeProperty('left');
+      fab.style.removeProperty('top');
+      fab.style.removeProperty('right');
+      fab.style.removeProperty('bottom');
+      return;
+    }
     try{
       const pos=JSON.parse(localStorage.getItem(FAB_POSITION_KEY)||'null');if(!pos)return;
       fab.classList.toggle('docked',!!pos.dock);const width=fab.offsetWidth||104,height=fab.offsetHeight||40;let left=Number(pos.left)||8;let top=Number(pos.top)||80;
@@ -15640,7 +15650,9 @@ document.addEventListener('keydown', e => {
   function bindFabDrag(){
     let dragging=false,moved=false,suppressClick=false,startX=0,startY=0,startLeft=0,startTop=0;
     fab.addEventListener('pointerdown',e=>{
-      if(e.button!==0)return;const rect=fab.getBoundingClientRect();dragging=true;moved=false;startX=e.clientX;startY=e.clientY;startLeft=rect.left;startTop=rect.top;fab.style.left=rect.left+'px';fab.style.top=rect.top+'px';fab.style.right='auto';fab.style.bottom='auto';fab.classList.add('dragging');fab.classList.remove('docked');fab.setPointerCapture?.(e.pointerId);e.preventDefault();
+      // 3.1.1 mobile 不允许拖 fab(避免位置持久化异常 + 与 iOS 长按手势冲突)
+      if(isMobile()||e.button!==0)return;
+      const rect=fab.getBoundingClientRect();dragging=true;moved=false;startX=e.clientX;startY=e.clientY;startLeft=rect.left;startTop=rect.top;fab.style.left=rect.left+'px';fab.style.top=rect.top+'px';fab.style.right='auto';fab.style.bottom='auto';fab.classList.add('dragging');fab.classList.remove('docked');fab.setPointerCapture?.(e.pointerId);e.preventDefault();
     });
     fab.addEventListener('pointermove',e=>{
       if(!dragging)return;if(Math.hypot(e.clientX-startX,e.clientY-startY)>4)moved=true;if(!moved)return;
