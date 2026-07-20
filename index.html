@@ -7263,6 +7263,7 @@ document.addEventListener('keydown', e => {
 function setView(view) {
   if (!['board', 'calendar', 'timesheet', 'litigation'].includes(view)) return;
   if (currentView === view) return;
+  console.log('[setView]', view, 'from', currentView, 'hash=', location.hash);
   currentView = view;
   document.querySelectorAll('#viewPills .pill').forEach(p => p.classList.toggle('active', p.dataset.view === view));
   document.body.dataset.view = view;
@@ -9244,6 +9245,7 @@ function render() {
   grid.innerHTML = '';
   updatePageTitle();
   if (currentView === 'calendar') {
+    console.log('[render] calendar branch, cal element:', !!cal, 'cal hidden:', cal?.classList.contains('hidden'));
     grid.classList.add('hidden');
     cal.classList.remove('hidden');
     empty.classList.add('hidden');
@@ -9251,6 +9253,7 @@ function render() {
     if (timesheet) timesheet.classList.add('hidden');
     if (litigation) litigation.classList.add('hidden');
     renderCalendar();
+    console.log('[render] after renderCalendar, cal innerHTML length:', cal?.innerHTML?.length);
     return;
   }
   if (currentView === 'timesheet') {
@@ -9346,6 +9349,7 @@ function updatePageTitle() {
 function renderCalendar() {
   // 3.1.1: agenda 模式(日程列表)优先于网格模式,既给移动端用也给桌面用
   const calMode = document.body.dataset.calMode || 'grid';
+  console.log('[renderCalendar] called, calMode =', calMode, 'calState =', JSON.stringify(calState));
   if (calMode === 'agenda') return renderCalendarAgenda();
   const cal = document.getElementById('calendar');
   const { year, month } = calState;
