@@ -2939,21 +2939,23 @@ body[data-view="board"][data-filter="all"] .card:not(.unified-card) .task-title:
 }
 /* 焦点状态: 底部细线变色,不用任何框/ring/shadow */
 /* 同时干掉 iOS Safari contenteditable focus 时的蓝色内阴影 */
+/* 同时干掉 macOS Safari contenteditable focus 时的绿色选区外框 */
 .task-detail-checklist-text:focus {
-  outline: none;
+  outline: none !important;
   border-bottom-color: var(--accent);
-  background: transparent;
-  box-shadow: none;
-  -webkit-appearance: none;
-  -webkit-box-shadow: none;
-  -webkit-tap-highlight-color: transparent;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  -webkit-box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
-/* WebKit 内部 contenteditable focus hack: 用伪元素覆盖系统蓝色 overlay */
-.task-detail-checklist-text:focus::-webkit-textfield-decoration-container,
-.task-detail-checklist-text:focus-visible {
-  outline: none;
-  box-shadow: none;
-  -webkit-box-shadow: none;
+.task-detail-checklist-text::-webkit-textfield-decoration-container,
+.task-detail-checklist-text:focus-visible,
+.task-detail-checklist-text:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  background: transparent !important;
 }
 .task-detail-checklist-text[data-placeholder]:empty::before {
   content: attr(data-placeholder);
