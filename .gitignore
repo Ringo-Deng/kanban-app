@@ -1,4 +1,17 @@
 .DS_Store
+.claude/
 node_modules/
 .wrangler/
 *.local
+*.JPG
+*.jpg
+kanban-3.1-ios-pwa/
+历史大版本/
+kanban-v3.*
+kanban-v4.html
+kanban-v5.html
+kanban-v5.1.html
+kanban-v5.2.html
+kanban-v5.3.html
+kanban-v5.4.html
+kanban-timesheet-ui-v2-fixed*
