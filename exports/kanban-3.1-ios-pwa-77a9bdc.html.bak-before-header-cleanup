@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="3_10_1784601818">
+<meta name="build-hash" content="d097ffe">
 <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -359,7 +359,7 @@
 [data-theme="mint"] .card:nth-child(3n),
 [data-theme="mint"] .ts-entry:nth-child(3n) { border-color: rgba(51,115,255,.40); }
 [data-theme="mint"] .card:hover,
-[data-theme="mint"] .ts-entry:hover { box-shadow: none; }
+[data-theme="mint"] .ts-entry:hover { box-shadow: var(--shadow-hover); }
 [data-theme="mint"] .btn-primary {
   color: #050713;
   background: linear-gradient(112deg, #ff168f 0 42%, #168fff 62%, #16c9ff 100%);
@@ -550,7 +550,11 @@ body[data-view="calendar"] .title-group .search-input {
   flex: 0 1 140px;
 }
 
-/* v1.6.8: 工时单视图下隐藏非必要元素 */
+/* v1.6.3: 工时单视图下,整个 header 隐藏(viewPills 已经从 header 内部挪到 viewPillsBar,所有视图都有)
+   v1.6.5 修复:回退到 v1.6 原始布局 — viewPills 仍在 header 内,工时单视图下
+   只藏掉 header 里其他元素(标题组/筛选/工具栏),viewPills 单独显示在 header 内(挨着右侧)
+   v1.6.8: 工时单专用按钮(刷新/CSV/MD)也放在 header 内,挨着 viewPills
+   原本在 timesheet 内部的 .timesheet-toolbar(标题+描述+按钮)藏掉,合并到顶部 */
 body[data-view="timesheet"] .title-group,
 body[data-view="timesheet"] #filterPills,
 body[data-view="timesheet"] #newProject,
@@ -561,6 +565,8 @@ body[data-view="timesheet"] #themeDropdown,
 body[data-view="timesheet"] #trashBtn,
 body[data-view="timesheet"] #searchInput,
 body[data-view="timesheet"] #searchCount { display: none; }
+/* v1.6.8: 原本的工时单顶部工具条(标题+描述+刷新/CSV/MD 按钮)现在合并到顶部 viewPills 同一行 */
+body[data-view="timesheet"] .timesheet-toolbar { display: none; }
 /* v1.6.5: 删了 viewPillsBar — viewPills 回到 header 内(.toolbar 末尾) */
 h1 {
   font-size: 30px;
@@ -941,14 +947,6 @@ body[data-view="timesheet"] .board-layout {
   text-transform: uppercase;
   margin-bottom: 6px;
 }
-.timer-active-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 8px;
-  word-break: break-word;
-  min-height: 1.4em;
-}
 .timer-clock-row {
   display: flex;
   align-items: baseline;
@@ -1165,7 +1163,7 @@ body[data-view="timesheet"] .board-layout {
 }
 .btn-timer-rest:hover { background: var(--green); color: #fff; border-color: var(--green); }
 
-/* v1.3 今日页: 计时进行中 — 暂停/继续 + 结束 按钮行 */
+/* v1.2 今日页: grid 下方独立卡片 — 时间分布 + 今日记录 */
 .timeline-card {
   background: var(--card-bg);
   backdrop-filter: saturate(180%) blur(20px);
@@ -1462,35 +1460,6 @@ body[data-view="timesheet"] .board-layout {
   color: var(--muted);
   margin-top: 2px;
 }
-.timer-timeline { display: flex; flex-direction: column; gap: 4px; }
-.timer-timeline-row {
-  display: grid;
-  grid-template-columns: 40px 1fr auto;
-  align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-}
-.timer-timeline-hour {
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-.timer-timeline-bar {
-  height: 8px;
-  background: var(--task-bg);
-  border-radius: 4px;
-  overflow: hidden;
-  position: relative;
-}
-.timer-timeline-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  border-radius: 4px;
-}
-.timer-timeline-label {
-  font-size: 10.5px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
 .timer-entries-block { }
 .timer-entries-header {
   display: flex;
@@ -1523,7 +1492,6 @@ body[data-view="timesheet"] .board-layout {
   white-space: nowrap;
   min-width: 0;
 }
-.timer-entry-archived { opacity: 0.7; border-style: dashed; }
 .timer-entry-dur {
   color: var(--accent);
   font-weight: 600;
@@ -1550,44 +1518,86 @@ body[data-view="timesheet"] .board-layout {
   padding: 8px 0;
   font-style: italic;
 }
-/* v1.1: 今日工时按项目分布(横向条形热力图) */
-.timer-projects-block { }
-.timer-projects-list { display: flex; flex-direction: column; gap: 4px; }
-.timer-project-row {
+/* 3.1.x: 今日统计按任务明细表(项目|任务|工作时间 三列) */
+.timer-task-table {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.timer-task-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 70px auto;
+  grid-template-columns: minmax(90px, 0.8fr) minmax(140px, 1.6fr) auto;
+  gap: 10px;
+  padding: 4px 8px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+.timer-task-header > span:last-child {
+  text-align: right;
+}
+.timer-task-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.8fr) minmax(140px, 1.6fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  background: var(--task-bg);
+  transition: background 0.12s;
+}
+.timer-task-row:hover {
+  background: var(--task-bg-hover);
+}
+.timer-task-col-project {
+  display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11.5px;
+  min-width: 0;
 }
-.timer-project-name {
+.timer-task-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--proj-color, var(--accent));
+  flex-shrink: 0;
+}
+.timer-task-project-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
   color: var(--text);
 }
-.timer-project-bar {
-  height: 10px;
-  background: var(--task-bg);
-  border-radius: 3px;
+.timer-task-col-task {
   overflow: hidden;
-  position: relative;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  color: var(--text);
 }
-.timer-project-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.25s;
-}
-.timer-project-time {
+.timer-task-col-time {
   font-variant-numeric: tabular-nums;
   font-family: ui-monospace, monospace;
-  font-size: 11px;
   color: var(--accent);
-  font-weight: 600;
-  flex-shrink: 0;
+  font-weight: 500;
+  white-space: nowrap;
   text-align: right;
-  min-width: 36px;
+}
+@media (max-width: 480px) {
+  .timer-task-header,
+  .timer-task-row {
+    grid-template-columns: minmax(70px, 0.7fr) minmax(100px, 1.4fr) auto;
+    gap: 6px;
+    font-size: 11.5px;
+    padding: 5px 6px;
+  }
+  .timer-task-header {
+    padding: 3px 6px 5px;
+  }
 }
 
 /* v1.1: 任务行里的 ⏱ 时间徽章(同时也是"选中用于计时"按钮) */
@@ -2797,24 +2807,7 @@ body[data-view="board"][data-filter="all"] .card:not(.unified-card) .task-title:
 .task-detail-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-.task-detail-row .task-detail-checklist-btn {
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  border: 1px dashed var(--border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.task-detail-row .task-detail-checklist-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  gap: 10px;
 }
 .task-detail-row label {
   font-size: 12px;
@@ -2921,7 +2914,7 @@ body[data-view="board"][data-filter="all"] .card:not(.unified-card) .task-title:
   height: 14px;
   flex-shrink: 0;
   cursor: pointer;
-  accent-color: var(--accent);
+  accent-color: var(--green);
   margin: 0;
 }
 .task-detail-checklist-text {
@@ -2933,29 +2926,12 @@ body[data-view="board"][data-filter="all"] .card:not(.unified-card) .task-title:
   outline: none;
   cursor: text;
   word-break: break-word;
-  border-bottom: 1px solid var(--border);
-  -webkit-appearance: none;
-  appearance: none;
+  border-radius: 3px;
 }
-/* 焦点状态: 底部细线变色,不用任何框/ring/shadow */
-/* 同时干掉 iOS Safari contenteditable focus 时的蓝色内阴影 */
-/* 同时干掉 macOS Safari contenteditable focus 时的绿色选区外框 */
+/* 焦点状态:极轻 — 只在文字下方加一条淡色下划线,不要 box / shadow */
 .task-detail-checklist-text:focus {
-  outline: none !important;
-  border-bottom-color: var(--accent);
-  background: transparent !important;
-  box-shadow: none !important;
-  -webkit-appearance: none !important;
-  -webkit-box-shadow: none !important;
-  -webkit-tap-highlight-color: transparent !important;
-}
-.task-detail-checklist-text::-webkit-textfield-decoration-container,
-.task-detail-checklist-text:focus-visible,
-.task-detail-checklist-text:focus-within {
-  outline: none !important;
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  background: transparent !important;
+  box-shadow: inset 0 -1px 0 0 var(--accent);
+  background: transparent;
 }
 .task-detail-checklist-text[data-placeholder]:empty::before {
   content: attr(data-placeholder);
@@ -3671,12 +3647,6 @@ button:focus-visible,
   white-space: nowrap;  /* v1.6.17: 中文"今天"绝不被拆竖排 */
   min-width: 48px;       /* 兜底,保证两个字横向显示 */
 }
-.cal-nav .btn[data-action="cal-prev"],
-.cal-nav .btn[data-action="cal-next"] {
-  width: 32px; height: 32px; padding: 0;
-  min-width: unset;
-  display: flex; align-items: center; justify-content: center;
-}
 .cal-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -4129,67 +4099,103 @@ button:focus-visible,
 /* v1.5: 顶上下拉 trigger 兼容 board label(无换行)*/
 .board-trigger { white-space: nowrap; }
 
-/* ============== 3.1 UI 精修: 工时单视图 ============== */
+/* ============== v1.6: 工时单视图 ============== */
 .timesheet {
-  display: flex; flex-direction: column; gap: 16px;
+  display: flex; flex-direction: column; gap: 14px;
   padding-top: 4px;
 }
+.timesheet-toolbar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.timesheet-title {
+  font-size: 26px; font-weight: 700; letter-spacing: -0.6px;
+  background: linear-gradient(135deg, var(--text) 0%, color-mix(in srgb, var(--text) 60%, var(--accent)) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.timesheet-subtitle { color: var(--muted); font-size: 12.5px; flex: 1; min-width: 0; }
+.timesheet-actions { display: flex; gap: 6px; }
 
-/* --- Header 内嵌控件 (ts-view-bar 内) --- */
-.ts-month-label { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.ts-month-sub { font-size: 11px; color: var(--muted); font-weight: 500; margin-left: 2px; display: none; }
+/* 月份导航 + 概览 */
+.ts-month-bar {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--card-bg); backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid var(--card-border); border-radius: 14px;
+  padding: 12px 16px; box-shadow: var(--shadow-card);
+}
+.ts-month-label { font-size: 18px; font-weight: 700; flex: 1; font-variant-numeric: tabular-nums; }
+.ts-month-sub { font-size: 12px; color: var(--muted); font-weight: 500; margin-left: 6px; }
 .ts-month-arrow {
-  width: 26px; height: 26px; border-radius: 6px;
+  width: 32px; height: 32px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--card-bg-solid);
-  cursor: pointer; font-size: 13px; color: var(--text);
+  cursor: pointer; font-size: 14px; color: var(--text);
   display: flex; align-items: center; justify-content: center;
-  font-family: inherit; transition: background 0.15s, border-color 0.15s;
-  flex-shrink: 0;
+  font-family: inherit; transition: all 0.15s;
 }
 .ts-month-arrow:hover { background: var(--task-bg); border-color: var(--accent); color: var(--accent); }
-.ts-month-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+.ts-month-arrow:disabled { opacity: 0.35; cursor: not-allowed; }
+.ts-month-spacer { flex: 1; }
+.ts-period-actions { display: flex; align-items: center; gap: 7px; }
 .ts-period-btn {
-  height: 28px; padding: 0 10px; border-radius: 6px;
+  height: 32px; padding: 0 11px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--card-bg-solid);
-  color: var(--text); cursor: pointer; font: 500 11.5px/1 inherit;
-  transition: background 0.15s, border-color 0.15s; white-space: nowrap;
+  color: var(--text); cursor: pointer; font: 500 12px/1 inherit;
+  transition: all .15s;
 }
 .ts-period-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--task-bg); }
-.ts-period-btn.active { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.ts-period-btn.active { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
 .ts-date-picker { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .ts-period-btn.hidden { display: none; }
 
-/* --- ts-view-bar (Header 工具栏右侧) --- */
-.ts-view-bar {
-  display: none;
-  align-items: center; gap: 8px;
-  margin-left: auto; padding-left: 8px;
-  border-left: 1px solid var(--border);
-  flex-wrap: wrap;
+/* 概览统计 */
+.ts-summary-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
 }
-body[data-view="timesheet"] .ts-view-bar { display: flex; }
-.ts-view-bar-btn {
-  padding: 4px 10px !important;
-  font-size: 12px !important; font-weight: 500;
+.ts-summary-card {
+  background: var(--card-bg); backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid var(--card-border); border-radius: 14px;
+  padding: 14px 16px; box-shadow: var(--shadow-card);
+  display: flex; flex-direction: column; gap: 4px;
+  position: relative; overflow: hidden;
 }
+.ts-summary-card::after {
+  content: ''; position: absolute; right: -18px; bottom: -26px;
+  width: 86px; height: 86px; border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  pointer-events: none;
+}
+.ts-summary-label { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
+.ts-summary-value { font-size: 24px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.ts-summary-meta { font-size: 11px; color: var(--muted); }
 
-/* --- 工时单 Header 标题 --- */
-.ts-header-title {
-  display: none;
-  font-size: 22px; font-weight: 700; letter-spacing: -0.4px;
-  background: linear-gradient(135deg, var(--text) 0%, color-mix(in srgb, var(--text) 60%, var(--accent)) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  align-items: center; padding-left: 4px;
-  white-space: nowrap; flex-shrink: 0;
+/* 专业工时概览：项目分布 */
+.ts-insights {
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(260px, .65fr);
+  gap: 12px;
 }
-body[data-view="timesheet"] .ts-header-title { display: inline-flex; }
-/* timesheet 视图下标题推到最左 */
-body[data-view="timesheet"] .ts-header-title { margin-right: auto; }
+.ts-insight-card {
+  background: var(--card-bg); backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid var(--card-border); border-radius: 14px;
+  padding: 16px 18px; box-shadow: var(--shadow-card);
+}
+.ts-insight-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.ts-insight-title { font-size: 14px; font-weight: 700; }
+.ts-insight-note { font-size: 11px; color: var(--muted); }
+.ts-project-bars { display: flex; flex-direction: column; gap: 11px; }
+.ts-project-bar-row { display: grid; grid-template-columns: minmax(110px, 180px) 1fr auto; align-items: center; gap: 12px; }
+.ts-project-bar-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; }
+.ts-project-bar-track { height: 7px; border-radius: 99px; background: var(--task-bg); overflow: hidden; }
+.ts-project-bar-fill { height: 100%; min-width: 3px; border-radius: inherit; background: var(--bar-color, var(--accent)); }
+.ts-project-bar-value { min-width: 58px; text-align: right; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.ts-period-note { display: flex; flex-direction: column; justify-content: center; min-height: 100%; }
+.ts-period-kicker { color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.ts-period-main { margin-top: 8px; font-size: 19px; line-height: 1.35; font-weight: 700; }
+.ts-period-copy { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.65; }
 
-/* --- 表格主卡片 --- */
+/* 表格 */
 .ts-table-card {
   background: var(--card-bg); backdrop-filter: saturate(180%) blur(20px);
-  border: 1px solid var(--card-border); border-radius: 12px;
+  border: 1px solid var(--card-border); border-radius: 14px;
   box-shadow: var(--shadow-card); overflow: hidden;
 }
 .ts-table-header {
@@ -4197,18 +4203,19 @@ body[data-view="timesheet"] .ts-header-title { margin-right: auto; }
   padding: 14px 18px; border-bottom: 1px solid var(--border);
   gap: 10px; flex-wrap: wrap;
 }
-.ts-table-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.ts-table-title { font-size: 15px; font-weight: 600; }
+/* 3.1.1 桌面+移动 统一: 隐藏工时单副标题(信息密度太高) */
 .ts-table-header > div > .ts-summary-meta { display: none; }
 .ts-table-tools { display: flex; gap: 6px; align-items: center; }
 .ts-search-input {
-  padding: 5px 10px; border: 1px solid var(--border); background: var(--card-bg-solid);
-  border-radius: 6px; font-size: 13px; font-family: inherit; color: var(--text);
-  width: 200px; transition: border-color 0.15s;
+  padding: 5px 12px; border: 1px solid var(--border); background: var(--card-bg-solid);
+  border-radius: 8px; font-size: 13px; font-family: inherit; color: var(--text);
+  width: 200px; transition: all 0.18s;
 }
-.ts-search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
+.ts-search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
 .ts-search-input.hidden { display: none !important; }
 
-/* 搜索框快捷入口 */
+/* 搜索框快捷入口(看起来像 input,点击或 ⌘K 触发) */
 .ts-search-shortcut {
   display: inline-flex;
   align-items: center;
@@ -4216,26 +4223,29 @@ body[data-view="timesheet"] .ts-header-title { margin-right: auto; }
   padding: 5px 10px 5px 11px;
   border: 1px solid var(--border);
   background: var(--card-bg-solid);
-  border-radius: 6px;
+  border-radius: 8px;
   font: inherit;
   font-size: 12.5px;
   color: var(--muted);
   cursor: pointer;
   min-width: 200px;
-  transition: border-color 0.15s;
+  transition: all 0.18s;
 }
 .ts-search-shortcut:hover { border-color: var(--accent); }
 .ts-search-shortcut-icon { font-size: 13px; line-height: 1; }
 .ts-search-shortcut-hint { flex: 1; text-align: left; }
 .ts-search-shortcut-kbd {
-  display: inline-flex; align-items: center;
-  padding: 1px 5px; border: 1px solid var(--border);
-  border-radius: 4px; background: var(--task-bg);
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--task-bg);
   font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--muted);
 }
 
-/* AI 工具下拉菜单 */
+/* AI 工具下拉菜单(<details> 实现) */
 .ts-ai-menu { position: relative; }
 .ts-ai-menu > summary {
   list-style: none;
@@ -4246,47 +4256,80 @@ body[data-view="timesheet"] .ts-header-title { margin-right: auto; }
 }
 .ts-ai-menu > summary::-webkit-details-marker { display: none; }
 .ts-ai-menu > summary::after {
-  content: '▾'; margin-left: 4px; font-size: 9px; color: var(--muted); transition: transform 0.15s;
+  content: '▾';
+  margin-left: 4px;
+  font-size: 9px;
+  color: var(--muted);
+  transition: transform 0.18s;
 }
 .ts-ai-menu[open] > summary::after { transform: rotate(180deg); }
 .ts-ai-menu-body {
-  position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 4px);
-  min-width: 190px; background: var(--card-bg-solid);
-  border: 1px solid var(--border); border-radius: 8px;
-  padding: 5px; display: flex; flex-direction: column; gap: 2px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12); z-index: 50;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  min-width: 200px;
+  background: var(--card-bg-solid);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+  z-index: 50;
 }
 .ts-ai-menu-item {
-  text-align: left !important; width: 100%;
-  padding: 7px 10px !important; border: 0 !important;
-  background: transparent !important; color: var(--text) !important;
-  border-radius: 5px !important; font: inherit !important;
-  font-size: 12.5px !important; cursor: pointer;
+  text-align: left !important;
+  width: 100%;
+  padding: 7px 10px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  border-radius: 6px !important;
+  font: inherit !important;
+  font-size: 12.5px !important;
+  cursor: pointer;
 }
 .ts-ai-menu-item:hover { background: var(--task-bg) !important; }
 .ts-ai-menu-status {
-  padding: 5px 10px; font-size: 11px; color: var(--muted);
-  border-top: 1px solid var(--border); margin-top: 3px; padding-top: 7px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--muted);
+  border-top: 1px dashed var(--border);
+  margin-top: 4px;
+  padding-top: 8px;
 }
 
 .ts-table-card table { width: 100%; border-collapse: collapse; }
-.ts-col-date { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; width: 100px; color: var(--muted); }
+.ts-table-card thead th {
+  text-align: left; padding: 10px 14px; font-size: 11px; color: var(--muted);
+  font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase;
+  background: var(--task-bg); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 1;
+}
+.ts-table-card tbody td {
+  padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border);
+  vertical-align: top; line-height: 1.5;
+}
+.ts-table-card tbody tr:last-child td { border-bottom: none; }
+.ts-table-card tbody tr:hover { background: var(--task-bg); }
+.ts-col-date { font-variant-numeric: tabular-nums; font-family: ui-monospace, monospace; white-space: nowrap; width: 100px; color: var(--muted); }
 .ts-col-title { font-weight: 500; min-width: 220px; }
 .ts-col-project { width: 160px; }
-.ts-col-time { font-variant-numeric: tabular-nums; text-align: right; width: 90px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+.ts-col-time { font-variant-numeric: tabular-nums; font-family: ui-monospace, monospace; text-align: right; width: 90px; font-weight: 600; color: var(--accent); white-space: nowrap; }
 .ts-col-notes { color: var(--muted); font-size: 12px; max-width: 360px; }
 .ts-col-actions { width: 160px; text-align: right; padding-right: 8px; }
 
 .ts-project-tag {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 13px; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 5px;
   background: color-mix(in srgb, var(--proj-color) 10%, transparent);
   color: var(--proj-color);
-  border: 1px solid color-mix(in srgb, var(--proj-color) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--proj-color) 22%, transparent);
   white-space: nowrap;
 }
 .ts-project-tag .ts-dot {
-  width: 5px; height: 5px; border-radius: 50%;
+  width: 6px; height: 6px; border-radius: 50%;
   background: var(--proj-color); flex-shrink: 0;
 }
 .ts-project-tag .ts-board-icon { font-size: 10px; opacity: 0.6; }
@@ -4298,96 +4341,94 @@ body[data-view="timesheet"] .ts-header-title { margin-right: auto; }
 }
 .ts-subtotal-row .ts-col-time { color: var(--accent); font-size: 14px; }
 
-/* --- 日报式分组列表 --- */
+/* 日报式列表 */
 .ts-daily-list { display: flex; flex-direction: column; }
 .ts-day-group + .ts-day-group { border-top: 1px solid var(--border); }
 .ts-day-header {
-  display: flex; align-items: center; gap: 10px; padding: 8px 14px;
-  background: color-mix(in srgb, var(--task-bg) 60%, transparent);
+  display: flex; align-items: center; gap: 10px; padding: 11px 16px;
+  background: color-mix(in srgb, var(--task-bg) 72%, transparent);
 }
-.ts-day-datebox {
-  display: flex; align-items: baseline; gap: 6px;
-  min-width: 0; padding-right: 10px; border-right: 1px solid var(--border);
-  white-space: nowrap;
-}
-.ts-day-date { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
-.ts-day-week { color: var(--muted); font-size: 10.5px; }
-.ts-day-heading { min-width: 0; flex: 1; display: flex; align-items: baseline; gap: 8px; }
-.ts-day-title { font-size: 13px; font-weight: 600; }
-.ts-day-meta { color: var(--muted); font-size: 11px; }
-.ts-day-total {
-  text-align: right; display: flex; align-items: baseline; gap: 6px;
-  white-space: nowrap;
-}
-.ts-day-total-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .4px; }
-.ts-day-total-value { color: var(--accent); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.ts-day-rows { padding: 6px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+.ts-day-datebox { min-width: 58px; padding-right: 12px; border-right: 1px solid var(--border); }
+.ts-day-date { font-size: 16px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.ts-day-week { margin-top: 2px; color: var(--muted); font-size: 10.5px; }
+.ts-day-heading { min-width: 0; flex: 1; }
+.ts-day-title { font-size: 13px; font-weight: 700; }
+.ts-day-meta { margin-top: 3px; color: var(--muted); font-size: 11px; }
+.ts-day-total { text-align: right; }
+.ts-day-total-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .5px; }
+.ts-day-total-value { margin-top: 1px; color: var(--accent); font-size: 16px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.ts-day-rows { padding: 7px 12px 10px; display: flex; flex-direction: column; gap: 4px; }
 .ts-entry {
   display: grid;
   grid-template-columns: minmax(150px,.68fr) minmax(190px,.88fr) minmax(250px,1.2fr) minmax(220px,1.08fr) 68px 82px;
   grid-template-areas: "context task translation note time actions";
-  gap: 8px; align-items: center; padding: 6px 10px;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-  transition: background 0.15s;
+  gap: 8px; align-items: center; padding: 8px 9px;
+  background: color-mix(in srgb, var(--card-bg-solid) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  border-radius: 9px;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
 }
-.ts-entry:last-child { border-bottom: none; }
 .ts-entry:hover {
-  background: var(--cell-bg-hover);
-  box-shadow: none;
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: color-mix(in srgb, var(--accent) 3%, var(--card-bg-solid));
+  transform: translateY(-1px);
 }
 .ts-entry-main { min-width: 0; display: contents; }
-.ts-entry-path { grid-area: context; display: flex; align-items: center; gap: 5px; min-width: 0; color: var(--muted); font-size: 13px; }
+.ts-entry-path { grid-area: context; display: flex; align-items: center; gap: 5px; min-width: 0; color: var(--muted); font-size: 10.5px; }
 .ts-entry-path span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ts-entry-path > span:first-child { flex: none; overflow: visible; text-overflow: clip; }
 .ts-entry-sep { display: none; }
 .ts-entry-task { grid-area: task; min-width: 0; }
 .ts-title-box {
-  display: flex; align-items: center; gap: 4px; min-height: 28px; padding: 2px 4px;
+  display:flex; align-items:center; gap:4px; min-height:30px; padding:3px 5px;
+  border:1px solid transparent; border-radius:7px; background:transparent;
 }
-.ts-title-box:focus-within { }
-.ts-entry-title { flex: 1; min-width: 0; outline: none; font-size: 13px; font-family: inherit; font-weight: 500; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
-.ts-entry-title:empty::before { content: attr(data-placeholder); color: var(--muted); opacity: .6; }
+.ts-title-box:focus-within { border-color:color-mix(in srgb, var(--accent) 48%, var(--border)); background:var(--card-bg-solid); }
+.ts-entry-title { flex:1; min-width:0; outline:none; font-size:13px; font-weight:680; line-height:1.35; white-space:pre-wrap; word-break:break-word; }
+.ts-entry-title:empty::before { content:attr(data-placeholder); color:var(--muted); opacity:.64; }
 .ts-entry-translation { grid-area: translation; min-width: 0; }
 .ts-translation-box {
-  display: flex; align-items: center; gap: 5px; min-height: 28px;
-  padding: 2px 6px;
+  display: flex; align-items: center; gap: 5px; min-height: 30px;
+  padding: 3px 6px; border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+  background: color-mix(in srgb, var(--accent) 4%, var(--card-bg-solid));
 }
 .ts-translation-text {
-  flex: 1; min-width: 0; font-size: 13px; font-family: inherit; font-weight: 400; line-height: 1.35; color: var(--text);
-  outline: none; border-radius: 0; word-break: break-word; white-space: pre-wrap;
+  flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.35; color: var(--text);
+  outline: none; border-radius: 4px; word-break: break-word; white-space: pre-wrap;
 }
-.ts-translation-text:empty::before { content: attr(data-placeholder); color: var(--muted); opacity: .6; }
-.ts-translation-box:focus-within { }
+.ts-translation-text:empty::before { content: attr(data-placeholder); color: var(--muted); opacity: .64; }
+.ts-translation-box:focus-within { border-color: color-mix(in srgb, var(--accent) 52%, var(--border)); }
 .ts-translation-tools { display: flex; flex-shrink: 0; gap: 2px; }
 .ts-translation-btn {
   width: 24px; height: 24px; padding: 0; border-radius: 5px; cursor: pointer;
   border: 1px solid var(--border); background: var(--card-bg-solid); color: var(--muted);
   font: 12px/1 inherit;
 }
-.ts-translation-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--task-bg); }
-.ts-translation-btn:disabled { opacity: .4; cursor: wait; }
-.ts-ai-optimize { width: auto; min-width: 48px; padding: 0 6px; font-size: 10px; font-weight: 600; }
+.ts-translation-btn:hover { color: var(--accent); border-color: var(--accent); }
+.ts-translation-btn:disabled { opacity: .45; cursor: wait; }
+.ts-ai-optimize { width: auto; min-width: 48px; padding: 0 6px; font-size: 10px; font-weight: 650; }
 .ts-translate-controls { display: flex; align-items: center; gap: 5px; }
-.ts-lang-select { height: 28px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-bg-solid); color: var(--text); font: 12px inherit; }
+.ts-lang-select { height: 31px; padding: 0 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg-solid); color: var(--text); font: 12px inherit; }
 .ts-ai-status { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
 .ts-ai-status.ok { color: var(--green); }
 .ts-ai-status.error { color: var(--red); }
-.ai-settings-content { max-width: 520px; }
-.ai-form { display: flex; flex-direction: column; gap: 12px; }
-.ai-field { display: flex; flex-direction: column; gap: 5px; }
-.ai-field label { font-size: 12px; font-weight: 600; color: var(--text); }
-.ai-field input, .ai-field select, .ai-field textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-bg-solid); color: var(--text); font: 13px inherit; resize: vertical; }
-.ai-hint { padding: 10px 12px; border-radius: 6px; background: var(--task-bg); color: var(--muted); font-size: 11.5px; line-height: 1.55; }
+.ai-settings-content { max-width: 560px; }
+.ai-form { display: flex; flex-direction: column; gap: 13px; }
+.ai-field { display: flex; flex-direction: column; gap: 6px; }
+.ai-field label { font-size: 12px; font-weight: 650; color: var(--text); }
+.ai-field input, .ai-field select, .ai-field textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg-solid); color: var(--text); font: 13px inherit; resize: vertical; }
+.ai-hint { padding: 10px 12px; border-radius: 8px; background: var(--task-bg); color: var(--muted); font-size: 11.5px; line-height: 1.55; }
 .ai-test-result { min-height: 18px; font-size: 12px; color: var(--muted); }
 .ai-test-result.ok { color: var(--green); }
 .ai-test-result.error { color: var(--red); }
 .ts-entry-notes {
-  grid-area: note; min-width: 0; color: var(--muted); font-size: 13px; line-height: 1.4;
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
-  overflow: hidden; white-space: pre-wrap; word-break: break-word; cursor: default;
+  grid-area:note; min-width:0; color:var(--muted); font-size:11.5px; line-height:1.42;
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3;
+  overflow:hidden; white-space:pre-wrap; word-break:break-word; cursor:default;
 }
-.ts-entry-notes.is-empty { opacity: .4; }
-.ts-entry-time { grid-area: time; text-align: right; color: var(--accent); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ts-entry-notes.is-empty { opacity: .42; }
+.ts-entry-time { grid-area: time; text-align: right; color: var(--accent); font-size: 14px; font-weight: 720; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ts-entry-actions { grid-area: actions; white-space: nowrap; text-align: right; padding-left: 0; }
 
 /* v1.6.13: 三个按钮放到同一行 (td 用 flex + gap + nowrap) */
@@ -4401,10 +4442,10 @@ body[data-view="timesheet"] .ts-header-title { margin-right: auto; }
 .ts-row-del, .ts-row-restore, .ts-row-edit {
   background: var(--card-bg-solid); border: 1px solid var(--border);
   color: var(--text); cursor: pointer; font-size: 12px;
-  width: 26px; height: 26px; padding: 0; border-radius: 6px; font-family: inherit;
-  margin-left: 3px;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-  display: inline-block;
+  width: 25px; height: 25px; padding: 0; border-radius: 6px; font-family: inherit;
+  margin-left: 2px;
+  transition: all 0.15s;
+  display: inline-block;  /* v1.6.13: 改用 inline-block, 不要 flex (会破坏 td) */
   line-height: 1;
   font-weight: 500;
   white-space: nowrap;
@@ -4414,89 +4455,83 @@ body[data-view="timesheet"] .ts-header-title { margin-right: auto; }
 .ts-row-edit:hover {
   color: var(--accent); border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, var(--card-bg-solid));
+  transform: translateY(-1px);
 }
 .ts-row-restore:hover {
   color: var(--green); border-color: var(--green);
   background: color-mix(in srgb, var(--green) 8%, var(--card-bg-solid));
+  transform: translateY(-1px);
 }
 .ts-row-del:hover {
   color: var(--red); border-color: var(--red);
   background: color-mix(in srgb, var(--red) 8%, var(--card-bg-solid));
+  transform: translateY(-1px);
 }
 
 .ts-empty {
-  text-align: center; padding: 56px 20px; color: var(--muted);
+  text-align: center; padding: 60px 20px; color: var(--muted);
 }
-.ts-empty h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+.ts-empty h2 { font-size: 18px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
 .ts-empty p { font-size: 13px; margin-bottom: 18px; }
 
 /* v1.6.6: 编辑工时 modal */
-.ts-edit-content { max-width: 420px; }
+.ts-edit-content { max-width: 460px; }
 .ts-edit-task {
   font-size: 13px; color: var(--muted); margin-bottom: 14px;
   padding: 8px 10px; background: var(--task-bg); border-radius: 6px;
   line-height: 1.4;
 }
-.ts-edit-task b { color: var(--text); font-weight: 600; }
+.ts-edit-task b { color: var(--text); }
 .ts-edit-row {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
 }
 .ts-edit-row label {
-  font-size: 13px; color: var(--text); font-weight: 600; min-width: 56px;
+  font-size: 13px; color: var(--text); font-weight: 600; min-width: 60px;
 }
 .ts-edit-row input {
   flex: 1; padding: 8px 12px; border: 1px solid var(--border);
-  background: var(--card-bg-solid); border-radius: 6px;
-  font-size: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: var(--text); transition: border-color 0.15s;
+  background: var(--card-bg-solid); border-radius: 8px;
+  font-size: 14px; font-family: ui-monospace, monospace;
+  color: var(--text); transition: all 0.18s;
 }
 .ts-edit-row input:focus {
   outline: none; border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
 }
+/* v1.6.7: date input 跟 text input 风格一致,但字体不是 monospace(日期用 normal 更易读) */
 .ts-edit-row input[type="date"] {
   font-family: inherit;
   color-scheme: light dark;
 }
-.ts-edit-hint {
-  font-size: 11.5px; color: var(--muted); min-height: 16px;
-  padding: 0 4px;
-}
-.ts-edit-hint.error { color: var(--red); }
-.ts-edit-hint.ok { color: var(--green); }
 
 /* v1.6.8: 工时单专用工具按钮(放在 viewPills 同一行,默认 hidden,timesheet 视图下显示)
-   v1.6.11: 加 margin-left: auto — 让 ts-view-bar + viewPills 整个 group 紧贴最右(viewPills 永远在最右)
-   3.1 UI精简: 月份导航/日期/全部记录/CSV/MD 全部收入 ts-view-bar 一行 */
+   v1.6.11: 加 margin-left: auto — 让 ts-view-bar + viewPills 整个 group 紧贴最右(viewPills 永远在最右) */
 .ts-view-bar {
   display: none;  /* 默认隐藏 */
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   margin-left: auto;       /* 推到右(配合 viewPills 紧跟其后) */
   padding-left: 8px;
   border-left: 1px solid var(--border);
-  flex-wrap: wrap;
 }
+body[data-view="timesheet"] .ts-view-bar { display: flex; }
 .ts-view-bar-btn {
-  height: 28px; padding: 0 10px !important;
-  font-size: 12px !important; font-weight: 500;
-  border: 1px solid var(--border); border-radius: 6px;
-  background: var(--card-bg-solid); color: var(--text); cursor: pointer;
-  font-family: inherit; transition: background 0.15s, border-color 0.15s;
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  font-weight: 500;
 }
-.ts-view-bar-btn:hover { background: var(--task-bg); border-color: var(--accent); color: var(--accent); }
 
 /* v1.6.9: 工时单视图标题(默认隐藏,timesheet 视图下显示在工具栏最左,推右边的元素到右端)
-   3.1 UI精简: 字号缩小,配合紧凑 Header */
+   v1.6.9+: 字号跟看板 h1(30px 渐变大字)保持一致,跟主标题视觉对等 */
 .ts-header-title {
   display: none;  /* 默认隐藏 */
-  font-size: 18px; font-weight: 700; letter-spacing: -0.4px;
+  font-size: 30px; font-weight: 700; letter-spacing: -0.8px;
   background: linear-gradient(135deg, var(--text) 0%, color-mix(in srgb, var(--text) 60%, var(--accent)) 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   align-items: center;
   padding-left: 4px;
   white-space: nowrap;
-  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 body[data-view="timesheet"] .ts-header-title { display: inline-flex; }
 /* timesheet 视图下让 title 推到最左,其他元素(viewPills + ts-view-bar)在最右 */
@@ -4507,12 +4542,18 @@ body[data-view="timesheet"] .ts-header-title { margin-right: auto; }
 }
 .ts-edit-hint.error { color: var(--red); }
 .ts-edit-hint.ok { color: var(--green); }
+/* v1.6.6 / v1.6.12: 行内按钮样式已统一到上面 .ts-row-del/.ts-row-restore/.ts-row-edit
+   保留 .ts-row-edit 选择器兼容(由上面统一规则接管) */
 /* 移动端: 收窄工时单 */
 @media (max-width: 720px) {
   .ts-col-project, .ts-col-notes { display: none; }
+  .ts-table-card thead th:nth-child(3), .ts-table-card thead th:nth-child(5) { display: none; }
   .ts-col-time { width: 70px; }
   .ts-col-date { width: 90px; }
   .ts-col-actions { width: 80px; }
+  .ts-summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .ts-insights { grid-template-columns: 1fr; }
+  .ts-project-bar-row { grid-template-columns: minmax(90px, 130px) 1fr auto; gap: 8px; }
   .ts-entry {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: "context time" "task task" "translation translation" "note note" "actions actions";
@@ -4522,16 +4563,18 @@ body[data-view="timesheet"] .ts-header-title { margin-right: auto; }
   .ts-entry-actions { text-align: left; padding-left: 0; }
   .ts-day-rows { padding-left: 14px; padding-right: 14px; }
   .ts-day-header { padding-left: 14px; padding-right: 14px; }
-  .ts-month-arrow { width: 22px; height: 22px; font-size: 12px; }
-  .ts-month-sub { display: none; }
-  .ts-month-label { font-size: 12px; }
+  .ts-month-bar { gap: 7px; padding: 10px; flex-wrap: wrap; }
+  .ts-month-bar > div:not(.ts-month-spacer):not(.ts-period-actions) { flex: 1; min-width: 150px; }
+  .ts-month-spacer { display: none; }
+  .ts-period-actions { width: 100%; }
+  .ts-period-btn { flex: 1; padding: 0 8px; }
 }
 
 @media (min-width: 721px) and (max-width: 1180px) {
   .ts-entry {
     grid-template-columns: minmax(150px,.65fr) minmax(185px,.82fr) minmax(240px,1.15fr) 68px 82px;
     grid-template-areas: "context task translation time actions" "note note translation time actions";
-    gap: 6px 8px;
+    gap: 7px 8px;
   }
 }
 
@@ -4576,7 +4619,6 @@ body[data-view="timesheet"] .ts-header-title { margin-right: auto; }
 .timer-panel-header { margin-bottom: 7px; }
 .timer-task-picker { margin-bottom: 6px; }
 .timer-task-search { height: 32px; }
-.timer-active-name { margin-bottom: 3px; min-height: 1.2em; }
 .timer-clock-row { margin: 2px 0 3px; }
 .timer-clock { font-size: 20px; }
 .timer-panel .timer-clock-row { display: none !important; }
@@ -5118,15 +5160,15 @@ input, select, textarea, button, [contenteditable] {
     background: color-mix(in srgb, var(--proj-color, var(--accent)) 10%, transparent);
     color: color-mix(in srgb, var(--proj-color, var(--accent)) 80%, var(--text));
     padding: 1px 7px; border-radius: 4px;
-    font-size: 13px; font-weight: 600;
+    font-size: 11.5px; font-weight: 600;
   }
   .ts-mob-entry-project .ts-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--proj-color, var(--accent)); }
   .ts-mob-entry-board {
-    font-size: 13px; color: var(--muted);
+    font-size: 11px; color: var(--muted);
     background: var(--task-bg); padding: 1px 6px; border-radius: 4px;
   }
-  .ts-mob-entry-title { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.45; word-break: break-word; }
-  .ts-mob-entry-notes { font-size: 13px; color: var(--muted); line-height: 1.5; padding-top: 2px; }
+  .ts-mob-entry-title { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.45; word-break: break-word; }
+  .ts-mob-entry-notes { font-size: 12px; color: var(--muted); line-height: 1.5; padding-top: 2px; }
   .ts-mob-entry-foot {
     display: flex; align-items: center; justify-content: space-between; gap: 6px;
     margin-top: 4px;
@@ -5141,7 +5183,7 @@ input, select, textarea, button, [contenteditable] {
   .ts-mob-entry-actions button {
     background: var(--task-bg); border: 1px solid var(--border);
     color: var(--text); border-radius: 6px; padding: 6px 9px;
-    font: inherit; font-size: 13px; cursor: pointer;
+    font: inherit; font-size: 11.5px; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
   .ts-mob-entry-actions button:active { background: color-mix(in srgb, var(--accent) 14%, transparent); }
@@ -5793,13 +5835,18 @@ input, select, textarea, button, [contenteditable] {
   .cal-agenda-title { font-size: 14.5px; }
   .cal-agenda-date-main { font-size: 16px; }
 
-  /* 工时单顶部工具条: 移动端极简化(只留看板筛选+AI) */
-  .ts-translate-controls > *:not(#tsBoardFilterMenu) { display: none !important; }
+  /* 工时单顶部工具条: 移动端极简化(副标题已在全局隐藏,这里只藏 AI 工具+搜索,只留'全部看板'下拉) */
+  .ts-translate-controls > *:not(#tsBoardFilter) { display: none !important; }
   .ts-table-header .ts-search-input { display: none !important; }
   .ts-table-header .ts-search-shortcut { display: none !important; }
   .ts-table-header { padding: 10px 14px 12px; gap: 8px; }
-  .ts-table-title { font-size: 13px; font-weight: 600; }
+  .ts-table-title { font-size: 14px; font-weight: 700; }
   .ts-table-tools { flex: 1; justify-content: flex-end; }
+  .ts-translate-controls #tsBoardFilter {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 7px;
+  }
 }
 /* 未排期组弱化 */
 .cal-agenda-group.cal-agenda-unscheduled .cal-agenda-date-main {
@@ -5955,18 +6002,11 @@ input, select, textarea, button, [contenteditable] {
         <span class="vault-icon">⇅</span>
         <span class="vault-status">未连接</span>
       </button>
-      <!-- v1.6.11 / 3.1 UI精简: ts-view-bar 包含月份导航 + 日期 + 全部记录 + CSV/MD -->
+      <!-- v1.6.11: 调换顺序 — ts-view-bar 在前,viewPills 在最后;让 viewPills 真正贴最右(因为是 flex-end 容器最后一个元素) -->
       <div class="ts-view-bar" id="tsViewBar">
-        <button class="ts-month-arrow" id="tsPrevMonth" title="上个月">‹</button>
-        <span class="ts-month-label" id="tsMonthLabel">—</span>
-        <span class="ts-month-sub" id="tsMonthSub"></span>
-        <button class="ts-month-arrow" id="tsNextMonth" title="下个月">›</button>
-        <button class="ts-period-btn" id="tsPickDateBtn" type="button" title="选择日期">📅</button>
-        <input class="ts-date-picker" id="tsDatePicker" type="date" aria-label="选择工时日期" />
-        <button class="ts-period-btn hidden" id="tsBackMonthBtn" type="button">返回本月</button>
         <button class="btn ts-view-bar-btn" id="tsBarRefresh" title="刷新">🔄</button>
-        <button class="btn ts-view-bar-btn" id="tsBarExportCsv" title="导出 CSV">CSV</button>
-        <button class="btn ts-view-bar-btn" id="tsBarExportMd" title="导出 Markdown">MD</button>
+        <button class="btn ts-view-bar-btn" id="tsBarExportCsv" title="导出 CSV">⬇️ CSV</button>
+        <button class="btn ts-view-bar-btn" id="tsBarExportMd" title="导出 Markdown">⬇️ MD</button>
       </div>
       <!-- v1.6.5: viewPills 回到 header 内(.toolbar 末尾),跟 1.6 原始布局一致 -->
       <div class="pills" id="viewPills">
@@ -6089,6 +6129,33 @@ input, select, textarea, button, [contenteditable] {
   <div class="calendar hidden" id="calendar"></div>
   <!-- v1.6: 工时单视图(归档 + 按月表格化) -->
   <div class="timesheet hidden" id="timesheet">
+    <div class="timesheet-toolbar">
+      <div class="timesheet-title">📋 工时单</div>
+      <div class="timesheet-subtitle">完成任务自动归档 · 按月分表 · 可导出 CSV / Markdown</div>
+      <div class="timesheet-actions">
+        <button class="btn" id="tsRefresh" title="从看板重新加载">🔄 刷新</button>
+        <button class="btn" id="tsExportCsv" title="导出 CSV">⬇️ CSV</button>
+        <button class="btn" id="tsExportMd" title="导出 Markdown">⬇️ Markdown</button>
+      </div>
+    </div>
+    <!-- 单一时间导航：月份切换 / 日期筛选 / 全部记录 -->
+    <div class="ts-month-bar">
+      <button class="ts-month-arrow" id="tsPrevMonth" title="上个月">‹</button>
+      <div>
+        <span class="ts-month-label" id="tsMonthLabel">—</span>
+        <span class="ts-month-sub" id="tsMonthSub"></span>
+      </div>
+      <button class="ts-month-arrow" id="tsNextMonth" title="下个月">›</button>
+      <div class="ts-month-spacer"></div>
+      <div class="ts-period-actions">
+        <button class="ts-period-btn" id="tsPickDateBtn" type="button">📅 选择日期</button>
+        <input class="ts-date-picker" id="tsDatePicker" type="date" aria-label="选择工时日期" />
+        <button class="ts-period-btn hidden" id="tsBackMonthBtn" type="button">返回本月</button>
+        <button class="ts-period-btn" id="tsAllRecordsBtn" type="button">全部记录</button>
+      </div>
+    </div>
+    <div class="ts-summary-grid" id="tsSummary"></div>
+    <div class="ts-insights" id="tsInsights"></div>
     <div class="ts-table-card">
       <div class="ts-table-header">
         <div>
@@ -6096,20 +6163,14 @@ input, select, textarea, button, [contenteditable] {
         </div>
         <div class="ts-table-tools">
           <div class="ts-translate-controls">
-            <details class="ts-ai-menu" id="tsBoardFilterMenu">
-              <summary class="ts-view-bar-btn" id="tsBoardFilterLabel" title="按看板筛选工时单范围(默认会被记住)">📋 全部看板</summary>
-              <div class="ts-ai-menu-body" id="tsBoardFilterBody">
-                <button class="btn ts-ai-menu-item ts-board-opt active" data-board="">全部看板</button>
-              </div>
-            </details>
-            <details class="ts-ai-menu" id="tsLangMenu">
-              <summary class="ts-view-bar-btn" id="tsLangLabel" title="译名语言">中文描述</summary>
-              <div class="ts-ai-menu-body">
-                <button class="btn ts-ai-menu-item ts-lang-opt active" data-lang="ZH">中文描述</button>
-                <button class="btn ts-ai-menu-item ts-lang-opt" data-lang="JA">日文描述</button>
-                <button class="btn ts-ai-menu-item ts-lang-opt" data-lang="EN">英文描述</button>
-              </div>
-            </details>
+            <select class="ts-lang-select" id="tsBoardFilter" title="按看板筛选工时单范围(默认会被记住)">
+              <option value="">全部看板</option>
+            </select>
+            <select class="ts-lang-select" id="tsTranslationLang" title="译名语言">
+              <option value="ZH">中文描述</option>
+              <option value="JA">日文描述</option>
+              <option value="EN">英文描述</option>
+            </select>
             <details class="ts-ai-menu" id="tsAiMenu">
               <summary class="ts-view-bar-btn" title="AI 工具 (一键优化 / 术语库 / API 设置)">⚙ AI</summary>
               <div class="ts-ai-menu-body">
@@ -6789,41 +6850,6 @@ function findProjectOfTask(taskId) {
   for (const b of Object.values(store.boards)) {
     for (const p of (b.projects || [])) {
       if (p.tasks.some(t => t.id === taskId)) return p;
-    }
-  }
-  return null;
-}
-
-// 解析任务名称: 先从 active project 找, 找不到再从 archive 找
-function resolveTaskName(taskId) {
-  const project = findProjectOfTask(taskId);
-  const task = project?.tasks.find(t => t.id === taskId);
-  if (task) return task.title;
-  const archived = findArchivedTask(taskId);
-  return archived ? archived.title : '(已删除)';
-}
-function resolveProjectName(projectId) {
-  const project = state.projects.find(p => p.id === projectId);
-  if (project) return escapeHtml(project.name);
-  const archived = findArchivedProject(projectId);
-  return archived ? escapeHtml(archived.projectName) : '(已删除)';
-}
-
-// 在 archive 中按 taskId 或 projectId 查找已归档任务
-function findArchivedTask(taskId) {
-  if (!store.archive) return null;
-  for (const arr of Object.values(store.archive)) {
-    for (const a of arr) {
-      if (a.taskId === taskId) return a;
-    }
-  }
-  return null;
-}
-function findArchivedProject(projectId) {
-  if (!store.archive) return null;
-  for (const arr of Object.values(store.archive)) {
-    for (const a of arr) {
-      if (a.projectId === projectId) return a;
     }
   }
   return null;
@@ -7882,6 +7908,7 @@ function renderTsMonthBar() {
   const sub = document.getElementById('tsMonthSub');
   if (!label) return;
   const backBtn = document.getElementById('tsBackMonthBtn');
+  const allBtn = document.getElementById('tsAllRecordsBtn');
   // v3.0: 看板 scope 后缀,提示用户当前在看哪个范围
   const scopeSuffix = tsBoardFilter ? ` · 📌 ${(store.boards[tsBoardFilter]?.name || '当前看板')}` : '';
   if (tsSelectedDate) {
@@ -7899,6 +7926,7 @@ function renderTsMonthBar() {
     sub.textContent = `· ${entries.length} 项任务${scopeSuffix}`;
   }
   backBtn?.classList.toggle('hidden', !tsSelectedDate && tsCurrentMonth === localDateStr(new Date()).slice(0, 7));
+  allBtn?.classList.toggle('active', tsCurrentMonth === '' && !tsSelectedDate);
 }
 
 function tsIsWeekday(dateStr) {
@@ -8362,32 +8390,21 @@ function bindTsEditInput() {
 function renderTimesheet() {
   bindTimesheetDelegates();  // 一次性绑事件委托
   renderTsMonthBar();
-  // v3.1: 看板过滤 + 译名语言 → 改用 details 弹窗菜单，同步标签和选中态
-  const boardLabel = document.getElementById('tsBoardFilterLabel');
-  const boardBody = document.getElementById('tsBoardFilterBody');
-  if (boardLabel && boardBody) {
+  // v3.0: 看板过滤 select 选项 — 始终同步所有看板(新建/删除板都自动反映)
+  const boardSel = document.getElementById('tsBoardFilter');
+  if (boardSel) {
     const boards = (store.boardOrder || []).map(k => store.boards[k]).filter(b => b && b._key || b);
-    let curBoard = store.boards[tsBoardFilter];
-    boardLabel.textContent = (curBoard ? (curBoard.icon || '📋') + ' ' + curBoard.name : '全部看板');
-    const items = ['<button class="btn ts-ai-menu-item ts-board-opt ' + (!tsBoardFilter ? 'active' : '') + '" data-board="">全部看板</button>']
+    const opts = ['<option value="">全部看板</option>']
       .concat((store.boardOrder || []).map(k => {
         const b = store.boards[k];
         if (!b) return '';
-        return '<button class="btn ts-ai-menu-item ts-board-opt ' + (k === tsBoardFilter ? 'active' : '') + '" data-board="' + escapeHtml(k) + '">' + escapeHtml((b.icon || '📋') + ' ' + (b.name || k)) + '</button>';
+        return `<option value="${escapeHtml(k)}" ${k === tsBoardFilter ? 'selected' : ''}>${escapeHtml((b.icon || '📋') + ' ' + (b.name || k))}</option>`;
       }));
-    boardBody.innerHTML = items.join('');
-  }
-  // 译名语言标签同步
-  const langLabel = document.getElementById('tsLangLabel');
-  if (langLabel) {
-    const labels = { ZH: '中文描述', JA: '日文描述', EN: '英文描述' };
-    langLabel.textContent = labels[tsTranslationLang] || '日文描述';
-    // 同步选中态
-    document.querySelectorAll('.ts-lang-opt').forEach(el => {
-      el.classList.toggle('active', el.dataset.lang === tsTranslationLang);
-    });
+    if (boardSel.innerHTML !== opts.join('')) boardSel.innerHTML = opts.join('');
+    else boardSel.value = tsBoardFilter;  // 兜底,确保 selected 状态正确
   }
   const entries = tsEntriesForCurrentView();
+  renderTsSummary(entries);
   renderTsTable(entries);
 }
 
@@ -8450,7 +8467,7 @@ function showToast(msg) {
   // 看板里的 toast 系统:直接调即可
   if (typeof window.showToast === 'function') { window.showToast(msg); return; }
   // 兜底:在 tsMonthBar 上方临时显示
-  const bar = document.querySelector('#tsViewBar');
+  const bar = document.querySelector('.ts-month-bar');
   if (!bar) return;
   const el = document.createElement('div');
   el.textContent = msg;
@@ -8726,12 +8743,11 @@ function resumeActiveTimer() {
 
 function stopActiveTimer() {
   if (!activeTimer) return;
-  const now = Date.now();
-  // entry 的 start/end 应该反映实际墙上时间范围，但只记录 active 部分的时长
+  const end = Date.now() - activeTimer.totalPaused
+             - (activeTimer.isPaused ? (Date.now() - activeTimer.pausedAt) : 0);
   const start = activeTimer.start;
-  const elapsed = getActiveElapsedMs();
-  const end = start + elapsed;
-  if (elapsed >= 1000 && activeTimer.taskId) {  // 休息不记工时；至少 1 秒才记
+  const duration = end - start;
+  if (duration >= 1000 && activeTimer.taskId) {  // 休息不记工时；至少 1 秒才记
     pushHistory();
     const entry = {
       id: uid(),
@@ -9857,12 +9873,14 @@ function renderTask(t, project, opts = {}) {
   li.draggable = true;
   // v2.7: 计时入口只保留在“今天”页的专用计时区和任务徽章中
   // 普通看板 / 明天 / 本周不再渲染小时钟，释放任务文字空间
+  // 3.1.1 (2026-07-20 调换布局): 今日待办面板(unified card)也允许显示
+  // —— 用户在“今日待办”视图里需要点 ⏱ 快速进入计时,与 board/today 一致
   const inBoard = currentView === 'board';
-  const showFullTimer = inBoard && currentFilter === 'today';
+  const showFullTimer = currentFilter === 'today';
   const todayMs = showFullTimer ? getTaskTodayTimeMs(t.id) : 0;
   const isSelected = selectedTaskId === t.id;
   const timeBadge = showFullTimer ? `
-    <span class="task-timer-trigger ${isSelected ? 'selected' : ''}"
+    <span class="task-timer-trigger ${isSelected ? 'selected' : ''}${!inBoard ? ' compact' : ''}"
           data-action="select-for-timer"
           data-task-id="${t.id}"
           title="${todayMs > 0 ? '今日 ' + fmtDuration(todayMs) + ' · 点击选中用于计时' : '点击选中用于计时'}">
@@ -9871,9 +9889,7 @@ function renderTask(t, project, opts = {}) {
   ` : '';
   const delBtn = showFullTimer ? `
     <button class="icon-btn task-del" data-action="delete-task" title="删除">×</button>
-  ` : (inBoard ? '' : `
-    <button class="icon-btn task-del" data-action="delete-task" title="删除">×</button>
-  `);
+  ` : '';
   // v1.2: 开始日徽章(只在该任务设了 startDate 时显示)
   const inProg = isTaskInProgress(t);
   const notYet = t.startDate && diffDays(t.startDate) > 0;
@@ -9891,12 +9907,12 @@ function renderTask(t, project, opts = {}) {
     </span>
   ` : '';
   li.innerHTML = `
-    <span class="task-handle" title="拖动排序">⋮⋮</span>
     ${opts.showProjectLabel
       ? `<span class="task-project-label" data-action="open-project-from-label" data-project-id="${project.id}" style="--proj-color:${projectColor(project)}" title="${escapeHtml(project.name)} · 点击编辑项目">${escapeHtml(project.name)}</span>`
-      : ''}
+      : '<span class="task-handle" title="拖动排序">⋮⋮</span>'}
     <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} data-action="toggle">
     <span class="task-title" data-action="open-detail" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</span>
+    ${timeBadge}
     <span class="task-date-stack">
       ${startBadge}
       <span class="task-due ${dueClass(t.due, t.done)}" data-action="edit-due" title="点击修改日期">${t.due ? dueLabel(t.due) : '设日期'}</span>
@@ -9978,25 +9994,44 @@ function renderTimelineCard() {
   if (!container) return;
   const todayEntries = getTodayEntries();
   const todayTotal = getTodayTotalMs();
-  const todayStr = localDateStr(new Date());
-  const archivedToday = collectArchiveEntries().filter(a => a.completedAt === todayStr);
-  // 过滤掉已经有 timeEntry 的已归档任务（避免重复计数）
-  const archivedWithoutEntry = archivedToday.filter(a => {
-    return !todayEntries.some(e => e.taskId === a.taskId);
-  });
-  const totalArchivedWithoutEntry = archivedWithoutEntry.length;
-  if (!todayEntries.length && !totalArchivedWithoutEntry) {
+  if (!todayEntries.length) {
+    // 没记录时显示空态
     container.innerHTML = `
       <div class="timeline-card-header">
         <span class="tc-icon">📊</span>
         <span>今日统计</span>
       </div>
       <div class="timeline-card-section">
-        <div class="timer-empty" style="padding: 12px 0; text-align: center; color: var(--muted); font-size: 12px; font-style: italic;">今天还没记录 · 开始一个任务计时后,这里会显示统计和时间分布</div>
+        <div class="timer-empty" style="padding: 12px 0; text-align: center; color: var(--muted); font-size: 12px; font-style: italic;">今天还没记录 · 开始一个任务计时后,这里会按任务显示今日工时</div>
       </div>
     `;
     return;
   }
+  // 3.1.x: 按任务汇总(代替原“按项目”/“时间分布”)
+  //   - 同一任务多条记录 -> 合并为一行(总工时)
+  //   - 排序:按当天首次开始时间升序
+  //   - 只计算 unique taskId 个数(跟顶部摘要一致)
+  const byTask = new Map();
+  for (const e of todayEntries) {
+    const dur = Math.max(0, e.end - e.start);
+    const cur = byTask.get(e.taskId) || { taskId: e.taskId, projectId: e.projectId, totalMs: 0, firstStart: e.start };
+    cur.totalMs += dur;
+    if (e.start < cur.firstStart) cur.firstStart = e.start;
+    byTask.set(e.taskId, cur);
+  }
+  // 活动计时器的实时时长也合进去(保证“现在在跑”的任务能看到)
+  if (activeTimer) {
+    const liveMs = getActiveElapsedMs();
+    const cur = byTask.get(activeTimer.taskId) || { taskId: activeTimer.taskId, projectId: activeTimer.projectId, totalMs: 0, firstStart: activeTimer.start };
+    cur.totalMs += liveMs;
+    if (activeTimer.start < cur.firstStart) cur.firstStart = activeTimer.start;
+    byTask.set(activeTimer.taskId, cur);
+  }
+  const taskRows = [...byTask.values()].sort((a, b) => a.firstStart - b.firstStart);
+  // 验证:顶部总工时 = 所有任务工时之和(含活动计时器实时部分)
+  const taskRowsTotal = taskRows.reduce((s, r) => s + r.totalMs, 0);
+  // 渲染任务明细表
+  const taskRowsHtml = renderTaskBreakdown(taskRows);
   container.innerHTML = `
     <div class="timeline-card-header">
       <span class="tc-icon">📊</span>
@@ -10006,18 +10041,14 @@ function renderTimelineCard() {
       <div class="unified-stats-row">
         <div class="unified-stat">
           <div class="unified-stat-label">今日工时</div>
-          <div class="unified-stat-value">${todayTotal > 0 ? fmtDuration(todayTotal) : '0 分钟'}</div>
-          <div class="unified-stat-meta">${todayEntries.length} 条记录 · ${new Set(todayEntries.map(e => e.taskId)).size} 个任务${totalArchivedWithoutEntry > 0 ? ` · ${totalArchivedWithoutEntry} 个已完成` : ''}</div>
+          <div class="unified-stat-value">${taskRowsTotal > 0 ? fmtDuration(taskRowsTotal) : '0 分钟'}</div>
+          <div class="unified-stat-meta">${todayEntries.length} 条记录 · ${taskRows.length} 个任务</div>
         </div>
       </div>
     </div>
     <div class="timeline-card-section">
-      <div class="timer-label">按项目</div>
-      <div class="timer-projects-list" id="timelineCardProjects"></div>
-    </div>
-    <div class="timeline-card-section">
-      <div class="timer-label">时间分布</div>
-      <div class="timer-timeline" id="timelineCardTimeline"></div>
+      <div class="timer-label">按任务</div>
+      ${taskRowsHtml}
     </div>
     <div class="timeline-card-section">
       <div class="unified-entries-header">
@@ -10027,30 +10058,49 @@ function renderTimelineCard() {
       <div class="timer-entries-list" id="timelineCardEntries"></div>
     </div>
   `;
-  // 填数据
-  renderProjectBreakdown(container.querySelector('#timelineCardProjects'));
-  renderTimeline(container.querySelector('#timelineCardTimeline'));
+  // 填今日记录(删除/手动添加交互不变)
   renderEntriesList(container.querySelector('#timelineCardEntries'));
-  // 追加今天完成但未计时的任务
-  if (totalArchivedWithoutEntry > 0) {
-    const entriesList = container.querySelector('#timelineCardEntries');
-    const today = localDateStr(new Date());
-    archivedWithoutEntry.forEach(a => {
-      const el = document.createElement('div');
-      el.className = 'timer-entry timer-entry-archived';
-      el.innerHTML = `
-        <span class="timer-entry-time">完成</span>
-        <span class="timer-entry-task" title="${escapeHtml(a.title)}">${escapeHtml(a.title)}</span>
-        <span class="timer-entry-dur" style="color:var(--green);font-size:11px;">已归档</span>
-      `;
-      entriesList.appendChild(el);
-    });
-  }
   // 绑 + 手动添加
   container.querySelector('#timelineCardAddEntry')?.addEventListener('click', e => {
     e.stopPropagation();
     promptAddTimeEntry();
   });
+}
+
+// 3.1.x: 按任务明细表渲染函数
+//   输入:taskRows = [{ taskId, projectId, totalMs, firstStart }, ...](已按 firstStart 升序)
+//   输出:HTML 字符串(包含表头 + 行)
+function renderTaskBreakdown(taskRows) {
+  if (!taskRows || taskRows.length === 0) {
+    return '<div class="timer-empty">今天还没记录</div>';
+  }
+  const rowsHtml = taskRows.map(r => {
+    // 跨板查找项目(老代码有跨月任务,备防)
+    const project = state.projects.find(p => p.id === r.projectId) || findProjectOfTask(r.taskId);
+    const task = project?.tasks.find(t => t.id === r.taskId);
+    const projectName = project ? escapeHtml(project.name) : escapeHtml(r.projectName || '(已删除)');
+    const taskName = task ? escapeHtml(task.title) : '(已删除)';
+    const color = project ? projectColor(project) : 'var(--muted)';
+    return `
+      <div class="timer-task-row">
+        <span class="timer-task-col-project" title="${projectName}" style="--proj-color:${color}">
+          <span class="timer-task-dot"></span><span class="timer-task-project-name">${projectName}</span>
+        </span>
+        <span class="timer-task-col-task" title="${taskName}">${taskName}</span>
+        <span class="timer-task-col-time">${fmtDuration(r.totalMs, { compact: true })}</span>
+      </div>
+    `;
+  }).join('');
+  return `
+    <div class="timer-task-table">
+      <div class="timer-task-header">
+        <span>项目</span>
+        <span>任务</span>
+        <span>工作时间</span>
+      </div>
+      ${rowsHtml}
+    </div>
+  `;
 }
 
 // 兼容旧调用(stats card 现在独立渲染,不再从 unified card 调用)
@@ -10301,35 +10351,41 @@ function openTaskDetail(task, project) {
     <div class="task-detail-content">
       <div class="task-detail-header">
         <span class="task-detail-project">${escapeHtml(project.name)}</span>
+        <span class="task-detail-status ${task.done ? 'is-done' : ''}">${task.done ? '已完成' : '进行中'}</span>
         <button class="modal-close" data-action="close-detail" title="关闭">×</button>
       </div>
       <input class="task-detail-title" placeholder="任务名…" value="${escapeHtml(task.title)}" maxlength="200">
       <div class="task-detail-row">
-        <label>📅 截止</label>
+        <label>📅 截止日期</label>
         <button type="button" class="task-detail-due-trigger" data-action="open-due-popover">${task.due ? dueLabel(task.due) : '设日期'}</button>
         <button class="btn" data-action="clear-detail-due" style="padding: 5px 10px; font-size: 11px;">清除</button>
-        <label style="margin-left: 12px;">⏳ 开始</label>
-        <button type="button" class="task-detail-due-trigger" data-action="open-start-popover">${task.startDate ? startLabel(task.startDate) : '未设置'}</button>
+      </div>
+      <div class="task-detail-row">
+        <label>⏳ 开始日期</label>
+        <button type="button" class="task-detail-start-trigger task-start ${task.startDate && isTaskInProgress(task) ? 'in-progress' : ''}" data-action="open-start-popover" style="cursor: pointer;">${task.startDate ? startLabel(task.startDate) : '未设置(只在到期日显示)'}</button>
         <button class="btn" data-action="clear-detail-start" style="padding: 5px 10px; font-size: 11px;">清除</button>
-        <div style="flex:1;"></div>
-        <button type="button" class="btn task-detail-checklist-btn" data-action="add-checklist-item" title="添加子任务">☑ 子任务</button>
       </div>
       <textarea class="task-detail-notes" placeholder="补充说明、链接、注意事项…">${escapeHtml(task.notes || '')}</textarea>
       <div class="task-detail-checklist">
+        <div class="task-detail-checklist-header">
+          <label>☑ 子清单 <span class="task-detail-checklist-hint">个人小任务,不计入看板</span></label>
+          <button type="button" class="btn" data-action="add-checklist-item" title="添加一条子清单项">+ 添加</button>
+        </div>
         <ul class="task-detail-checklist-list" data-role="checklist-list">
           ${(Array.isArray(task.checklist) ? task.checklist : []).map(item => `
             <li class="task-detail-checklist-item ${item.done ? 'is-done' : ''}" data-checklist-id="${item.id}">
               <input type="checkbox" class="task-detail-checklist-check" ${item.done ? 'checked' : ''} data-action="checklist-toggle" title="勾选 / 取消">
-              <span class="task-detail-checklist-text" contenteditable="true" spellcheck="false" data-placeholder="子任务…" data-action="checklist-edit">${escapeHtml(item.text || '')}</span>
-              <button type="button" class="task-detail-checklist-del" data-action="checklist-del" title="删除">×</button>
+              <span class="task-detail-checklist-text" contenteditable="true" spellcheck="false" data-placeholder="小任务…" data-action="checklist-edit">${escapeHtml(item.text || '')}</span>
+              <button type="button" class="task-detail-checklist-del" data-action="checklist-del" title="删除这一条">×</button>
             </li>
           `).join('')}
-          ${(Array.isArray(task.checklist) && task.checklist.length === 0) ? '<li class="task-detail-checklist-empty">还没有子任务</li>' : ''}
+          ${(Array.isArray(task.checklist) && task.checklist.length === 0) ? '<li class="task-detail-checklist-empty">还没有小任务 · 点上方「+ 添加」开第一条</li>' : ''}
         </ul>
       </div>
       <div class="task-detail-footer">
-        <div style="flex:1"></div>
         <button class="btn" data-action="delete-detail" title="删除到回收站">删除</button>
+        <div style="flex:1"></div>
+        <button class="btn" data-action="toggle-detail-done">${task.done ? '↻ 标为未完成' : '✓ 标为完成'}</button>
         <button class="btn btn-primary" data-action="save-detail">保存</button>
       </div>
     </div>
@@ -10342,9 +10398,17 @@ function openTaskDetail(task, project) {
 
   const commit = () => {
     const newTitle = titleInput.value.trim() || '未命名';
-    const newDue = task.due || '';
+    const newDue = task.due || '';   // v47: due 通过 popover 改,这里只读
     const newNotes = notesArea.value;
-    // flush any focused checklist edits before saving
+    const changed = newTitle !== task.title
+                 || newDue !== (task.due || '')
+                 || newNotes !== (task.notes || '');
+    if (changed) pushHistory();
+    task.title = newTitle;
+    task.due = newDue;
+    task.notes = newNotes;
+    // v2.0: 提交前把还在 focused 的 checklist 文本刷进 task.checklist
+    // (用户可能改了文本没失焦就点保存/关闭,避免丢字)
     if (Array.isArray(task.checklist)) {
       const focusedEdit = modal.querySelector('.task-detail-checklist-text:focus');
       if (focusedEdit) {
@@ -10353,17 +10417,13 @@ function openTaskDetail(task, project) {
         const item = task.checklist.find(x => x.id === cid);
         if (item) {
           const value = (focusedEdit.innerText || '').replace(/\s+/g, ' ').trim();
-          if (value !== (item.text || '')) { item.text = value; }
+          if (value !== (item.text || '')) {
+            item.text = value;
+            pushHistory();
+          }
         }
       }
     }
-    const changed = newTitle !== task.title
-                 || newDue !== (task.due || '')
-                 || newNotes !== (task.notes || '');
-    if (changed) pushHistory();
-    task.title = newTitle;
-    task.due = newDue;
-    task.notes = newNotes;
     try { save(); } catch {}
   };
   // v47: 日期通过点 dueTrigger 弹 popover,不再监听原生 input 的 change
@@ -10372,29 +10432,28 @@ function openTaskDetail(task, project) {
     openDatePopover(dueTrigger, project, task);
   });
   // v1.2: 开始日 trigger → 弹 popover 时切到 start 模式
-  const startTrigger = modal.querySelector('[data-action="open-start-popover"]');
-  if (startTrigger) {
-    startTrigger.addEventListener('click', e => {
-      e.stopPropagation();
-      openDatePopover(startTrigger, project, task, { mode: 'start' });
-    });
-  }
+  const startTrigger = modal.querySelector('.task-detail-start-trigger');
+  startTrigger.addEventListener('click', e => {
+    e.stopPropagation();
+    openDatePopover(startTrigger, project, task, { mode: 'start' });
+  });
   // 输入即保存（失焦 / 改日期 / 完成）
   titleInput.addEventListener('change', () => { commit(); render(); });
   notesArea.addEventListener('blur', () => { commit(); render(); });
 
-  // 子清单: 可点击 checkbox + 可编辑文本
+  // v2.0: 子清单(轻量 checklist)— 纯展示,不入任务体系,加/删/勾/改文本各自走各自的小 handler
   if (!Array.isArray(task.checklist)) task.checklist = [];
   const checklistList = modal.querySelector('[data-role="checklist-list"]');
 
   function rebuildChecklistDom() {
-    const emptyHint = '<li class="task-detail-checklist-empty">还没有子任务</li>';
+    // 重新渲染 li 列表(添加 / 删除后用)
+    const emptyHint = '<li class="task-detail-checklist-empty">还没有小任务 · 点上方「+ 添加」开第一条</li>';
     const items = task.checklist;
     checklistList.innerHTML = items.map(item => `
       <li class="task-detail-checklist-item ${item.done ? 'is-done' : ''}" data-checklist-id="${item.id}">
         <input type="checkbox" class="task-detail-checklist-check" ${item.done ? 'checked' : ''} data-action="checklist-toggle" title="勾选 / 取消">
-        <span class="task-detail-checklist-text" contenteditable="true" spellcheck="false" data-placeholder="子任务…" data-action="checklist-edit">${escapeHtml(item.text || '')}</span>
-        <button type="button" class="task-detail-checklist-del" data-action="checklist-del" title="删除">×</button>
+        <span class="task-detail-checklist-text" contenteditable="true" spellcheck="false" data-placeholder="小任务…" data-action="checklist-edit">${escapeHtml(item.text || '')}</span>
+        <button type="button" class="task-detail-checklist-del" data-action="checklist-del" title="删除这一条">×</button>
       </li>
     `).join('') + (items.length === 0 ? emptyHint : '');
   }
@@ -10403,25 +10462,39 @@ function openTaskDetail(task, project) {
     try { save({ immediate: true }); } catch {}
   }
 
-  // checklist 交互: 添加 / 勾选 / 删除 / 编辑
+  // + 添加
   modal.querySelector('[data-action="add-checklist-item"]').addEventListener('click', () => {
     task.checklist.push({ id: uid(), text: '', done: false });
     rebuildChecklistDom();
+    // 自动 focus 到新加的那条
     const newItem = checklistList.querySelector('.task-detail-checklist-item:last-child .task-detail-checklist-text');
-    if (newItem) { newItem.focus(); }
+    if (newItem) {
+      newItem.focus();
+      // 光标放到开头
+      const range = document.createRange();
+      range.selectNodeContents(newItem);
+      range.collapse(true);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
     saveChecklist();
   });
 
-  // 统一委托: checkbox 勾选
+  // 列表内统一委托:勾选 / 改文本 / 删除
   checklistList.addEventListener('change', e => {
-    if (e.target.dataset.action === 'checklist-toggle') {
-      const li = e.target.closest('.task-detail-checklist-item');
+    const t = e.target;
+    if (t.dataset.action === 'checklist-toggle') {
+      const li = t.closest('.task-detail-checklist-item');
       const cid = li?.dataset.checklistId;
       const item = task.checklist.find(x => x.id === cid);
-      if (item) { item.done = !!e.target.checked; li.classList.toggle('is-done', item.done); saveChecklist(); }
+      if (item) {
+        item.done = !!t.checked;
+        li.classList.toggle('is-done', item.done);
+        saveChecklist();
+      }
     }
   });
-  // 删除按钮
   checklistList.addEventListener('click', e => {
     const btn = e.target.closest('[data-action="checklist-del"]');
     if (!btn) return;
@@ -10432,7 +10505,6 @@ function openTaskDetail(task, project) {
     rebuildChecklistDom();
     saveChecklist();
   });
-  // 编辑失焦同步
   checklistList.addEventListener('blur', e => {
     const t = e.target;
     if (t.dataset.action !== 'checklist-edit') return;
@@ -10443,11 +10515,18 @@ function openTaskDetail(task, project) {
     const value = (t.innerText || '').replace(/\s+/g, ' ').trim();
     if (value === (item.text || '')) return;
     item.text = value;
+    // 规范显示:把多空格折叠成单空格
     t.textContent = value;
     saveChecklist();
   }, true);
+  // Enter 在 checklist 文本上 = 失焦保存
   checklistList.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+    if (e.key !== 'Enter') return;
+    const t = e.target;
+    if (t.dataset && t.dataset.action === 'checklist-edit') {
+      e.preventDefault();
+      t.blur();
+    }
   });
 
   modal.querySelectorAll('[data-action="close-detail"]').forEach(el => {
@@ -10457,6 +10536,13 @@ function openTaskDetail(task, project) {
     commit();
     modal.remove();
     render();
+  });
+  modal.querySelector('[data-action="toggle-detail-done"]').addEventListener('click', () => {
+    commit();
+    modal.remove();
+    // 用户主动完成：提示音 → 划线动画 → 归档。
+    const detailBoard = findProjectAcrossBoards(project.id)?.board || state;
+    completeTaskWithCelebration(task, project, detailBoard);
   });
   modal.querySelector('[data-action="delete-detail"]').addEventListener('click', () => {
     commit();
@@ -10482,7 +10568,8 @@ function openTaskDetail(task, project) {
   modal.querySelector('[data-action="clear-detail-start"]').addEventListener('click', () => {
     if (task.startDate) { pushHistory(); task.startDate = null; try { save(); } catch {} }
     if (startTrigger) {
-      startTrigger.textContent = '未设置';
+      startTrigger.textContent = '未设置(只在到期日显示)';
+      startTrigger.classList.remove('in-progress');
     }
   });
 
@@ -10752,6 +10839,15 @@ document.addEventListener('click', e => {
     if (task) openTaskDetail(task, project);
     return;
   }
+  // 点击 task 空白（不在交互控件上）→ 打开详情 modal
+  // v47: 但点击目标有 data-action 的(edit-due 等)优先走具体 handler
+  const taskEl = t.closest('.task');
+  if (taskEl && !isInteractive(t) && !t.dataset.action) {
+    const tid = taskEl.dataset.taskId;
+    const task = project.tasks.find(x => x.id === tid);
+    if (task) openTaskDetail(task, project);
+    return;
+  }
   if (action === 'rename') {
     // v47: 留作兼容,正常路径走 open-project modal
     startRename(t);
@@ -10902,8 +10998,7 @@ document.addEventListener('dragstart', e => {
   const task = e.target.closest('.task');
   if (task && !isInteractive(e.target)) {
     const taskCard = task.closest('.card');
-    const pid = task.dataset.projectId || (taskCard ? taskCard.dataset.projectId : null);
-    drag = { kind: 'task', id: task.dataset.taskId, projectId: pid };
+    drag = { kind: 'task', id: task.dataset.taskId, projectId: taskCard.dataset.projectId };
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', task.dataset.taskId);
     task.classList.add('dragging');
@@ -11147,28 +11242,22 @@ document.addEventListener('drop', e => {
     return;
   } else {
     // task 拖动
-    // v2.0: 跨板查找(from 和 to 都可能来自不同 board)
-    const fromFound = findProjectAcrossBoards(drag.projectId);
-    if (!fromFound) { drag = null; return; }
-    const fromProject = fromFound.project;
+    const fromProject = state.projects.find(p => p.id === drag.projectId);
+    if (!fromProject) { drag = null; return; }
     const fromIdx = fromProject.tasks.findIndex(t => t.id === drag.id);
     if (fromIdx < 0) { drag = null; return; }
     pushHistory();
     const [removed] = fromProject.tasks.splice(fromIdx, 1);
 
     const targetTaskId = target.dataset.taskId;
-    const targetPid = target.dataset.projectId || (target.closest('.card') ? target.closest('.card').dataset.projectId : null);
-    let targetProject = null;
-    if (targetPid) {
-      const toFound = findProjectAcrossBoards(targetPid);
-      targetProject = toFound ? toFound.project : null;
+    let targetProject;
+    if (targetTaskId) {
+      const targetCard = target.closest('.card');
+      targetProject = state.projects.find(p => p.id === targetCard.dataset.projectId);
+    } else {
+      targetProject = state.projects.find(p => p.id === target.dataset.projectId);
     }
-    if (!targetProject) {
-      // 如果找不到目标项目(例如拖到空区域),把 task 放回原 project
-      fromProject.tasks.splice(fromIdx, 0, removed);
-      save(); render();
-      drag = null; return;
-    }
+    if (!targetProject) { drag = null; return; }
 
     if (targetTaskId) {
       let toIdx = targetProject.tasks.findIndex(t => t.id === targetTaskId);
@@ -13283,88 +13372,6 @@ function renderTimerPanel() {
   updatePomodoroRing();
 }
 
-// v1.2: 重构为接受 container 参数(panel 和 unified card 共用)
-function renderProjectBreakdown(container) {
-  if (!container) container = document.getElementById('timerProjectsList');
-  if (!container) return;
-  // 1. 今日 entries 按 projectId 聚合
-  const todayEntries = getTodayEntries();
-  const byProject = {};  // { projectId: totalMs }
-  for (const e of todayEntries) {
-    const dur = Math.max(0, e.end - e.start);
-    byProject[e.projectId] = (byProject[e.projectId] || 0) + dur;
-  }
-  // 2. 当前 activeTimer 的实时时长也合进去(让"现在在跑"的项目数对得上)
-  if (activeTimer) {
-    const liveMs = getActiveElapsedMs();
-    byProject[activeTimer.projectId] = (byProject[activeTimer.projectId] || 0) + liveMs;
-  }
-  // 3. 按时长降序
-  const rows = Object.entries(byProject)
-    .filter(([_, ms]) => ms > 0)
-    .sort((a, b) => b[1] - a[1]);
-  if (rows.length === 0) {
-    container.innerHTML = '<div class="timer-empty">今天还没记录</div>';
-    return;
-  }
-  // 4. 找最长的项目作为 100% bar 宽度
-  const maxMs = Math.max(...rows.map(([_, ms]) => ms), 1);
-  container.innerHTML = rows.map(([pid, ms]) => {
-    const name = resolveProjectName(pid);
-    const project = state.projects.find(p => p.id === pid);
-    const color = project ? projectColor(project) : 'var(--muted)';
-    const widthPct = Math.max(8, Math.round(ms / maxMs * 100));  // 至少 8% 可见
-    return `
-      <div class="timer-project-row">
-        <span class="timer-project-name" title="${name}">${name}</span>
-        <div class="timer-project-bar">
-          <div class="timer-project-bar-fill" style="width:${widthPct}%; background:${color}"></div>
-        </div>
-        <span class="timer-project-time">${fmtDuration(ms, { compact: true })}</span>
-      </div>
-    `;
-  }).join('');
-}
-
-function renderTimeline(container) {
-  if (!container) container = document.getElementById('timerTimeline');
-  if (!container) return;
-  const todayEntries = getTodayEntries();
-  if (todayEntries.length === 0) {
-    container.innerHTML = '<div class="timer-empty">今天还没记录</div>';
-    return;
-  }
-  // 按小时分桶
-  const buckets = {};  // { hour: { totalMs, tasks: { taskName: ms } } }
-  for (const e of todayEntries) {
-    const hour = new Date(e.start).getHours();
-    if (!buckets[hour]) buckets[hour] = { totalMs: 0, tasks: {} };
-    const dur = Math.max(0, e.end - e.start);
-    buckets[hour].totalMs += dur;
-    const taskName = resolveTaskName(e.taskId);
-    buckets[hour].tasks[taskName] = (buckets[hour].tasks[taskName] || 0) + dur;
-  }
-  // 找最忙小时作为条形图最大宽度
-  const maxHourMs = Math.max(...Object.values(buckets).map(b => b.totalMs), 1);
-  // 输出每个有活动的小时
-  const hours = Object.keys(buckets).map(Number).sort((a, b) => a - b);
-  container.innerHTML = hours.map(h => {
-    const b = buckets[h];
-    const widthPct = Math.round(b.totalMs / maxHourMs * 100);
-    // 找这一小时里耗时最多的任务作为标签
-    const topTask = Object.entries(b.tasks).sort((a, b) => b[1] - a[1])[0];
-    return `
-      <div class="timer-timeline-row">
-        <span class="timer-timeline-hour">${String(h).padStart(2, '0')}:00</span>
-        <div class="timer-timeline-bar">
-          <div class="timer-timeline-bar-fill" style="width:${widthPct}%"></div>
-        </div>
-        <span class="timer-timeline-label">${fmtDuration(b.totalMs, { compact: true })}</span>
-      </div>
-    `;
-  }).join('');
-}
-
 function renderEntriesList(container) {
   if (!container) container = document.getElementById('timerEntriesList');
   if (!container) return;
@@ -13374,7 +13381,9 @@ function renderEntriesList(container) {
     return;
   }
   container.innerHTML = todayEntries.map(e => {
-    const taskName = resolveTaskName(e.taskId);
+    const project = findProjectOfTask(e.taskId);
+    const task = project?.tasks.find(t => t.id === e.taskId);
+    const taskName = task ? task.title : '(已删除)';
     const startTime = new Date(e.start).toTimeString().slice(0, 5);
     const endTime = new Date(e.end).toTimeString().slice(0, 5);
     const dur = Math.max(0, e.end - e.start);
@@ -15708,36 +15717,24 @@ document.getElementById('tsBarRefresh')?.addEventListener('click', () => {
 document.getElementById('tsBarExportCsv')?.addEventListener('click', tsExportCSV);
 document.getElementById('tsBarExportMd')?.addEventListener('click', tsExportMarkdown);
 
-// v3.1: AI 下拉菜单点击外部自动关闭
-document.addEventListener('click', e => {
-  document.querySelectorAll('.ts-ai-menu[open]').forEach(d => {
-    if (!d.contains(e.target)) d.removeAttribute('open');
-  });
-});
-// v3.1: 译名语言 — 改用 details 弹窗菜单，点击时直接切换
+// DeepSeek 专业工时描述
+const _translationSettings = loadDeepSeekSettings();
+const _tsLangSelect = document.getElementById('tsTranslationLang');
+if (_tsLangSelect) _tsLangSelect.value = tsTranslationLang;
 updateDeepSeekStatus();
-document.getElementById('tsLangMenu')?.addEventListener('click', e => {
-  const btn = e.target.closest('.ts-lang-opt');
-  if (!btn || btn.classList.contains('active')) return;
-  const val = btn.dataset.lang;
-  if (TS_LANGUAGES.includes(val)) {
-    tsTranslationLang = val;
-    const s = deepSeekSettings();
-    s.targetLang = val;
-    saveDeepSeekSettings(s);
-    document.getElementById('tsLangMenu')?.removeAttribute('open');
-    renderTimesheet();
-  }
+_tsLangSelect?.addEventListener('change', e => {
+  const s = deepSeekSettings();
+  s.targetLang = TS_LANGUAGES.includes(e.target.value) ? e.target.value : 'JA';
+  saveDeepSeekSettings(s);
+  renderTimesheet();
 });
-// v3.1: 看板过滤 — 改用 details 弹窗菜单
-document.getElementById('tsBoardFilterMenu')?.addEventListener('click', e => {
-  const btn = e.target.closest('.ts-board-opt');
-  if (!btn) return;
-  const key = btn.dataset.board || '';
-  setTsBoardFilter(key);
-  const name = key ? (store.boards[key]?.name || '当前看板') : '全部看板';
+// v3.0: 看板过滤 — 整个工时单视图遵守,默认存 localStorage
+const _tsBoardSel = document.getElementById('tsBoardFilter');
+if (_tsBoardSel) _tsBoardSel.value = tsBoardFilter;
+_tsBoardSel?.addEventListener('change', e => {
+  setTsBoardFilter(e.target.value);
+  const name = e.target.value ? (store.boards[e.target.value]?.name || '当前看板') : '全部看板';
   showToast(`工时单范围: ${name}(已存为默认)`);
-  document.getElementById('tsBoardFilterMenu')?.removeAttribute('open');
 });
 document.getElementById('tsTranslateAll')?.addEventListener('click', () => {
   // v2.0: 取消 tsSelectedDate 过滤 — 即使用户选了某一天,一键优化也要处理当月全部
@@ -15818,8 +15815,12 @@ document.getElementById('tsBackMonthBtn')?.addEventListener('click', () => {
   }
   renderTimesheet();
 });
-	// v3.1: 全部记录按钮已删除 — no-op stub
-	const _tsSearch = document.getElementById('tsSearchInput');
+document.getElementById('tsAllRecordsBtn')?.addEventListener('click', () => {
+  tsSelectedDate = '';
+  tsCurrentMonth = '';
+  renderTimesheet();
+});
+const _tsSearch = document.getElementById('tsSearchInput');
 if (_tsSearch) {
   let _tsDebounce = null;
   _tsSearch.addEventListener('input', e => {
@@ -15841,13 +15842,13 @@ function openTsSearchOverlay() {
   if (document.body.dataset.view !== 'timesheet') return;
   const input = document.getElementById('tsSearchInput');
   if (!input) return;
-  input.classList.remove('hidden'); document.getElementById('tsSearchShortcut')?.classList.add('hidden');
+  input.classList.remove('hidden');
   input.focus();
   input.select?.();
   // 用 Enter 关闭
   input.addEventListener('keydown', function once(ev) {
     if (ev.key === 'Enter' || ev.key === 'Escape') {
-      input.classList.add('hidden'); document.getElementById('tsSearchShortcut')?.classList.remove('hidden');
+      input.classList.add('hidden');
       document.getElementById('tsSearchShortcut')?.focus();
       input.removeEventListener('keydown', once);
     }
