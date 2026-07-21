@@ -10752,6 +10752,10 @@ document.addEventListener('click', e => {
     if (task) openTaskDetail(task, project);
     return;
   }
+  // 如果点击来自 task-detail modal 内部且不在可操作控件上，不做卡片的 open-detail
+  if (t.closest('.task-detail-modal') && !isInteractive(t) && !t.dataset.action) {
+    return;
+  }
   if (action === 'rename') {
     // v47: 留作兼容,正常路径走 open-project modal
     startRename(t);
