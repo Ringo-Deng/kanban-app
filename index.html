@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kanban · 工时单多选看板 v5.31</title>
+<title>Kanban · 工时单多选看板 v5.42</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="3_31_3431511">
+<meta name="build-hash" content="3_42_260726">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -538,7 +538,7 @@ header {
 
 /* 月历视图下"全部/今天/明天/本周"筛选没用,真删。
    搜索框已经挪到左侧 title-group,位置稳定,toolbar 短了也不会挤到 search */
-body[data-view="calendar"] #filterPills { display: none; }
+body[data-view="calendar"] #filterPills { display: none !important; }
 /* v5.17: 月历也显示看板切换(切后会跳到该看板「全部」视图);诉讼进度仍隐藏 */
 body[data-view="litigation"] #boardDropdown { display: none; }
 /* v2.6: 月历顶部控件较多，单独缩短搜索框；其他视图继续使用 200px */
@@ -3223,20 +3223,20 @@ button:focus-visible,
   .timeline-card {
     padding: 14px 14px;
   }
-  /* 任务行: 避免横向溢出(开始日 + 截止日 + ⏱ 同时显示时挤压标题) */
+  /* 任务行: 窄屏仍保持单行，标题可收缩省略，不再强制换行错位 */
   .task {
-    flex-wrap: wrap;
-    row-gap: 4px;
+    flex-wrap: nowrap;
+    align-items: center;
   }
   .task-title {
-    flex: 1 1 100%;
-    order: 10;
+    flex: 1 1 auto;
+    min-width: 0;
+    order: 0;
   }
   .task-date-stack {
-    margin-left: auto;
+    margin-left: 0;
+    flex-shrink: 0;
   }
-  /* 任务行: 手机上隐藏 task-handle(触摸拖动用长按,先隐) */
-  .task-handle { display: none; }
 }
 
 /* 只有手机宽度允许顶部换成两行；桌面和平板始终保持一行 */
@@ -3254,6 +3254,10 @@ button:focus-visible,
     justify-content: flex-start;
     flex-wrap: wrap;
   }
+  /* v5.38: 看板保持一行，覆盖上面的换行规则 */
+  body[data-view="board"] header { flex-wrap: nowrap !important; }
+  body[data-view="board"] .title-group { flex: 0 1 auto !important; width: auto !important; }
+  body[data-view="board"] .toolbar { flex: 1 1 auto !important; width: auto !important; flex-wrap: nowrap !important; justify-content: flex-end !important; }
 }
 @media (max-width: 560px) {
   /* 极小屏: 标题缩小,月份下拉缩短 */
@@ -4459,7 +4463,8 @@ body[data-view="timesheet"] .ts-title-month-nav { display: inline-flex; }
 .ts-overview-day.lvl2, .ts-overview-day.lvl3 { color: #fff; }
 .ts-overview-day.lvl2 .ov-day-num, .ts-overview-day.lvl3 .ov-day-num { color: #fff; }
 .ts-overview-day.lvl2 .ov-day-hrs, .ts-overview-day.lvl3 .ov-day-hrs { color: #fff; }
-.ts-overview-day.weekend { opacity: 0.45; }
+/* v5.34: 周末与工作日统一风格，不再压灰 */
+.ts-overview-day.weekend { opacity: 1; }
 .ts-overview-day.today {
   box-shadow: inset 0 0 0 1.5px var(--accent);
 }
@@ -5017,14 +5022,56 @@ body[data-view="timesheet"] .ts-title-month-nav { display: inline-flex; }
   border-left: 1px solid var(--border);
   flex-wrap: wrap;
 }
-.ts-view-bar-btn {
-  height: 28px; padding: 0 10px !important;
-  font-size: 12px !important; font-weight: 500;
-  border: 1px solid var(--border); border-radius: 6px;
-  background: var(--card-bg-solid); color: var(--text); cursor: pointer;
-  font-family: inherit; transition: background 0.15s, border-color 0.15s;
+/* v5.41: 工时工具栏按钮统一高度与风格（看板选择 / AI优化 / 概览） */
+.ts-view-bar-btn,
+button.ts-view-bar-btn,
+.btn.ts-view-bar-btn,
+.ts-view-bar summary.ts-view-bar-btn {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  background: var(--card-bg-solid) !important;
+  color: var(--text) !important;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  list-style: none;
 }
-.ts-view-bar-btn:hover { background: var(--task-bg); border-color: var(--accent); color: var(--accent); }
+.ts-view-bar-btn::-webkit-details-marker { display: none; }
+.ts-view-bar-btn:hover,
+.btn.ts-view-bar-btn:hover {
+  background: var(--task-bg) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+.ts-view-bar .ts-month-arrow,
+.ts-title-month-nav .btn {
+  height: 32px !important;
+  min-height: 32px !important;
+  width: 32px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  box-sizing: border-box;
+}
+.ts-title-month-nav .ts-month-label {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 10px !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  box-sizing: border-box;
+}
 
 /* v1.6.9: 工时单视图标题(默认隐藏,timesheet 视图下显示在工具栏最左,推右边的元素到右端)
    3.1 UI精简: 字号缩小,配合紧凑 Header */
@@ -5277,6 +5324,8 @@ body[data-view="litigation"] #searchCount,
 body[data-view="litigation"] #vaultBtn { display: none; }
 body:not([data-view="litigation"]) #litigationAdd { display:none; }
 body[data-view="litigation"] #litigationAdd { display:inline-flex; margin-left:4px; }
+/* v5.34: 诉讼页只保留一个「新增记录」(litigationAdd)，隐藏通用 viewAddRecord 避免双按钮 */
+body[data-view="litigation"] #viewAddRecord { display: none !important; }
 .litigation { max-width: 1500px; margin: 0 auto; }
 .litigation-table-card { background:color-mix(in srgb, var(--card-bg-solid) 76%, transparent); border:1px solid color-mix(in srgb, var(--border) 78%, rgba(255,255,255,.45)); border-radius:16px; overflow:hidden; box-shadow:0 12px 34px rgba(28,45,36,.10), inset 0 1px 0 rgba(255,255,255,.38); backdrop-filter:blur(22px) saturate(145%); -webkit-backdrop-filter:blur(22px) saturate(145%); }
 .litigation-table { width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; color:var(--text); }
@@ -5442,7 +5491,7 @@ input, select, textarea, button, [contenteditable] {
   }
   .container { max-width: 100%; width: 100%; }
 
-  /* 顶部 header 紧凑 + 两行 */
+  /* 顶部 header 紧凑 */
   header {
     margin-bottom: 10px;
     padding: 0 2px;
@@ -5450,20 +5499,130 @@ input, select, textarea, button, [contenteditable] {
     flex-wrap: wrap;
   }
   h1 {
-    font-size: 22px !important;
+    font-size: 20px !important;
     background: none;
     -webkit-text-fill-color: currentColor;
     color: var(--text);
   }
-  .ts-header-title { font-size: 22px !important; letter-spacing: -0.8px; }
+  .ts-header-title { font-size: 20px !important; letter-spacing: -0.8px; }
   .title-group { gap: 6px; flex: 1 1 100%; }
   .title-group .search-input { width: 100%; min-width: 0; max-width: 100%; flex: 1 1 100%; }
   .toolbar { flex: 1 1 100%; justify-content: flex-end; flex-wrap: wrap; }
+
+  /* v5.38: 看板标题 + 看板下拉 + 筛选栏同一行 */
+  body[data-view="board"] header {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  body[data-view="board"] .title-group {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 0;
+    gap: 6px !important;
+  }
+  body[data-view="board"] .title-group h1 {
+    font-size: 18px !important;
+  }
+  /* v5.41: 「默认」与右侧筛选栏同高、同风格 */
+  body[data-view="board"] .board-trigger {
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 12px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--card-border) !important;
+    background: var(--card-bg) !important;
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    max-width: 110px;
+    box-sizing: border-box;
+  }
+  body[data-view="board"] .board-trigger #boardLabel {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 72px;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1;
+  }
+  body[data-view="board"] .board-trigger .board-caret {
+    font-size: 10px;
+    opacity: 0.55;
+    line-height: 1;
+  }
+  body[data-view="board"] #filterPills {
+    height: 36px !important;
+    min-height: 36px !important;
+    align-items: center !important;
+    box-sizing: border-box;
+  }
+  body[data-view="board"] #filterPills .pill {
+    height: 30px !important;
+    min-height: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    box-sizing: border-box;
+  }
+  body[data-view="board"] .toolbar {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    justify-content: flex-end !important;
+    flex-wrap: nowrap !important;
+    min-width: 0;
+    gap: 4px !important;
+  }
+  body[data-view="board"] #filterPills {
+    flex-shrink: 1 !important;
+    min-width: 0;
+  }
+  body[data-view="board"] #filterPills .pill {
+    padding: 6px 10px !important;
+    font-size: 12.5px !important;
+    min-height: 30px !important;
+  }
+  /* v5.41: 手机工时顶栏按钮与概览同高同风格 */
+  body[data-view="timesheet"] .ts-view-bar {
+    gap: 6px !important;
+    align-items: center !important;
+  }
+  body[data-view="timesheet"] .ts-view-bar-btn,
+  body[data-view="timesheet"] button.ts-view-bar-btn,
+  body[data-view="timesheet"] .btn.ts-view-bar-btn,
+  body[data-view="timesheet"] .ts-view-bar summary.ts-view-bar-btn {
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 12px !important;
+    font-size: 12.5px !important;
+    border-radius: 10px !important;
+  }
+  body[data-view="timesheet"] .ts-title-month-nav .btn,
+  body[data-view="timesheet"] .ts-month-arrow {
+    height: 34px !important;
+    width: 34px !important;
+    min-height: 34px !important;
+    border-radius: 10px !important;
+  }
+  body[data-view="timesheet"] .ts-title-month-nav .ts-month-label {
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 10px !important;
+    border-radius: 10px !important;
+  }
+
   /* 桌面顶 viewPills 隐藏,改用底部导航 */
   #viewPills { display: none !important; }
 
   /* 移动端不常用的桌面工具按钮 → 移到设置/抽屉 */
   #newProject, #export, #import, #vaultBtn, #themeDropdown, #trashBtn, #headerDataMenu { display: none !important; }
+  /* v5.37: 看板只留右下角 +，隐藏顶部「+ 新增记录」 */
+  #viewAddRecord { display: none !important; }
 
   /* 显示 mobile-only 元素 */
   .mobile-nav { display: flex !important; }
@@ -5510,50 +5669,70 @@ input, select, textarea, button, [contenteditable] {
     -webkit-line-clamp: unset;
     overflow: visible;
   }
-  /* 任务行紧凑 */
+  /* v5.37: 任务行单行布局 — 手柄 | 勾选 | 标题 | 日期，不再错行 */
   .task {
-    padding: 7px 0 !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    padding: 10px 2px !important;
     gap: 8px !important;
-    min-height: 32px;
+    min-height: 40px;
   }
   .task-title {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    order: 0 !important;
     font-size: 14.5px !important;
-    line-height: 1.4 !important;
+    line-height: 1.35 !important;
   }
-  .task-handle { display: none !important; }  /* 触摸端隐藏拖拽柄 */
+  /* 拖动手柄（替代上下键） */
+  .task-handle {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    min-width: 28px;
+    height: 36px;
+    margin: 0 !important;
+    padding: 0 2px;
+    font-size: 16px !important;
+    letter-spacing: -1px;
+    color: var(--muted);
+    opacity: 0.75;
+    cursor: grab;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .task-handle:active { opacity: 1; cursor: grabbing; color: var(--accent); }
+  .task.task-handle-dragging {
+    opacity: 0.45;
+    background: var(--task-bg);
+  }
+  .task.task-drop-before { box-shadow: inset 0 2px 0 0 var(--accent); }
+  .task.task-drop-after { box-shadow: inset 0 -2px 0 0 var(--accent); }
+  /* 彻底隐藏上下箭头 */
+  .task-reorder { display: none !important; }
   .task-del { opacity: 0.55; font-size: 16px; padding: 2px 6px; }
-  .task-check { width: 17px; height: 17px; }
+  .task-check { width: 18px; height: 18px; flex-shrink: 0; }
   .task-due { font-size: 10.5px !important; padding: 2px 5px !important; }
   .task-start { font-size: 10px !important; padding: 1px 4px !important; }
-  .task-date-stack { flex-basis: 56px; min-width: 56px; gap: 3px; }
-  .task-project-label { font-size: 10.5px !important; padding: 1px 6px !important; width: 90px !important; }
+  .task-date-stack {
+    flex: 0 0 auto !important;
+    flex-basis: auto !important;
+    min-width: 52px !important;
+    max-width: 72px;
+    gap: 3px;
+    margin-left: 0 !important;
+  }
+  .task-project-label { font-size: 10.5px !important; padding: 1px 6px !important; width: 72px !important; flex-shrink: 0; }
   /* unified card 在 mobile 紧凑 */
   .unified-header-row { gap: 8px; margin-bottom: 6px; }
   .unified-header-row .card-title { font-size: 15px; }
   .unified-project-tag { font-size: 10.5px; padding: 1px 6px; }
   .unified-stats-row { gap: 8px; }
-  /* 3.1.1: 上移/下移按钮(mobile 拖动降级,跟随 task-title 后面) */
-  .task-reorder {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    flex-shrink: 0;
-    margin-left: 2px;
-  }
-  .task-reorder button {
-    width: 22px; height: 14px;
-    border: 1px solid var(--border);
-    background: var(--card-bg-solid);
-    color: var(--muted);
-    border-radius: 3px;
-    padding: 0; line-height: 1;
-    font-size: 9px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .task-reorder button:active { background: var(--task-bg); color: var(--accent); }
-  .task-reorder button:disabled { opacity: 0.25; cursor: not-allowed; }
-  /* 3.1.1 mobile 任务标题: 2 行截断(避免长 task 撑高卡片) */
+  /* 标题最多 2 行，不把勾选/日期挤到下一行 */
   .task-title:not([contenteditable="true"]) {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -5687,6 +5866,39 @@ input, select, textarea, button, [contenteditable] {
   .ts-mob-entry-actions button[data-restore] { color: var(--blue); }
   .ts-mob-entry-actions button[data-del] { color: var(--red); }
   /* 3.1.1 mobile 主题选择器("更多" 抽屉内) */
+  /* v5.34: 移动端 AI 助手区块（在「更多」抽屉内） */
+  .mobile-ai-picker {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .mobile-ai-langs {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .mobile-ai-lang {
+    flex: 1 1 0;
+    min-width: 64px;
+    min-height: 36px;
+    font-size: 13px !important;
+  }
+  .mobile-ai-lang.active {
+    border-color: var(--accent) !important;
+    background: color-mix(in srgb, var(--accent) 12%, var(--card-bg-solid)) !important;
+    color: var(--accent) !important;
+    font-weight: 700;
+  }
+  .mobile-ai-status {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 0 2px;
+  }
+  .mobile-ai-picker > .btn {
+    min-height: 40px;
+    justify-content: flex-start;
+  }
+
   .mobile-theme-picker {
     display: flex; flex-direction: column; gap: 6px;
     padding: 10px 12px;
@@ -6165,10 +6377,34 @@ input, select, textarea, button, [contenteditable] {
     color: var(--accent);
     font-weight: 700;
   }
-  .mobile-nav-item .icon { font-size: 22px; line-height: 1; }
-  .mobile-nav-item .label { font-size: 10.5px; letter-spacing: 0.2px; }
+  /* v5.40: 四枚导航图标统一尺寸与风格（SVG stroke） */
+  .mobile-nav-item .icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-size: 0;
+  }
+  .mobile-nav-item .icon svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+  }
+  .mobile-nav-item .label {
+    font-size: 10.5px;
+    letter-spacing: 0.2px;
+    line-height: 1.1;
+    font-weight: 500;
+  }
+  .mobile-nav-item.active .label { font-weight: 700; }
 
-  /* FAB:右下角新建任务 */
+  /* v5.39: 看板右下角 + 已移除，新建项目改到列表底部按钮 */
+  #mobileFab.mobile-fab {
+    display: none !important;
+  }
+  /* 保留 secondary（⋯）样式，主 FAB 不再使用 */
   .mobile-fab {
     position: fixed;
     right: 16px;
@@ -6192,26 +6428,46 @@ input, select, textarea, button, [contenteditable] {
   .mobile-fab:hover { transform: translateY(-2px); }
   .mobile-fab:active { transform: scale(0.95); }
 
-  /* AI fab: 移动端挪到右下 + 按钮的左上方,避免与 +/⋯ 重叠 */
-  .bot-fab {
-    right: 76px !important;
-    bottom: calc(78px + env(safe-area-inset-bottom)) !important;
-    padding: 0 !important;
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 50% !important;
-    font-size: 12px !important;
-    justify-content: center !important;
+  /* 列表底部「+ 新建项目」 */
+  .mobile-add-project-btn {
+    display: none;
+    width: 100%;
+    margin: 4px 0 12px;
+    padding: 14px 16px;
+    border: 1.5px dashed color-mix(in srgb, var(--accent) 40%, var(--border));
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent) 6%, var(--card-bg));
+    color: var(--accent);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 650;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
-  .bot-fab .bot-fab-label { display: none !important; }
-  .bot-fab .bot-fab-dot { width: 10px; height: 10px; }
+  .mobile-add-project-btn:active {
+    background: color-mix(in srgb, var(--accent) 12%, var(--card-bg));
+  }
+  @media (max-width: 767px) {
+    body[data-view="board"] .mobile-add-project-btn {
+      display: block;
+    }
+  }
 
-  /* "更多" fab: 挪到 + 主按钮正上方,不再与 + 完全重叠 */
+  /* v5.36: 手机端彻底隐藏黑色 AI 助手悬浮球，入口改到「⋯」更多菜单 */
+  #botFab,
+  .bot-fab {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+  }
+
+  /* v5.39: 主 + 已移除，⋯ 回到右下角主位置 */
   .mobile-fab-secondary {
     right: 16px !important;
-    bottom: calc(140px + env(safe-area-inset-bottom)) !important;
-    width: 44px !important;
-    height: 44px !important;
+    bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+    width: 48px !important;
+    height: 48px !important;
     font-size: 22px !important;
   }
 
@@ -6333,8 +6589,9 @@ input, select, textarea, button, [contenteditable] {
   .cal-agenda-title { font-size: 14.5px; }
   .cal-agenda-date-main { font-size: 16px; }
 
-  /* 工时单顶部工具条: 移动端极简化(只留看板筛选+AI) */
+  /* 工时单顶部工具条: 移动端极简化(只留看板筛选，AI已移除) */
   .ts-translate-controls > *:not(#tsBoardFilterMenu) { display: none !important; }
+  .ts-ai-menu, #tsLangMenu, .ts-ai-optimize { display: none !important; }
   .ts-table-header .ts-search-input { display: none !important; }
   .ts-table-header .ts-search-shortcut { display: none !important; }
   .ts-table-header { padding: 10px 14px 12px; gap: 8px; }
@@ -6347,12 +6604,627 @@ input, select, textarea, button, [contenteditable] {
   color: var(--muted);
 }
 
+
+/* ========== v5.32 看板 + 诉讼 手机端强化 ========== */
+@media (max-width: 767px) {
+  /* v5.35: 彻底隐藏日程/月历双模式切换 */
+  #calModeToggle { display: none !important; }
+
+  /* v5.36: 手机看板「+」与内联新增表单 */
+  .card-add-trigger {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 22px !important;
+    min-width: 36px;
+    min-height: 36px;
+  }
+  .card-add-form {
+    display: grid !important;
+    grid-template-columns: 40px 1fr 40px 40px;
+    grid-template-areas:
+      "title title title title"
+      "due submit cancel .";
+    gap: 8px !important;
+    padding: 8px 0 !important;
+    align-items: center;
+    width: 100%;
+  }
+  .card-add-form .card-add-title {
+    grid-area: title;
+    width: 100% !important;
+    min-height: 42px !important;
+    font-size: 15px !important;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+  }
+  .card-add-form .card-add-due {
+    grid-area: due;
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+  }
+  .card-add-form .card-add-submit {
+    grid-area: submit;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    font-size: 22px !important;
+    flex: none !important;
+    z-index: 2;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .card-add-form .card-add-cancel {
+    grid-area: cancel;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  /* 彻底隐藏 AI 助手/优化功能 */
+  .ts-ai-menu,
+  #tsLangMenu,
+  .ts-ai-optimize,
+  button.ts-ai-optimize,
+  [data-translate-one],
+  .ts-translation-btn { display: none !important; }
+
+  /* v5.33: 筛选栏只在看板显示；月历强制隐藏（修复 v5.32 !important 覆盖） */
+  body[data-view="calendar"] #filterPills,
+  body[data-view="timesheet"] #filterPills,
+  body[data-view="litigation"] #filterPills {
+    display: none !important;
+  }
+  /* v5.36: 筛选栏紧凑分段控件 — 外框贴合按钮，不再拉满整行 */
+  body[data-view="board"] #filterPills {
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
+    width: auto !important;
+    max-width: 100%;
+    gap: 2px !important;
+    padding: 3px !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+    overflow: visible !important;
+    scrollbar-width: none;
+    align-self: flex-start;
+  }
+  body[data-view="board"] #filterPills::-webkit-scrollbar { display: none; }
+  body[data-view="board"] #filterPills .pill {
+    flex: 0 0 auto;
+    padding: 7px 12px !important;
+    font-size: 13px !important;
+    border-radius: 9px !important;
+    min-height: 32px;
+    line-height: 1.2;
+  }
+  body[data-view="board"] #filterPills .pill.active {
+    border-radius: 9px !important;
+  }
+
+  /* v5.33: 月历顶部按钮统一尺寸与风格（board 下拉 / 翻月 / 日程·月历切换） */
+  body[data-view="calendar"] .board-trigger,
+  body[data-view="calendar"] .cal-nav .btn,
+  body[data-view="calendar"] .cal-nav .cal-month-label,
+  body[data-view="calendar"] #calModeToggle .pill {
+    height: 36px !important;
+    min-height: 36px !important;
+    box-sizing: border-box;
+    border-radius: 10px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    padding: 0 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card-bg-solid) !important;
+    color: var(--text) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  body[data-view="calendar"] .cal-nav .btn[data-action="cal-prev"],
+  body[data-view="calendar"] .cal-nav .btn[data-action="cal-next"] {
+    width: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    font-size: 18px !important;
+  }
+  body[data-view="calendar"] .cal-nav .cal-month-label {
+    min-width: auto !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 8px !important;
+  }
+  body[data-view="calendar"] .board-trigger {
+    gap: 4px;
+    max-width: 120px;
+  }
+  body[data-view="calendar"] .board-trigger #boardLabel {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 80px;
+  }
+  /* 日程/月历切换：紧凑分段控件，风格与其它按钮一致 */
+  body[data-view="calendar"] #calModeToggle {
+    display: flex !important;
+    gap: 0 !important;
+    margin: 8px 0 10px !important;
+    padding: 3px !important;
+    background: var(--task-bg) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    width: 100%;
+  }
+  body[data-view="calendar"] #calModeToggle .pill {
+    flex: 1 1 0 !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    border-radius: 9px !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--muted) !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+  }
+  body[data-view="calendar"] #calModeToggle .pill.active {
+    background: var(--card-bg-solid) !important;
+    color: var(--text) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+  }
+
+  /* v5.33: 月历顶部标题行更干净 — 不换行、控件间距统一 */
+  body[data-view="calendar"] header {
+    gap: 8px !important;
+  }
+  body[data-view="calendar"] .title-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100%;
+  }
+  body[data-view="calendar"] .title-group h1 {
+    font-size: 20px !important;
+    margin: 0 !important;
+    flex: 0 0 auto;
+  }
+  body[data-view="calendar"] .cal-nav {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 0;
+  }
+  body[data-view="calendar"] .board-dropdown {
+    margin-left: 0 !important;
+    flex: 0 0 auto;
+  }
+  /* 工具栏在月历下几乎为空（筛选已隐藏），收紧 */
+  body[data-view="calendar"] .toolbar {
+    display: none !important;
+  }
+
+  /* 看板整体更紧凑，减少纵向浪费 */
+  body[data-view="board"] .board-layout {
+    gap: 12px !important;
+  }
+  body[data-view="board"] .right-column {
+    order: 2;
+  }
+  body[data-view="board"] .left-column {
+    order: 1;
+  }
+  /* 计时器面板在手机上更紧凑、触控友好 */
+  .timer-panel {
+    padding: 12px 14px !important;
+    border-radius: 14px !important;
+  }
+  .timer-panel-header {
+    margin-bottom: 8px;
+  }
+  .timer-status {
+    font-size: 13px !important;
+    padding: 4px 10px !important;
+  }
+  .timer-display, .timer-time {
+    font-size: 28px !important;
+    letter-spacing: -0.5px;
+  }
+  .timer-controls button,
+  .timer-panel .btn {
+    min-height: 40px;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+  }
+
+  /* 任务行触控目标放大 */
+  .task {
+    padding: 10px 0 !important;
+    min-height: 40px !important;
+    gap: 10px !important;
+  }
+  .task-check {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px;
+  }
+  .task-del {
+    opacity: 0.7;
+    font-size: 18px !important;
+    padding: 4px 8px !important;
+    min-width: 32px;
+    min-height: 32px;
+  }
+  .task-reorder button {
+    width: 28px !important;
+    height: 18px !important;
+    font-size: 11px !important;
+  }
+  .task-title {
+    font-size: 15px !important;
+    line-height: 1.45 !important;
+  }
+
+  /* 卡片间距与圆角 */
+  .grid {
+    gap: 12px !important;
+  }
+  .grid > .card,
+  .grid > .unified-card {
+    padding: 14px 14px 12px !important;
+    border-radius: 14px !important;
+  }
+
+  /* v5.42: 诉讼手机端简洁整理 — 少框、少层、更清晰层级 */
+  body[data-view="litigation"] {
+    padding-left: 4vw !important;
+    padding-right: 4vw !important;
+  }
+  body[data-view="litigation"] .container,
+  body[data-view="litigation"] .litigation,
+  body[data-view="litigation"] .litigation-table-card,
+  body[data-view="litigation"] .litigation-mobile {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box;
+  }
+  .litigation-mobile {
+    gap: 12px !important;
+    padding: 4px 0 20px;
+    width: 100% !important;
+  }
+  .lit-mob-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+    border-radius: 14px !important;
+    border: 1px solid var(--card-border) !important;
+    box-shadow: none !important;
+    background: var(--card-bg-solid) !important;
+    overflow: hidden;
+  }
+  .lit-mob-card-head {
+    padding: 14px 16px 12px !important;
+    min-height: 0 !important;
+  }
+  .lit-mob-card-title {
+    font-size: 16px !important;
+    font-weight: 700;
+    margin-bottom: 6px !important;
+    line-height: 1.35;
+    padding-right: 24px !important;
+  }
+  .lit-mob-card-meta {
+    font-size: 12px !important;
+    gap: 4px 10px !important;
+    margin-bottom: 6px !important;
+    color: var(--muted);
+  }
+  .lit-mob-card-recent {
+    font-size: 12.5px !important;
+    padding: 0 !important;
+    margin: 0 0 6px !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    line-height: 1.45 !important;
+    color: var(--muted) !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+  /* 展开后摘要信息已在下方详情，隐藏避免重复 */
+  .lit-mob-card.expanded .lit-mob-card-recent,
+  .lit-mob-card.expanded .lit-mob-card-footer,
+  .lit-mob-card.expanded .lit-mob-card-meta {
+    display: none !important;
+  }
+  .lit-mob-card-footer {
+    font-size: 12.5px !important;
+    margin-top: 2px;
+    gap: 6px !important;
+  }
+  .lit-mob-chevron {
+    font-size: 13px;
+    right: 14px;
+    top: 16px;
+    color: var(--muted);
+  }
+  .lit-mob-card-detail {
+    padding: 0 16px 8px !important;
+    border-top: 1px solid var(--border) !important;
+    background: transparent !important;
+  }
+
+  /* 案件信息：轻量一行触发，去掉厚重外框感 */
+  .lit-mob-fields-toggle {
+    margin: 12px 0 4px !important;
+  }
+  .lit-mob-fields-trigger {
+    width: 100%;
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px !important;
+    border: none !important;
+    border-radius: 10px !important;
+    background: var(--task-bg) !important;
+    color: var(--text);
+    font: inherit;
+    font-size: 13.5px !important;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+  .lit-mob-fields-trigger-icon { display: none !important; }
+  .lit-mob-fields-summary {
+    flex: 1;
+    min-width: 0;
+    font-weight: 400 !important;
+    font-size: 12.5px !important;
+    color: var(--muted) !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .lit-mob-fields-body {
+    padding: 10px 2px 4px !important;
+  }
+  .lit-mob-field {
+    margin-bottom: 10px !important;
+  }
+  .lit-mob-field label {
+    font-size: 11px !important;
+    margin-bottom: 4px !important;
+    display: block;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .lit-mob-field input,
+  .lit-mob-field textarea {
+    font-size: 14px !important;
+    padding: 9px 11px !important;
+    min-height: 38px !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card-bg) !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* 时间线标题行 */
+  .lit-mob-section-title {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    margin: 14px 0 10px !important;
+    padding: 0 !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    color: var(--text) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .lit-mob-section-title button {
+    min-height: 30px !important;
+    padding: 0 11px !important;
+    font-size: 12.5px !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card-bg) !important;
+    color: var(--text) !important;
+    font-weight: 500 !important;
+  }
+
+  /* 去掉时间轴竖线与圆点，改成轻卡片列表 */
+  .lit-mob-timeline {
+    gap: 8px !important;
+    padding-left: 0 !important;
+    margin-top: 0 !important;
+  }
+  .lit-mob-timeline::before { display: none !important; }
+  .lit-mob-timeline-item {
+    background: var(--task-bg) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    gap: 8px !important;
+  }
+  .lit-mob-timeline-item::before { display: none !important; }
+
+  .lit-mob-line-date {
+    margin-bottom: 0 !important;
+    gap: 8px !important;
+  }
+  .lit-mob-line-date input[type="date"],
+  .lit-mob-line-date-input {
+    min-height: 36px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    border-radius: 9px !important;
+    padding: 6px 10px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card-bg-solid) !important;
+  }
+  .lit-mob-bell-btn {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 15px !important;
+    border-radius: 9px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card-bg-solid) !important;
+  }
+  .lit-mob-line-text {
+    font-size: 14px !important;
+    padding: 10px 12px !important;
+    min-height: 44px !important;
+    border-radius: 10px !important;
+    margin-top: 0 !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card-bg-solid) !important;
+    resize: vertical;
+  }
+
+  /* 待办区：去掉双重底色，更干净 */
+  .lit-mob-todos {
+    gap: 6px !important;
+    padding: 0 !important;
+    margin-top: 4px !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+  .lit-mob-todo {
+    grid-template-columns: 20px 1fr 28px !important;
+    gap: 6px 8px !important;
+    padding: 0 !important;
+    align-items: center !important;
+  }
+  .lit-mob-todo-text {
+    min-height: 34px !important;
+    font-size: 13.5px !important;
+    padding: 7px 10px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card-bg-solid) !important;
+  }
+  .lit-mob-todo-due {
+    min-height: 32px !important;
+    font-size: 12.5px !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card-bg-solid) !important;
+  }
+  .lit-mob-todo-del {
+    color: var(--muted) !important;
+    opacity: 0.7;
+  }
+
+  /* 操作按钮轻量化 */
+  .lit-mob-line-actions {
+    gap: 8px !important;
+    margin-top: 2px !important;
+  }
+  .lit-mob-line-actions button {
+    min-height: 30px !important;
+    padding: 0 12px !important;
+    font-size: 12.5px !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card-bg-solid) !important;
+  }
+  .lit-mob-line-actions button[data-variant="remove"] {
+    border-color: transparent !important;
+    background: transparent !important;
+    color: var(--muted) !important;
+  }
+  .lit-mob-line-actions button[data-variant="add"] {
+    color: var(--accent) !important;
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--border)) !important;
+  }
+
+  .lit-mob-empty {
+    padding: 12px 8px !important;
+    font-size: 13px !important;
+    color: var(--muted) !important;
+    font-style: normal !important;
+    text-align: left !important;
+  }
+
+  /* 删除案件：弱化为底部分隔文字按钮 */
+  .lit-mob-card-actions {
+    margin: 12px 0 4px !important;
+    padding: 8px 0 4px !important;
+    border-top: 1px dashed var(--border) !important;
+  }
+  .lit-mob-card-actions button {
+    width: 100% !important;
+    min-height: 40px !important;
+    border: none !important;
+    background: transparent !important;
+    color: var(--red) !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+  }
+  .lit-mob-card-actions button:active {
+    background: color-mix(in srgb, var(--red) 8%, transparent) !important;
+  }
+  .lit-mob-todo {
+    gap: 6px !important;
+    padding: 2px 0 !important;
+  }
+  .lit-mob-todo-text {
+    font-size: 13px !important;
+    min-height: 32px !important;
+    padding: 6px 8px !important;
+    border-radius: 6px !important;
+  }
+  /* 诉讼新增按钮在 header 更醒目 */
+  body[data-view="litigation"] #litigationAdd {
+    display: inline-flex !important;
+    min-height: 40px;
+    padding: 8px 14px !important;
+    font-size: 14px !important;
+    border-radius: 10px;
+  }
+
+  /* 防止看板页横向溢出 */
+  body[data-view="board"] .left-column,
+  body[data-view="board"] .grid,
+  body[data-view="board"] .card {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  .task-project-label {
+    max-width: 80px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 /* ---------- 极窄屏 (max-width: 380px):iPhone SE 1 等 ---------- */
 @media (max-width: 380px) {
   body { font-size: 13.5px; padding: 8px 8px calc(72px + env(safe-area-inset-bottom)) 8px; }
   h1 { font-size: 20px !important; }
   .ts-header-title { font-size: 20px !important; }
-  .mobile-nav-item .icon { font-size: 20px; }
+  .mobile-nav-item .icon { width: 22px; height: 22px; }
+  .mobile-nav-item .icon svg { width: 20px; height: 20px; }
   .mobile-nav-item .label { font-size: 10px; }
   .mobile-nav-item { min-height: 48px; }
   .mobile-fab { width: 50px; height: 50px; font-size: 24px; right: 12px; }
@@ -6895,8 +7767,8 @@ input, select, textarea, button, [contenteditable] {
   </div>
   <div class="empty hidden" id="empty">
     <h2>还没有项目</h2>
-    <p>点击右上角「+ 新增记录」开始 · 数据保存在浏览器本地</p>
-    <button class="btn btn-primary" onclick="document.getElementById('viewAddRecord').click()">+ 新增记录</button>
+    <p>数据保存在浏览器本地</p>
+    <button class="btn btn-primary" id="emptyNewProject" type="button">+ 新建项目</button>
   </div>
 </div>
 
@@ -7320,7 +8192,8 @@ let prevSearch = '';
 // - 视口窄:1-2 列(原有响应式)
 function getColumnCount() {
   const vw = window.innerWidth;
-  if (vw < 560) return 1;
+  // v5.32: align with CSS mobile breakpoint 767px — force single column on phones
+  if (vw < 768) return 1;
   if (vw < 900) return 2;
   if (currentFilter === 'all' && !currentSearch) return 4;
   return 1;
@@ -8032,6 +8905,8 @@ function setView(view) {
   // 3.1.1 防御:首次切换到月历偶现不显示(猜测是 render() 早 return + grid.innerHTML='' 时机)
   // 用 rAF 强制再渲染一次,确保 #calendar 填充内容
   if (view === 'calendar') {
+    // v5.38: 手机与桌面统一使用月历网格
+    document.body.dataset.calMode = 'grid';
     requestAnimationFrame(() => {
       const c = document.getElementById('calendar');
       if (c && !c.classList.contains('hidden') && c.innerHTML.trim() === '') {
@@ -8717,8 +9592,9 @@ function renderOverviewDonut(entries, year, month) {
   const totalMs = entries.reduce((s, e) => s + (e.totalTimeMs || 0), 0);
   const totalHours = totalMs / 3600000;
   const workdays = getMonthWorkdays(year, month);
-  const targetMs = workdays * 8 * 3600000;
-  const targetHours = workdays * 8;
+  // v5.35: 每月目标固定 150h（不再按工作日×8）
+  const targetHours = 150;
+  const targetMs = targetHours * 3600000;
   const pct = targetMs > 0 ? Math.min(totalMs / targetMs, 1) : 0;
   const displayPct = targetMs > 0 ? Math.round((totalMs / targetMs) * 100) : 0;
   const deg = Math.round(pct * 360);
@@ -10202,6 +11078,19 @@ function ensureProjectPosition(p, cols, colWidth, gap) {
 function applyMasonryLayout() {
   const grid = document.getElementById('grid');
   if (!grid) return;
+  // v5.32: 手机端完全交给 CSS 单列 flex，清掉所有 absolute 内联样式，避免与 !important 打架导致空白/错位
+  if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
+    grid.style.height = 'auto';
+    grid.style.position = '';
+    Array.from(grid.querySelectorAll('.card, .unified-card')).forEach(card => {
+      card.style.left = '';
+      card.style.top = '';
+      card.style.width = '';
+      card.style.position = '';
+      card.style.transform = '';
+    });
+    return;
+  }
   const containerWidth = grid.clientWidth;
   if (containerWidth === 0) return;
   const cols = getColumnCount();
@@ -10827,6 +11716,11 @@ function applyStableLayout(snap, draggedId, targetId) {
   // v1.6.13 终极方案: 读 project.position, 固定 gap 12px 累加
   const grid = document.getElementById('grid');
   if (!grid) return;
+  // v5.32: mobile 走 CSS flex，跳过 absolute 布局
+  if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
+    applyMasonryLayout(); // 会清样式
+    return;
+  }
   const containerWidth = grid.clientWidth;
   if (containerWidth === 0) return;
   const cols = getColumnCount();
@@ -11045,6 +11939,17 @@ function render() {
     applyStableLayout(prevSnap, null, null);
   } else {
     applyMasonryLayout();
+  }
+  // v5.39: 手机端在项目列表底部放「+ 新建项目」（替代右下角 FAB）
+  if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches && currentView === 'board') {
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'mobile-add-project-btn';
+    addBtn.textContent = '+ 新建项目';
+    addBtn.addEventListener('click', () => {
+      document.getElementById('newProject')?.click();
+    });
+    grid.appendChild(addBtn);
   }
   // 记录这一帧的 filter / search(下一帧做对比用)
   prevFilter = currentFilter;
@@ -11525,16 +12430,13 @@ function renderTask(t, project, opts = {}) {
           data-action="edit-start"
           title="开始日 ${t.startDate}${t.due ? ' · 到期 ' + t.due : ''} · 点击修改">${startLabel(t.startDate)}</span>
   ` : '';
-  // 3.1.1 移动端: 上移/下移按钮(拖动降级,只在 mobile 显示)
-  const showReorder = !opts.showProjectLabel && window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
-  const reorderHtml = showReorder ? `
-    <span class="task-reorder" data-role="task-reorder">
-      <button type="button" data-action="task-move-up" title="上移" aria-label="上移">▲</button>
-      <button type="button" data-action="task-move-down" title="下移" aria-label="下移">▼</button>
-    </span>
-  ` : '';
+  // v5.37: 手机端用手柄拖动排序，不再渲染上下箭头
+  const reorderHtml = '';
+  // 手机端关闭整行 HTML5 drag（改由手柄 pointer 拖动），桌面保留
+  const isMob = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+  li.draggable = !isMob;
   li.innerHTML = `
-    <span class="task-handle" title="拖动排序">⋮⋮</span>
+    <span class="task-handle" title="拖动排序" aria-label="拖动排序">⋮⋮</span>
     ${opts.showProjectLabel
       ? `<span class="task-project-label" data-action="open-project-from-label" data-project-id="${project.id}" style="--proj-color:${projectColor(project)}" title="${escapeHtml(project.name)} · 点击编辑项目">${escapeHtml(project.name)}</span>`
       : ''}
@@ -11737,15 +12639,31 @@ function openCardAddForm(card, project) {
   dueInput.addEventListener('change', syncDueStyle);
   dueInput.addEventListener('input', syncDueStyle);
 
-  form.addEventListener('submit', e => {
-    e.preventDefault();
+  // v5.36: 统一提交逻辑；手机端 type=submit 偶发无响应，额外绑 click/touchend
+  const doSubmit = () => {
     const title = titleInput.value.trim();
-    if (!title) { titleInput.focus(); return; }
+    if (!title) { titleInput.focus(); return false; }
     pushHistory();
     project.tasks.push({ id: uid(), title, due: dueInput.value || '', done: false });
     save();
     render();
+    return true;
+  };
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    doSubmit();
   });
+  const submitBtn = form.querySelector('.card-add-submit');
+  if (submitBtn) {
+    const onSubmitTap = e => {
+      e.preventDefault();
+      e.stopPropagation();
+      doSubmit();
+    };
+    submitBtn.addEventListener('click', onSubmitTap);
+    submitBtn.addEventListener('touchend', onSubmitTap, { passive: false });
+  }
   form.addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); closeCardAddForm(card); }
   });
@@ -11754,8 +12672,15 @@ function openCardAddForm(card, project) {
     closeCardAddForm(card);
   });
   // 防止点 form 内部空白触发 card 整体拖动 / 其它 click 冒泡
-  form.addEventListener('click', e => e.stopPropagation());
-  form.addEventListener('mousedown', e => e.stopPropagation());
+  // 注意：不要拦截 submit 按钮自身的事件
+  form.addEventListener('click', e => {
+    if (e.target.closest('.card-add-submit')) return;
+    e.stopPropagation();
+  });
+  form.addEventListener('mousedown', e => {
+    if (e.target.closest('.card-add-submit')) return;
+    e.stopPropagation();
+  });
 
   // v47: form 让卡片高度变了,用稳定列重排(其他列不动)
   setTimeout(() => {
@@ -12326,7 +13251,7 @@ document.addEventListener('click', e => {
   }
 
   // 工具栏
-  if (t.id === 'newProject') {
+  if (t.id === 'newProject' || t.id === 'emptyNewProject') {
     pushHistory();
     // v1.2: 自动编号,避免连点出 N 个"新项目"重名
     // 同月里找已存在的"新项目"/"新项目 N"数量,N+1 作为新名
@@ -12370,7 +13295,8 @@ document.addEventListener('click', e => {
   if (!foundProject) return;
   const project = foundProject.project;
   const board = foundProject.board;
-  const action = t.dataset.action;
+  // v5.35: 用 closest 取 data-action，避免点到按钮内文字节点时丢失
+  const action = (t.closest && t.closest('[data-action]')?.dataset.action) || t.dataset.action;
 
   if (action === 'open-card-add') {
     openCardAddForm(card, project);
@@ -13500,7 +14426,7 @@ function renderLitMobileCard(record, bellBadgeMap) {
         </div>
       </div>
       <div class="lit-mob-timeline">
-        ${record.timeline.length === 0 ? '<div class="lit-mob-empty">暂无进展，点击"+ 新增"开始</div>' : ''}
+        ${record.timeline.length === 0 ? '<div class="lit-mob-empty">暂无进展</div>' : ''}
         ${record.timeline.map(line => renderLitMobileLine(record, line, bellBadgeMap)).join('')}
       </div>
       <div class="lit-mob-card-actions">
@@ -13534,7 +14460,7 @@ function renderLitMobileLine(record, line, bellBadgeMap) {
         <input class="lit-mob-line-date-input" type="date" value="${escapeHtml(line.date || '')}" data-line-id="${escapeHtml(line.id)}" data-field="date" aria-label="进展日期">
         <button class="lit-mob-bell-btn ${bellInfo.count > 0 ? 'has-reminders' : ''}" type="button" data-action="lit-mob-bell" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}" title="设置提醒${bellInfo.count > 0 ? ' · 已设 ' + bellInfo.count + ' 条' : ''}" aria-label="设置提醒">🔔${bellInfo.count > 0 ? ' ' + bellInfo.count : ''}</button>
       </div>
-      <textarea class="lit-mob-line-text" rows="1" placeholder="诉讼进展（例：法院已立案，进入诉前调解）" data-line-id="${escapeHtml(line.id)}" data-field="text" aria-label="诉讼进展">${escapeHtml(line.text || '')}</textarea>
+      <textarea class="lit-mob-line-text" rows="1" placeholder="进展内容" data-line-id="${escapeHtml(line.id)}" data-field="text" aria-label="诉讼进展">${escapeHtml(line.text || '')}</textarea>
       <div class="lit-mob-todos">${todosHtml}</div>
       <div class="lit-mob-line-actions">
         <button type="button" data-variant="add" data-action="lit-mob-add-todo" data-line-id="${escapeHtml(line.id)}">+ 待办</button>
@@ -17607,9 +18533,17 @@ document.addEventListener('keydown', e => {
 
   function setOpen(open){
     panel.classList.toggle('open',open); panel.setAttribute('aria-hidden',String(!open));
-    fab.setAttribute('aria-expanded',String(open));fab.style.display=open?'none':'flex';
+    fab.setAttribute('aria-expanded',String(open));
+    // v5.36: 手机端 fab 始终由 CSS 隐藏，不要被 inline display 拉出来
+    if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
+      fab.style.display = 'none';
+    } else {
+      fab.style.display = open ? 'none' : 'flex';
+    }
     if(open){applySavedPosition();setTimeout(()=>input.focus(),180);}else closeShortcutEditor();
   }
+  // 供手机「更多」菜单调用
+  window.__openBotPanel = function(){ setOpen(true); };
   function addMessage(text, role='bot', extraClass=''){
     const el=document.createElement('div'); el.className=`bot-msg ${role} ${extraClass}`; el.textContent=text; messages.appendChild(el); messages.scrollTop=messages.scrollHeight; return el;
   }
@@ -18055,25 +18989,33 @@ document.addEventListener('keydown', e => {
 <!-- 底部四项导航(只在 mobile 断点下通过 CSS 显示) -->
 <nav class="mobile-nav" id="mobileNav" aria-label="主导航">
   <button class="mobile-nav-item active" data-view="board" type="button" aria-label="看板">
-    <span class="icon" aria-hidden="true">▦</span>
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M15 4v16"/><path d="M9 9h.01M15 11h.01M9 14h.01"/></svg>
+    </span>
     <span class="label">看板</span>
   </button>
   <button class="mobile-nav-item" data-view="calendar" type="button" aria-label="日程">
-    <span class="icon" aria-hidden="true">📅</span>
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></svg>
+    </span>
     <span class="label">日程</span>
   </button>
   <button class="mobile-nav-item" data-view="timesheet" type="button" aria-label="工时">
-    <span class="icon" aria-hidden="true">⏱</span>
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+    </span>
     <span class="label">工时</span>
   </button>
   <button class="mobile-nav-item" data-view="litigation" type="button" aria-label="诉讼">
-    <span class="icon" aria-hidden="true">⚖</span>
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M7 7l-2.5 6a2.5 2.5 0 1 0 5 0L7 7"/><path d="M17 7l-2.5 6a2.5 2.5 0 1 0 5 0L17 7"/><path d="M9 21h6"/></svg>
+    </span>
     <span class="label">诉讼</span>
   </button>
 </nav>
 
 <!-- 移动端浮动按钮: 当前 board 视图下显示,点击新建任务(打开项目 → 添加任务) -->
-<button class="mobile-fab" id="mobileFab" type="button" aria-label="新建任务" title="新建任务">
+<button class="mobile-fab" id="mobileFab" type="button" aria-label="新建项目" title="新建项目">
   <span aria-hidden="true">+</span>
 </button>
 
@@ -18123,6 +19065,21 @@ document.addEventListener('keydown', e => {
       <div class="mobile-theme-picker" id="mobileThemePicker" data-field="theme">
         <div class="mobile-theme-label">🎨 主题 · 当前 <span id="mobileThemeCurrent">—</span></div>
         <div class="mobile-theme-grid" id="mobileThemeGrid"></div>
+      </div>
+      <!-- v5.36: AI 对话助手 + 工时 AI 优化，统一放进「⋯」更多菜单 -->
+      <div class="mobile-ai-picker" id="mobileAiPicker">
+        <div class="mobile-theme-label">✨ AI 助手</div>
+        <button class="btn btn-primary" id="mobileOpenBot" type="button" style="min-height:44px;font-weight:700;">打开 AI 对话助手</button>
+        <div class="mobile-theme-label" style="margin-top:4px;">工时描述语言</div>
+        <div class="mobile-ai-langs" id="mobileAiLangs">
+          <button type="button" class="btn mobile-ai-lang" data-mobile-lang="ZH">中文</button>
+          <button type="button" class="btn mobile-ai-lang" data-mobile-lang="JA">日文</button>
+          <button type="button" class="btn mobile-ai-lang" data-mobile-lang="EN">英文</button>
+        </div>
+        <button class="btn" id="mobileAiOptimizeAll" type="button">AI 一键优化全部</button>
+        <button class="btn" id="mobileAiTerms" type="button">术语库</button>
+        <button class="btn" id="mobileAiApi" type="button">API 设置</button>
+        <div class="mobile-ai-status" id="mobileAiStatus">未设置 API</div>
       </div>
       <button class="btn" id="mobileTrash" type="button">🗑 回收站</button>
       <button class="btn" id="mobileExport" type="button">⬇ 导出 JSON 备份</button>
@@ -18384,9 +19341,9 @@ self.addEventListener('fetch', e => {
       nav.querySelectorAll('.mobile-nav-item').forEach(n => {
         n.classList.toggle('active', n.dataset.view === v);
       });
-      // 同步 FAB 显示
+      // v5.39: 主 FAB 已移除
       const fab = document.getElementById('mobileFab');
-      if (fab) fab.classList.toggle('show', v === 'board');
+      if (fab) fab.classList.remove('show');
     });
     obs.observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
     // 初始同步
@@ -18395,33 +19352,22 @@ self.addEventListener('fetch', e => {
       n.classList.toggle('active', n.dataset.view === initialView);
     });
     const fab = document.getElementById('mobileFab');
-    if (fab) fab.classList.toggle('show', initialView === 'board');
+    if (fab) fab.classList.remove('show');
   }
 
   // ---- 8) FAB: 新建任务(在 board 视图下) ----
   function bindFab() {
     const fab = document.getElementById('mobileFab');
     if (!fab) return;
+    fab.setAttribute('aria-label', '新建项目');
+    fab.setAttribute('title', '新建项目');
     fab.addEventListener('click', () => {
       if (document.body.dataset.view !== 'board') return;
-      // 策略:把当前 board 的"添加任务"输入框聚焦
-      // 1) 优先尝试 unified card 的输入框
-      const unified = document.querySelector('.unified-add-form input[data-role="title"]');
-      if (unified) {
-        unified.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        unified.focus();
-        return;
-      }
-      // 2) fallback: 找任意 .add-task input
-      const addInput = document.querySelector('.add-task input[type="text"]');
-      if (addInput) {
-        addInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        addInput.focus();
-        return;
-      }
-      // 3) 都没有: 触发"新建项目"流程(顶部 newProject 按钮)
+      // v5.38: 右下角 + = 新建项目（任务请用项目卡上的 +）
       const newProj = document.getElementById('newProject');
-      if (newProj) newProj.click();
+      if (newProj) { newProj.click(); return; }
+      // fallback: 触发与 newProject 相同的逻辑（按钮被隐藏时仍可点）
+      document.getElementById('mobileNewProject')?.click();
     });
   }
 
@@ -18434,6 +19380,8 @@ self.addEventListener('fetch', e => {
     fab.addEventListener('click', () => {
       // 3.1.1: 打开抽屉时刷新主题网格
       renderMobileThemeGrid();
+      // v5.34: 同步 AI 语言选中态与 API 状态
+      syncMobileAiPanel();
       modal.hidden = false;
       document.body.classList.add('modal-open');
     });
@@ -18453,6 +19401,61 @@ self.addEventListener('fetch', e => {
         renderMobileThemeGrid();
       });
     }
+    // v5.34: AI 助手 — 语言切换 / 一键优化 / 术语库 / API 设置
+    const aiLangs = document.getElementById('mobileAiLangs');
+    if (aiLangs) {
+      aiLangs.addEventListener('click', e => {
+        const btn = e.target.closest('[data-mobile-lang]');
+        if (!btn) return;
+        const lang = btn.dataset.mobileLang;
+        // 触发桌面端语言按钮逻辑（保持状态一致）
+        const desk = document.querySelector(`#tsLangMenu .ts-lang-opt[data-lang="${lang}"]`);
+        if (desk) desk.click();
+        else if (typeof TS_LANGUAGES !== 'undefined' && TS_LANGUAGES.includes(lang)) {
+          // fallback: 直接写全局
+          if (typeof tsTranslationLang !== 'undefined') {
+            // 通过桌面 handler 的同款路径
+            const fake = document.querySelector('#tsLangMenu .ts-lang-opt');
+            if (fake) {
+              // 若没有对应按钮，手动同步
+            }
+          }
+        }
+        syncMobileAiPanel();
+      });
+    }
+    // v5.36: 打开 AI 对话助手面板（替代底部黑色悬浮球）
+    document.getElementById('mobileOpenBot')?.addEventListener('click', () => {
+      modal.hidden = true;
+      document.body.classList.remove('modal-open');
+      // 优先走全局钩子；否则触发隐藏的 botFab click
+      if (typeof window.__openBotPanel === 'function') {
+        window.__openBotPanel();
+      } else {
+        const botFab = document.getElementById('botFab');
+        if (botFab) {
+          botFab.style.display = 'flex'; // 临时可点
+          botFab.click();
+        }
+      }
+    });
+    document.getElementById('mobileAiOptimizeAll')?.addEventListener('click', () => {
+      modal.hidden = true;
+      document.body.classList.remove('modal-open');
+      document.getElementById('tsTranslateAll')?.click();
+    });
+    document.getElementById('mobileAiTerms')?.addEventListener('click', () => {
+      modal.hidden = true;
+      document.body.classList.remove('modal-open');
+      if (typeof openTermLibrary === 'function') openTermLibrary();
+      else document.getElementById('tsTermLibrary')?.click();
+    });
+    document.getElementById('mobileAiApi')?.addEventListener('click', () => {
+      modal.hidden = true;
+      document.body.classList.remove('modal-open');
+      if (typeof openDeepSeekSettings === 'function') openDeepSeekSettings();
+      else document.getElementById('tsDeepSeekSettings')?.click();
+    });
     // 转发到桌面按钮(复用现有逻辑)
     function proxy(id) {
       document.getElementById(id)?.addEventListener('click', () => {
@@ -18469,6 +19472,19 @@ self.addEventListener('fetch', e => {
       });
     }
     ['mobileNewProject', 'mobileTrash', 'mobileExport', 'mobileImport', 'mobileVault'].forEach(proxy);
+  }
+
+  // v5.34: 同步手机端 AI 面板的语言高亮与 API 状态文案
+  function syncMobileAiPanel() {
+    const cur = (typeof tsTranslationLang !== 'undefined') ? tsTranslationLang : 'JA';
+    document.querySelectorAll('#mobileAiLangs .mobile-ai-lang').forEach(b => {
+      b.classList.toggle('active', b.dataset.mobileLang === cur);
+    });
+    const statusEl = document.getElementById('mobileAiStatus');
+    const deskStatus = document.getElementById('tsDeepSeekStatus');
+    if (statusEl) {
+      statusEl.textContent = deskStatus ? (deskStatus.textContent || '未设置 API') : '未设置 API';
+    }
   }
 
   // 3.1.1 渲染 mobile 主题选择网格(色块 + 当前主题高亮)
@@ -18534,43 +19550,11 @@ self.addEventListener('fetch', e => {
 
   // ---- 11) 移动端日历:默认日程列表,顶部"日程/网格"切换 ----
   function ensureMobileCalendarToggle() {
-    if (document.getElementById('calModeToggle')) return;
-    // 只在 mobile 上挂日程/网格切换,desktop 走 grid
-    if (!window.matchMedia('(max-width: 767px)').matches) {
-      document.body.dataset.calMode = 'grid';
-      return;
-    }
-    const calNav = document.getElementById('calNav');
-    if (!calNav) return;
-    const wrap = document.createElement('div');
-    wrap.id = 'calModeToggle';
-    wrap.className = 'mobile-only';
-    wrap.style.cssText = 'display:flex;gap:4px;margin:6px 0 10px;';
-    wrap.innerHTML = `
-      <button class="pill active" data-cal-mode="agenda" type="button" style="flex:1;padding:6px 10px;border-radius:8px;">日程</button>
-      <button class="pill" data-cal-mode="grid" type="button" style="flex:1;padding:6px 10px;border-radius:8px;">月历</button>
-    `;
-    wrap.addEventListener('click', e => {
-      const btn = e.target.closest('[data-cal-mode]');
-      if (!btn) return;
-      wrap.querySelectorAll('[data-cal-mode]').forEach(b => b.classList.toggle('active', b === btn));
-      document.body.dataset.calMode = btn.dataset.calMode;
-      try { localStorage.setItem('kanban_cal_mode_v31', btn.dataset.calMode); } catch {}
-    });
-    // 恢复上次模式
-    try {
-      const m = localStorage.getItem('kanban_cal_mode_v31');
-      if (m) {
-        document.body.dataset.calMode = m;
-        wrap.querySelectorAll('[data-cal-mode]').forEach(b => b.classList.toggle('active', b.dataset.calMode === m));
-      } else {
-        document.body.dataset.calMode = 'agenda';
-      }
-    } catch {
-      document.body.dataset.calMode = 'agenda';
-    }
-    // 插入到 calNav 之后
-    calNav.parentNode.insertBefore(wrap, calNav.nextSibling);
+    // v5.38: 恢复月历网格视图（不再强制 agenda 列表）
+    const existing = document.getElementById('calModeToggle');
+    if (existing) existing.remove();
+    document.body.dataset.calMode = 'grid';
+    try { localStorage.setItem('kanban_cal_mode_v31', 'grid'); } catch {}
   }
 
   // ---- 12) 底部 nav 在桌面端始终隐藏(已在 CSS 处理);resize 时重新计算 ----
@@ -18578,12 +19562,196 @@ self.addEventListener('fetch', e => {
     // 触发底部 nav 重渲染(因 CSS 控制,这里只需更新 FAB 显隐)
     const fab = document.getElementById('mobileFab');
     const fab2 = document.getElementById('mobileMenuFab');
-    const showFab = IS_MOBILE() && document.body.dataset.view === 'board';
-    if (fab) fab.classList.toggle('show', showFab);
+    // v5.39: 主 FAB 已移除，始终不显示
+    if (fab) fab.classList.remove('show');
     if (fab2) fab2.classList.toggle('show', IS_MOBILE());
   }
 
   // ---- 启动 ----
+  // ---- v5.37: 手机端任务手柄拖动排序 ----
+  function bindMobileTaskHandleDrag() {
+    let dragState = null;
+
+    function clearDropMarks() {
+      document.querySelectorAll('.task.task-drop-before, .task.task-drop-after, .task.task-handle-dragging')
+        .forEach(el => el.classList.remove('task-drop-before', 'task-drop-after', 'task-handle-dragging'));
+    }
+
+    function siblingsOf(taskEl) {
+      const ul = taskEl.closest('ul.tasks, ul');
+      if (!ul) return [];
+      return Array.from(ul.querySelectorAll(':scope > .task'));
+    }
+
+    function applyReorder(fromId, toId, after) {
+      if (!fromId || !toId || fromId === toId) return;
+      // 找任务所在项目
+      let project = null, fromIdx = -1;
+      const boards = (typeof store !== 'undefined' && store.boards) ? store.boards : null;
+      // 使用全局 state / findProjectAcrossBoards
+      if (typeof findProjectAcrossBoards === 'function') {
+        // 需要先拿到 projectId from DOM
+      }
+      const fromEl = document.querySelector(`.task[data-task-id="${fromId}"]`);
+      const pid = fromEl?.dataset.projectId;
+      if (!pid) return;
+      const found = typeof findProjectAcrossBoards === 'function' ? findProjectAcrossBoards(pid) : null;
+      project = found?.project || (typeof state !== 'undefined' ? state.projects.find(p => p.id === pid) : null);
+      if (!project || !Array.isArray(project.tasks)) return;
+      fromIdx = project.tasks.findIndex(t => t.id === fromId);
+      let toIdx = project.tasks.findIndex(t => t.id === toId);
+      if (fromIdx < 0 || toIdx < 0) return;
+      if (typeof pushHistory === 'function') pushHistory();
+      const [moved] = project.tasks.splice(fromIdx, 1);
+      // 删除后目标下标可能变化
+      toIdx = project.tasks.findIndex(t => t.id === toId);
+      if (toIdx < 0) {
+        project.tasks.push(moved);
+      } else {
+        const insertAt = after ? toIdx + 1 : toIdx;
+        project.tasks.splice(insertAt, 0, moved);
+      }
+      if (typeof save === 'function') save();
+      if (typeof render === 'function') render();
+    }
+
+    document.addEventListener('pointerdown', e => {
+      if (!window.matchMedia('(max-width: 767px)').matches) return;
+      const handle = e.target.closest('.task-handle');
+      if (!handle) return;
+      const taskEl = handle.closest('.task');
+      if (!taskEl || !taskEl.dataset.taskId) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dragState = {
+        id: taskEl.dataset.taskId,
+        projectId: taskEl.dataset.projectId,
+        startY: e.clientY,
+        pointerId: e.pointerId,
+        moved: false,
+        targetId: null,
+        after: false,
+      };
+      taskEl.classList.add('task-handle-dragging');
+      try { handle.setPointerCapture(e.pointerId); } catch {}
+    }, { passive: false });
+
+    document.addEventListener('pointermove', e => {
+      if (!dragState) return;
+      if (Math.abs(e.clientY - dragState.startY) > 4) dragState.moved = true;
+      if (!dragState.moved) return;
+      const fromEl = document.querySelector(`.task[data-task-id="${dragState.id}"]`);
+      if (!fromEl) return;
+      const list = siblingsOf(fromEl);
+      clearDropMarks();
+      fromEl.classList.add('task-handle-dragging');
+      let hit = null;
+      for (const el of list) {
+        if (el.dataset.taskId === dragState.id) continue;
+        const r = el.getBoundingClientRect();
+        if (e.clientY >= r.top && e.clientY <= r.bottom) {
+          hit = el;
+          dragState.after = e.clientY > (r.top + r.height / 2);
+          break;
+        }
+      }
+      if (hit) {
+        dragState.targetId = hit.dataset.taskId;
+        hit.classList.add(dragState.after ? 'task-drop-after' : 'task-drop-before');
+      } else {
+        dragState.targetId = null;
+      }
+    });
+
+    const end = e => {
+      if (!dragState) return;
+      const { id, targetId, after, moved, pointerId } = dragState;
+      dragState = null;
+      clearDropMarks();
+      try {
+        const handle = document.querySelector(`.task[data-task-id="${id}"] .task-handle`);
+        if (handle) handle.releasePointerCapture?.(pointerId);
+      } catch {}
+      if (moved && targetId) applyReorder(id, targetId, after);
+    };
+    document.addEventListener('pointerup', end);
+    document.addEventListener('pointercancel', end);
+  }
+
+  // ---- v5.37: 右下角「⋯」可拖动 ----
+  function bindMobileMenuFabDrag() {
+    const fab = document.getElementById('mobileMenuFab');
+    if (!fab) return;
+    const POS_KEY = 'kanban_mobile_menu_fab_pos_v37';
+    let dragging = false, moved = false, suppressClick = false;
+    let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+    function applySaved() {
+      try {
+        const pos = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
+        if (!pos || typeof pos.left !== 'number' || typeof pos.top !== 'number') return;
+        fab.style.left = pos.left + 'px';
+        fab.style.top = pos.top + 'px';
+        fab.style.right = 'auto';
+        fab.style.bottom = 'auto';
+      } catch {}
+    }
+    applySaved();
+
+    fab.addEventListener('pointerdown', e => {
+      if (!window.matchMedia('(max-width: 767px)').matches) return;
+      if (e.button !== undefined && e.button !== 0) return;
+      const rect = fab.getBoundingClientRect();
+      dragging = true; moved = false;
+      startX = e.clientX; startY = e.clientY;
+      startLeft = rect.left; startTop = rect.top;
+      fab.style.left = rect.left + 'px';
+      fab.style.top = rect.top + 'px';
+      fab.style.right = 'auto';
+      fab.style.bottom = 'auto';
+      fab.style.transition = 'none';
+      fab.classList.add('dragging');
+      try { fab.setPointerCapture(e.pointerId); } catch {}
+      e.preventDefault();
+    });
+
+    fab.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) > 6) moved = true;
+      if (!moved) return;
+      const w = fab.offsetWidth || 44, h = fab.offsetHeight || 44;
+      const left = Math.min(window.innerWidth - w - 8, Math.max(8, startLeft + e.clientX - startX));
+      const top = Math.min(window.innerHeight - h - 8, Math.max(8, startTop + e.clientY - startY));
+      fab.style.left = left + 'px';
+      fab.style.top = top + 'px';
+    });
+
+    const finish = e => {
+      if (!dragging) return;
+      dragging = false;
+      fab.classList.remove('dragging');
+      fab.style.transition = '';
+      try { fab.releasePointerCapture?.(e.pointerId); } catch {}
+      if (!moved) return;
+      const rect = fab.getBoundingClientRect();
+      try {
+        localStorage.setItem(POS_KEY, JSON.stringify({ left: Math.round(rect.left), top: Math.round(rect.top) }));
+      } catch {}
+      suppressClick = true;
+      setTimeout(() => { suppressClick = false; }, 50);
+    };
+    fab.addEventListener('pointerup', finish);
+    fab.addEventListener('pointercancel', finish);
+
+    // 拦截 click：拖动后不打开菜单
+    fab.addEventListener('click', e => {
+      if (suppressClick) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    }, true);
+  }
+
   function boot() {
     injectManifest();
     registerSW();
@@ -18593,6 +19761,8 @@ self.addEventListener('fetch', e => {
     bindMobileNav();
     bindFab();
     bindMobileMenu();
+    bindMobileTaskHandleDrag();
+    bindMobileMenuFabDrag();
     bindModalClass();
     bindTimerPrefs();
     ensureMobileCalendarToggle();
