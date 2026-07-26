@@ -2,15 +2,15 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kanban · 工时单多选看板 v5.42</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Kanban · 工时单多选看板 v5.46</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="3_42_260726">
+<meta name="build-hash" content="3_46_260726">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -566,6 +566,10 @@ h1 {
   font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.8px;
+  color: var(--text);
+}
+/* 渐变字仅作用于文字，避免 SVG 图标被 transparent 吃掉 */
+h1 .page-title-text {
   background: linear-gradient(135deg, var(--text) 0%, color-mix(in srgb, var(--text) 60%, var(--accent)) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -633,6 +637,59 @@ h1 {
   box-shadow: 0 1px 4px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.04);
 }
 #viewPills .pill { cursor: pointer; touch-action: none; user-select: none; }
+/* v5.45: 大标题自带与手机底栏同款 SVG 图标（不再另建图标功能区） */
+.title-group h1 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.title-group h1 .page-title-icon {
+  display: inline-flex;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  color: var(--accent);
+  /* 与标题字号对齐：h1 为 30px / 手机 20px，1em 同步缩放 */
+}
+.title-group h1 .page-title-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  stroke-width: 1.6;
+}
+.title-group h1 .page-title-text {
+  line-height: 1;
+}
+/* 工时单标题同样使用同款图标 */
+.ts-header-title {
+  gap: 8px;
+}
+.ts-header-title .page-title-icon {
+  display: inline-flex;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  color: var(--accent);
+  -webkit-text-fill-color: initial; /* 避免被渐变透明吃掉 */
+  background: none;
+}
+.ts-header-title .page-title-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  stroke-width: 1.6;
+}
+.ts-header-title .page-title-text {
+  background: linear-gradient(135deg, var(--text) 0%, color-mix(in srgb, var(--text) 60%, var(--accent)) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+
 #viewPills .pill:active { cursor: pointer; }
 #viewPills .pill.view-pill-dragging {
   opacity: .42;
@@ -4222,10 +4279,10 @@ body[data-view="timesheet"] .ts-view-bar { display: flex; }
 .ts-header-title {
   display: none;
   font-size: 30px; font-weight: 700; letter-spacing: -0.8px;
-  background: linear-gradient(135deg, var(--text) 0%, color-mix(in srgb, var(--text) 60%, var(--accent)) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  color: var(--text);
   align-items: center; padding-left: 0;
   white-space: nowrap; flex-shrink: 0;
+  gap: 8px;
 }
 body[data-view="timesheet"] .ts-header-title { display: inline-flex; }
 /* 日期按钮样式 */
@@ -5078,12 +5135,10 @@ button.ts-view-bar-btn,
 .ts-header-title {
   display: none;  /* 默认隐藏 */
   font-size: 30px; font-weight: 700; letter-spacing: -0.8px;
-  background: linear-gradient(135deg, var(--text) 0%, color-mix(in srgb, var(--text) 60%, var(--accent)) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  align-items: center;
-  padding-left: 0;
-  white-space: nowrap;
-  flex-shrink: 0;
+  color: var(--text);
+  align-items: center; padding-left: 0;
+  white-space: nowrap; flex-shrink: 0;
+  gap: 8px;
 }
 .ts-edit-hint {
   font-size: 11.5px; color: var(--muted); min-height: 16px;
@@ -5475,6 +5530,21 @@ body {
 input, select, textarea, button, [contenteditable] {
   font-size: max(16px, 1em);
   -webkit-tap-highlight-color: transparent;
+}
+/* v5.43: 强制所有可编辑控件 ≥16px，彻底阻止 iOS 聚焦缩放 */
+@media (max-width: 767px) {
+  input, select, textarea, [contenteditable],
+  .card-add-form .card-add-title,
+  .lit-mob-field input,
+  .lit-mob-field textarea,
+  .project-edit-name,
+  .project-edit-desc,
+  .ts-create-field,
+  .modal input,
+  .modal textarea,
+  .modal select {
+    font-size: 16px !important;
+  }
 }
 /* 桌面端先隐藏 mobile-only 元素 */
 .mobile-nav,
@@ -6058,7 +6128,7 @@ input, select, textarea, button, [contenteditable] {
     border-radius: 8px;
     padding: 8px 10px;
     font: inherit;
-    font-size: 14px;
+    font-size: 16px; /* v5.43: 防 iOS 聚焦缩放 */
     background: var(--card-bg-solid);
     color: var(--text);
     resize: vertical;
@@ -6633,7 +6703,7 @@ input, select, textarea, button, [contenteditable] {
     grid-area: title;
     width: 100% !important;
     min-height: 42px !important;
-    font-size: 15px !important;
+    font-size: 16px !important;
     padding: 10px 12px !important;
     border-radius: 10px !important;
   }
@@ -7372,7 +7442,7 @@ input, select, textarea, button, [contenteditable] {
 <div class="container">
   <header>
     <div class="title-group">
-      <h1 id="pageTitle">看板</h1>
+      <h1 id="pageTitle"><span class="page-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M15 4v16"/><path d="M9 9h.01M15 11h.01M9 14h.01"/></svg></span><span class="page-title-text">看板</span></h1>
       <div class="board-dropdown" id="boardDropdown">
         <button class="board-trigger" id="boardTrigger" title="切换看板">
           <span id="boardLabel">—</span>
@@ -7394,7 +7464,7 @@ input, select, textarea, button, [contenteditable] {
     </div>
     <div class="toolbar">
       <!-- v1.6.9: 工时单视图标题,默认隐藏,timesheet视图下显示 -->
-      <span class="ts-header-title" id="tsHeaderTitle">📋 工时</span>
+      <span class="ts-header-title" id="tsHeaderTitle"><span class="page-title-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span><span class="page-title-text">工时</span></span>
       <span class="ts-title-month-nav" id="tsTitleMonthNav">
         <button class="btn" type="button" id="tsPrevMonth" title="上个月">‹</button>
         <button type="button" class="ts-month-label" id="tsMonthLabel" title="返回本月">—</button>
@@ -7751,16 +7821,10 @@ input, select, textarea, button, [contenteditable] {
   <div class="modal hidden" id="termLibraryModal">
     <div class="modal-backdrop" data-action="term-close"></div>
     <div class="modal-content ai-settings-content">
-      <div class="modal-header"><h3>项目专属术语库</h3><button class="modal-close" data-action="term-close" title="关闭">×</button></div>
+      <div class="modal-header"><h3>常用工时表达</h3><button class="modal-close" data-action="term-close" title="关闭">×</button></div>
       <div class="modal-body"><div class="ai-form">
-        <div class="ai-field"><label for="termLibraryProject">项目</label><select id="termLibraryProject"></select></div>
-        <div class="ai-hint" id="termLibraryProjectLabel">术语按项目独立保存，DeepSeek 优化该项目工时描述时会自动参考。</div>
-        <div class="ai-field"><label for="termCompany">公司名称固定译法</label><textarea id="termCompany" rows="2" placeholder="每行一条，例如：海岳株式会社 = Haiyue Corporation"></textarea></div>
-        <div class="ai-field"><label for="termCaseNames">案件简称</label><textarea id="termCaseNames" rows="2" placeholder="每行一条"></textarea></div>
-        <div class="ai-field"><label for="termLegal">法律术语</label><textarea id="termLegal" rows="3" placeholder="原词 = 固定译法"></textarea></div>
-        <div class="ai-field"><label for="termPeople">人名和部门名</label><textarea id="termPeople" rows="3" placeholder="每行一条"></textarea></div>
-        <div class="ai-field"><label for="termNoTranslate">禁止翻译的词</label><textarea id="termNoTranslate" rows="2" placeholder="保持原文的词，每行一条"></textarea></div>
-        <div class="ai-field"><label for="termExpressions">常用工时表达</label><textarea id="termExpressions" rows="4" placeholder="例：看合同 = 契約書の主要条項の確認及び修正案の検討"></textarea></div>
+        <div class="ai-hint" id="termLibraryProjectLabel">全局常用工时表达。DeepSeek 优化工时描述时会自动参考。</div>
+        <div class="ai-field"><label for="termExpressions">常用工时表达</label><textarea id="termExpressions" rows="12" placeholder="每行一条，例如：&#10;看合同 = 契約書の主要条項の確認及び修正案の検討&#10;开会 = クライアントとの打ち合わせ&#10;写邮件 = メールの作成・送付"></textarea></div>
       </div></div>
       <div class="modal-footer"><button class="btn" data-action="term-close">取消</button><button class="btn btn-primary" id="termLibrarySave" type="button">保存术语库</button></div>
     </div>
@@ -8905,8 +8969,10 @@ function setView(view) {
   // 3.1.1 防御:首次切换到月历偶现不显示(猜测是 render() 早 return + grid.innerHTML='' 时机)
   // 用 rAF 强制再渲染一次,确保 #calendar 填充内容
   if (view === 'calendar') {
-    // v5.38: 手机与桌面统一使用月历网格
-    document.body.dataset.calMode = 'grid';
+    // v5.43: 手机端强制日程列表(agenda)，桌面保持月历网格 — 手机格子里任务完全看不清
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    document.body.dataset.calMode = isMobile ? 'agenda' : 'grid';
+    try { localStorage.setItem('kanban_cal_mode_v31', document.body.dataset.calMode); } catch {}
     requestAnimationFrame(() => {
       const c = document.getElementById('calendar');
       if (c && !c.classList.contains('hidden') && c.innerHTML.trim() === '') {
@@ -8936,6 +9002,8 @@ function restoreViewPillOrder() {
     if (pill) bar.appendChild(pill);
   });
 }
+
+
 function initViewPillReorder() {
   const bar = document.getElementById('viewPills');
   if (!bar) return;
@@ -9283,37 +9351,44 @@ function listTermLibraryProjects() {
   return [...items.values()].sort((a, b) => a.label.localeCompare(b.label, 'zh-CN'));
 }
 function fillTermLibraryForm(key) {
-  activeTermLibraryKey = key || '';
-  const lib = getTermLibrary(activeTermLibraryKey);
-  const ids = { company: 'termCompany', caseNames: 'termCaseNames', legal: 'termLegal', people: 'termPeople', noTranslate: 'termNoTranslate', expressions: 'termExpressions' };
-  TERM_FIELDS.forEach(field => { const el = document.getElementById(ids[field]); if (el) el.value = lib[field] || ''; });
+  activeTermLibraryKey = key;
+  const lib = getTermLibrary(key);
+  const el = document.getElementById('termExpressions');
+  if (el) el.value = lib.expressions || '';
 }
 function openTermLibrary() {
-  const select = document.getElementById('termLibraryProject');
-  const projects = listTermLibraryProjects();
-  if (!projects.length) { showToast('暂无可设置术语的项目'); return; }
-  select.innerHTML = projects.map(p => `<option value="${escapeHtml(p.key)}">${escapeHtml(p.label)}</option>`).join('');
-  const preferred = projects.some(p => p.key === activeTermLibraryKey) ? activeTermLibraryKey : projects[0].key;
-  select.value = preferred;
-  fillTermLibraryForm(preferred);
+  // v5.46: 全局常用工时表达，不再按项目选择
+  activeTermLibraryKey = '__global__';
+  fillTermLibraryForm('__global__');
   document.getElementById('termLibraryModal').classList.remove('hidden');
 }
 function closeTermLibrary() { document.getElementById('termLibraryModal').classList.add('hidden'); }
 function saveTermLibrary() {
-  if (!activeTermLibraryKey) return;
-  const ids = { company: 'termCompany', caseNames: 'termCaseNames', legal: 'termLegal', people: 'termPeople', noTranslate: 'termNoTranslate', expressions: 'termExpressions' };
-  const lib = {};
-  TERM_FIELDS.forEach(field => { lib[field] = String(document.getElementById(ids[field])?.value || '').trim(); });
-  ensureTermLibraries()[activeTermLibraryKey] = lib;
+  // v5.46: 保存到全局 key
+  activeTermLibraryKey = '__global__';
+  const prev = getTermLibrary('__global__');
+  const expressions = (document.getElementById('termExpressions')?.value || '').trim();
+  ensureTermLibraries()['__global__'] = { ...prev, expressions };
   save({ skipVault: true, immediate: true });
   closeTermLibrary();
-  showToast('项目术语库已保存');
+  showToast('常用工时表达已保存');
 }
 function termLibraryPromptText(entry) {
-  const lib = getTermLibrary(entry);
+  // v5.46: 优先用全局常用工时表达，并合并项目级旧数据（若有）
+  const globalLib = getTermLibrary('__global__');
+  const projLib = entry ? getTermLibrary(entry) : blankTermLibrary();
+  const lib = {
+    company: projLib.company || '',
+    caseNames: projLib.caseNames || '',
+    legal: projLib.legal || '',
+    people: projLib.people || '',
+    noTranslate: projLib.noTranslate || '',
+    expressions: globalLib.expressions || projLib.expressions || '',
+  };
   const labels = { company: '公司名称固定译法', caseNames: '案件简称', legal: '法律术语', people: '人名和部门名', noTranslate: '禁止翻译的词', expressions: '常用工时表达' };
-  return TERM_FIELDS.filter(k => lib[k]).map(k => `${labels[k]}：\n${lib[k]}`).join('\n\n') || '（无项目专属术语）';
+  return TERM_FIELDS.filter(k => lib[k]).map(k => `${labels[k]}：\n${lib[k]}`).join('\n\n') || '（无常用工时表达）';
 }
+
 async function requestDeepSeek(entries, targetLang, override = {}) {
   const settings = { ...deepSeekSettings(), ...override };
   const apiKey = settings.apiKey;
@@ -11969,18 +12044,39 @@ function updatePageTitle() {
   const title = document.getElementById('pageTitle');
   const calNav = document.getElementById('calNav');
   const calMonthLabel = document.getElementById('calMonthLabel');
+  // v5.45: 大标题使用与手机底部导航同款 SVG 图标（不另建功能区）
+  const ICONS = {
+    board: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M15 4v16"/><path d="M9 9h.01M15 11h.01M9 14h.01"/></svg>',
+    calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></svg>',
+    timesheet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
+    litigation: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M7 7l-2.5 6a2.5 2.5 0 1 0 5 0L7 7"/><path d="M17 7l-2.5 6a2.5 2.5 0 1 0 5 0L17 7"/><path d="M9 21h6"/></svg>',
+  };
+  const setTitle = (viewKey, label) => {
+    const html = `<span class="page-title-icon" aria-hidden="true">${ICONS[viewKey] || ''}</span><span class="page-title-text">${label}</span>`;
+    if (title) title.innerHTML = html;
+    // v5.46: 工时单可见标题是 tsHeaderTitle（title-group 在工时视图被隐藏）
+    const tsTitle = document.getElementById('tsHeaderTitle');
+    if (tsTitle && viewKey === 'timesheet') tsTitle.innerHTML = html;
+  };
   if (currentView === 'calendar') {
-    if (title) title.textContent = '月历';
-    if (calMonthLabel) calMonthLabel.textContent = `${calState.year} 年 ${calState.month + 1} 月`;
-    if (calNav) calNav.classList.remove('hidden');
+    const isAgenda = (document.body.dataset.calMode || 'grid') === 'agenda';
+    setTitle('calendar', isAgenda ? '日程' : '月历');
+    if (calMonthLabel) {
+      if (isAgenda) {
+        calMonthLabel.textContent = '近期任务';
+      } else {
+        calMonthLabel.textContent = `${calState.year} 年 ${calState.month + 1} 月`;
+      }
+    }
+    if (calNav) calNav.classList.toggle('hidden', isAgenda);
   } else if (currentView === 'timesheet') {
-    if (title) title.textContent = '工时';
+    setTitle('timesheet', '工时');
     if (calNav) calNav.classList.add('hidden');
   } else if (currentView === 'litigation') {
-    if (title) title.textContent = '⚖️ 诉讼';
+    setTitle('litigation', '诉讼');
     if (calNav) calNav.classList.add('hidden');
   } else {
-    if (title) title.textContent = '看板';
+    setTitle('board', '看板');
     if (calNav) calNav.classList.add('hidden');
   }
 }
@@ -17878,7 +17974,7 @@ updateTrashCount();
 updatePageTitle();
 updateBoardLabel();   // 同步月份标签到当前 store.currentBoard
 document.body.dataset.view = currentView;  // 初始化 body view(CSS 隐藏月历下无用控件)
-initViewPillReorder(); // 恢复并启用顶部视图按钮的自定义顺序
+initViewPillReorder();
 // v1.6.15: 同步 viewPills active 状态 (从 store.lastView 恢复时)
 document.querySelectorAll('#viewPills .pill').forEach(p => p.classList.toggle('active', p.dataset.view === currentView));
 // 同步 filterPills active 状态
@@ -18362,7 +18458,6 @@ document.getElementById('deepseekClearKey')?.addEventListener('click', () => {
 });
 document.getElementById('tsTermLibrary')?.addEventListener('click', openTermLibrary);
 document.querySelectorAll('[data-action="term-close"]').forEach(el => el.addEventListener('click', closeTermLibrary));
-document.getElementById('termLibraryProject')?.addEventListener('change', e => fillTermLibraryForm(e.target.value));
 document.getElementById('termLibrarySave')?.addEventListener('click', saveTermLibrary);
 
 // v1.6.6: 编辑工时 modal 事件
@@ -19550,11 +19645,13 @@ self.addEventListener('fetch', e => {
 
   // ---- 11) 移动端日历:默认日程列表,顶部"日程/网格"切换 ----
   function ensureMobileCalendarToggle() {
-    // v5.38: 恢复月历网格视图（不再强制 agenda 列表）
+    // v5.43: 手机端强制 agenda 日程列表（月历网格任务无法看清）
     const existing = document.getElementById('calModeToggle');
     if (existing) existing.remove();
-    document.body.dataset.calMode = 'grid';
-    try { localStorage.setItem('kanban_cal_mode_v31', 'grid'); } catch {}
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    const mode = isMobile ? 'agenda' : 'grid';
+    document.body.dataset.calMode = mode;
+    try { localStorage.setItem('kanban_cal_mode_v31', mode); } catch {}
   }
 
   // ---- 12) 底部 nav 在桌面端始终隐藏(已在 CSS 处理);resize 时重新计算 ----
@@ -19565,6 +19662,15 @@ self.addEventListener('fetch', e => {
     // v5.39: 主 FAB 已移除，始终不显示
     if (fab) fab.classList.remove('show');
     if (fab2) fab2.classList.toggle('show', IS_MOBILE());
+    // v5.43: 跨断点时同步月历模式
+    if (document.body.dataset.view === 'calendar') {
+      const want = IS_MOBILE() ? 'agenda' : 'grid';
+      if (document.body.dataset.calMode !== want) {
+        document.body.dataset.calMode = want;
+        try { localStorage.setItem('kanban_cal_mode_v31', want); } catch {}
+        if (typeof renderCalendar === 'function') renderCalendar();
+      }
+    }
   }
 
   // ---- 启动 ----
