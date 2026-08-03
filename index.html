@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · 工时单多选看板 v5.95</title>
+<title>Kanban · 工时单多选看板 v5.101</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="3_95_260802">
+<meta name="build-hash" content="3_101_260802">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -2559,9 +2559,28 @@ body[data-view="timesheet"] .board-layout {
 .dot.red { background: var(--red); }
 
 /* ====== 拖动（看板） ====== */
-.card, .task { cursor: grab; }
+.card { cursor: grab; }
+/* v5.98/v5.101: 任务默认手指指针；长按或手柄拖动排序 */
+.task { cursor: pointer; user-select: none; -webkit-user-select: none; }
 .card.dragging, .task.dragging { opacity: 0.35; cursor: grabbing; }
 .task.dragging { background: var(--task-bg); }
+.task.task-longpress-ready {
+  cursor: grabbing;
+  background: color-mix(in srgb, var(--accent) 10%, var(--task-bg));
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 45%, transparent);
+  touch-action: none;
+}
+.task.task-pointer-dragging {
+  cursor: grabbing;
+  opacity: 0.55;
+  background: color-mix(in srgb, var(--accent) 12%, var(--task-bg));
+  box-shadow: 0 6px 18px rgba(0,0,0,.12);
+  position: relative;
+  z-index: 5;
+  touch-action: none;
+}
+.task.task-drop-before { box-shadow: inset 0 2px 0 0 var(--accent); }
+.task.task-drop-after { box-shadow: inset 0 -2px 0 0 var(--accent); }
 .card.drop-over-top { box-shadow: 0 -3px 0 0 var(--accent); }
 .card.drop-over-bottom { box-shadow: 0 3px 0 0 var(--accent); }
 .task.drop-over-top { box-shadow: 0 -2px 0 0 var(--accent); }
@@ -2587,18 +2606,28 @@ body[data-view="timesheet"] .board-layout {
   transition: background 0.15s, opacity 0.15s;
 }
 .col-dropzone-active { background: color-mix(in srgb, var(--accent, #007aff) 18%, transparent); opacity: 1; }
+/* v5.101: 手柄全端可用 — 桌面可直接拖，手机保留大触控区 */
 .task-handle {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--muted);
-  opacity: 0.6;
+  opacity: 0.65;
   font-size: 12px;
   margin-right: 2px;
+  min-width: 16px;
+  padding: 2px 1px;
   user-select: none;
+  -webkit-user-select: none;
   cursor: grab;
   letter-spacing: -2px;
+  touch-action: none;
+  -webkit-user-drag: none;
 }
 .card-header { cursor: grab; }
-.task-check, .task-due, .task-del, .task-title, .card-title, .icon-btn, .add-task, input { cursor: auto; }
+.task-check, .task-due, .task-del, .card-title, .icon-btn, .add-task, input { cursor: auto; }
+.task-title { cursor: pointer !important; }
+.task-title[contenteditable="true"] { cursor: text !important; }
 .task-handle:hover { color: var(--muted); opacity: 1; }
 
 /* ====== 空状态 ====== */
@@ -2638,7 +2667,7 @@ body[data-view="timesheet"] .board-layout {
   flex: 1;
   min-width: 0;
   word-break: break-word;
-  cursor: text;
+  cursor: pointer;
   padding: 1px 3px;
   margin: -1px -3px;
   border-radius: 3px;
@@ -3361,13 +3390,39 @@ body[data-view="board"][data-filter="all"] .card:not(.unified-card) .task-title:
 .task-detail-checklist-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 3px 4px;
-  /* 无 hover 背景,无圆角 — 整体走"纯文字流" */
+  border-radius: 0;
+  touch-action: manipulation;
 }
+.task-detail-checklist-item.is-dragging { opacity: 0.45; }
 .task-detail-checklist-item.is-done .task-detail-checklist-text {
   text-decoration: line-through;
   opacity: 0.5;
+}
+/* v5.97: 子任务拖拽手柄 */
+.task-detail-checklist-handle {
+  flex-shrink: 0;
+  width: 16px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  opacity: 0.35;
+  cursor: grab;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
+  letter-spacing: -1px;
+}
+.task-detail-checklist-handle:active { cursor: grabbing; }
+.task-detail-checklist-item:hover .task-detail-checklist-handle,
+.task-detail-checklist-item:focus-within .task-detail-checklist-handle {
+  opacity: 0.75;
 }
 .task-detail-checklist-check {
   width: 14px;
@@ -3377,34 +3432,38 @@ body[data-view="board"][data-filter="all"] .card:not(.unified-card) .task-title:
   accent-color: var(--accent);
   margin: 0;
 }
+/* v5.97: 子任务文本框 = 底部淡色直线（去掉弧线/圆角描边） */
 .task-detail-checklist-text {
   flex: 1;
   min-width: 0;
   font-size: 13px;
   line-height: 1.45;
-  padding: 1px 2px;
-  outline: none;
+  padding: 3px 2px 4px;
+  outline: none !important;
   cursor: text;
   word-break: break-word;
-  border-bottom: 1px solid var(--border);
-  -webkit-appearance: none;
-  appearance: none;
-}
-/* 焦点状态: 底部细线变色,不用任何框/ring/shadow */
-/* 同时干掉 iOS Safari contenteditable focus 时的蓝色内阴影 */
-/* 同时干掉 macOS Safari contenteditable focus 时的绿色选区外框 */
-.task-detail-checklist-text:focus {
-  outline: none !important;
-  border-bottom-color: var(--accent);
+  border: none !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 85%, transparent) !important;
   background: transparent !important;
   box-shadow: none !important;
   -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-box-shadow: none !important;
+}
+.task-detail-checklist-text:focus,
+.task-detail-checklist-text:focus-visible,
+.task-detail-checklist-text:focus-within {
+  outline: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border)) !important;
+  background: transparent !important;
+  box-shadow: none !important;
   -webkit-box-shadow: none !important;
   -webkit-tap-highlight-color: transparent !important;
 }
-.task-detail-checklist-text::-webkit-textfield-decoration-container,
-.task-detail-checklist-text:focus-visible,
-.task-detail-checklist-text:focus-within {
+.task-detail-checklist-text::-webkit-textfield-decoration-container {
   outline: none !important;
   box-shadow: none !important;
   -webkit-box-shadow: none !important;
@@ -3792,6 +3851,170 @@ button:focus-visible,
 }
 .modal-close:hover { color: var(--text); }
 .modal-body { flex: 1; overflow-y: auto; min-height: 100px; }
+
+/* ===== v5.96 全局搜索 ===== */
+.gs-modal .modal-content {
+  max-width: 640px;
+  min-width: min(640px, 100%);
+  padding: 0;
+  overflow: hidden;
+}
+.gs-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.gs-search-icon {
+  color: var(--muted);
+  font-size: 18px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.gs-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 4px 0;
+}
+.gs-input::placeholder { color: var(--muted); opacity: .7; }
+.gs-close {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.gs-close:hover { color: var(--text); background: var(--task-bg); }
+.gs-body {
+  max-height: min(52vh, 420px);
+  overflow-y: auto;
+  padding: 8px;
+}
+.gs-empty {
+  padding: 36px 16px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.gs-group-title {
+  padding: 8px 10px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+.gs-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  transition: background .12s;
+}
+.gs-item:hover,
+.gs-item.is-active {
+  background: color-mix(in srgb, var(--accent) 12%, var(--task-bg));
+}
+.gs-item-badge {
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--task-bg);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+.gs-item-badge.task { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.gs-item-badge.project { color: var(--green, #16a34a); border-color: color-mix(in srgb, var(--green, #16a34a) 35%, var(--border)); background: color-mix(in srgb, var(--green, #16a34a) 10%, transparent); }
+.gs-item-badge.archive { color: #a78bfa; border-color: color-mix(in srgb, #a78bfa 35%, var(--border)); background: color-mix(in srgb, #a78bfa 10%, transparent); }
+.gs-item-badge.litigation { color: #f59e0b; border-color: color-mix(in srgb, #f59e0b 35%, var(--border)); background: color-mix(in srgb, #f59e0b 10%, transparent); }
+.gs-item-badge.trash { color: var(--red, #e44); border-color: color-mix(in srgb, var(--red, #e44) 35%, var(--border)); background: color-mix(in srgb, var(--red, #e44) 10%, transparent); }
+.gs-item-main { min-width: 0; flex: 1; }
+.gs-item-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  word-break: break-word;
+}
+.gs-item-sub {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+  word-break: break-word;
+}
+.gs-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--task-bg) 60%, transparent);
+  flex-wrap: wrap;
+}
+.gs-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.gs-shortcut-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.gs-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--card-bg-solid);
+  font: 11px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text);
+}
+.gs-shortcut-btn {
+  border: 1px solid var(--border);
+  background: var(--card-bg-solid);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.gs-shortcut-btn:hover { border-color: var(--accent); color: var(--accent); }
+.gs-shortcut-btn.is-recording {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+}
 
 /* v47: 项目编辑 modal */
 .project-edit-content { max-width: 540px; }
@@ -8325,6 +8548,9 @@ input, select, textarea, button, [contenteditable] {
       <details class="ts-ai-menu header-data-menu" id="headerDataMenu">
         <summary class="btn" title="备份、同步与回收站">数据</summary>
         <div class="ts-ai-menu-body">
+          <button class="btn ts-ai-menu-item" id="dataMenuGlobalSearch" type="button">全局搜索</button>
+          <button class="btn ts-ai-menu-item" id="dataMenuSortByDue" type="button" title="项目卡片内的任务按截止日期自动排序，越紧急越靠上">任务按截止日期排序：关</button>
+          <div class="ts-top-menu-divider"></div>
           <button class="btn ts-ai-menu-item" id="dataMenuExport" type="button">导出备份</button>
           <button class="btn ts-ai-menu-item" id="dataMenuImport" type="button">导入备份</button>
           <button class="btn ts-ai-menu-item" id="dataMenuSync" type="button">数据同步</button>
@@ -8679,6 +8905,29 @@ input, select, textarea, button, [contenteditable] {
   </div>
 </div>
 
+<!-- v5.96: 全局搜索 -->
+<div class="modal hidden gs-modal" id="globalSearchModal" role="dialog" aria-modal="true" aria-label="全局搜索">
+  <div class="modal-backdrop" data-action="gs-close"></div>
+  <div class="modal-content">
+    <div class="gs-header">
+      <span class="gs-search-icon" aria-hidden="true">⌕</span>
+      <input type="search" class="gs-input" id="gsInput" placeholder="搜索任务、项目、工时、诉讼、回收站…" autocomplete="off" spellcheck="false">
+      <button type="button" class="gs-close" data-action="gs-close" title="关闭">×</button>
+    </div>
+    <div class="gs-body" id="gsBody">
+      <div class="gs-empty">输入关键词，检索整个平台的数据</div>
+    </div>
+    <div class="gs-footer">
+      <div class="gs-shortcut-row">
+        <span>快捷键</span>
+        <span id="gsShortcutDisplay"></span>
+        <button type="button" class="gs-shortcut-btn" id="gsShortcutBtn">设置快捷键</button>
+      </div>
+      <div class="gs-hint">↑↓ 选择 · Enter 打开 · Esc 关闭</div>
+    </div>
+  </div>
+</div>
+
 <!-- 回收站 modal -->
 <div class="modal hidden" id="trashModal">
   <div class="modal-backdrop" data-action="close-trash"></div>
@@ -8847,9 +9096,10 @@ if (!Array.isArray(store.litigationRecords)) {
   store.litigationRecords = [];
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch {}
 }
-// v5.69: 偏好设置
+// v5.69 / v5.97: 偏好设置
 if (!store.prefs || typeof store.prefs !== 'object') store.prefs = {};
 if (typeof store.prefs.autoRolloverDue !== 'boolean') store.prefs.autoRolloverDue = true;
+if (typeof store.prefs.autoSortTasksByDue !== 'boolean') store.prefs.autoSortTasksByDue = false;
 // v3.0: 诉讼时间线提醒 — 每个时间线条目可以挂多个提醒
 if (!Array.isArray(store.litigationReminders)) {
   store.litigationReminders = [];
@@ -9013,6 +9263,8 @@ let currentView = (store && store.lastView && ['board', 'calendar', 'timesheet',
     : 'board');
 // 全局搜索入口已移除；保留空值以兼容原有渲染筛选代码
 let currentSearch = '';
+// v5.101: 手动拖任务排序后，本轮 render 跳过「按截止日期自动排序」
+let __skipAutoSortOnce = false;
 // v47: 记录"上一帧"的 filter / search,用于判断是否能用稳定列
 // 全部 → 全部:可以用稳定列(其他卡片不动)
 // 全部 → 过滤:用贪心(数据子集变了,列号语义对不上)
@@ -9848,6 +10100,78 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !themeMenu.classList.contains('hidden')) toggleThemeMenu(false);
+
+  // v5.96: 全局搜索快捷键录制
+  if (gsRecordingShortcut) {
+    if (['Control', 'Meta', 'Alt', 'Shift'].includes(e.key)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const key = (e.key || '').length === 1 ? e.key.toLowerCase() : (e.key || '').toLowerCase();
+    if (!key || key === 'escape') {
+      gsRecordingShortcut = false;
+      const btn = document.getElementById('gsShortcutBtn');
+      if (btn) { btn.classList.remove('is-recording'); btn.textContent = '设置快捷键'; }
+      return;
+    }
+    gsShortcut = {
+      key,
+      code: e.code || '',
+      ctrl: !!e.ctrlKey,
+      meta: !!e.metaKey,
+      alt: !!e.altKey,
+      shift: !!e.shiftKey
+    };
+    // 至少需要一个修饰键，避免覆盖单字母快捷键
+    if (!gsShortcut.ctrl && !gsShortcut.meta && !gsShortcut.alt) {
+      gsShortcut.ctrl = true;
+      gsShortcut.meta = true;
+    }
+    saveGsShortcut();
+    renderGsShortcutDisplay();
+    gsRecordingShortcut = false;
+    const btn = document.getElementById('gsShortcutBtn');
+    if (btn) { btn.classList.remove('is-recording'); btn.textContent = '设置快捷键'; }
+    if (typeof showToast === 'function') showToast('快捷键已设为 ' + formatGsShortcut(gsShortcut));
+    return;
+  }
+
+  // v5.96: 打开全局搜索（默认 Ctrl/⌘ + K）
+  const gsModalOpen = !document.getElementById('globalSearchModal')?.classList.contains('hidden');
+  if (!gsModalOpen && eventMatchesGsShortcut(e)) {
+    const ae0 = document.activeElement;
+    const editing0 = ae0 && (ae0.tagName === 'INPUT' || ae0.tagName === 'TEXTAREA' || ae0.isContentEditable);
+    // 输入框中仍允许用快捷键唤出搜索（更符合全局搜索习惯）
+    e.preventDefault();
+    openGlobalSearch(editing0 && ae0.value ? '' : '');
+    return;
+  }
+
+  // 搜索弹窗内导航
+  if (gsModalOpen) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeGlobalSearch();
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      updateGsActiveItem(gsActiveIndex + 1);
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      updateGsActiveItem(gsActiveIndex - 1);
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (gsActiveIndex >= 0 && gsResultItems[gsActiveIndex]) {
+        jumpToGlobalSearchResult(gsResultItems[gsActiveIndex]);
+      }
+      return;
+    }
+  }
+
   // ⌘Z / Ctrl+Z → 撤销(仅在非文本编辑态下拦截,文本编辑让浏览器原生 undo 处理)
   if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
     const ae = document.activeElement;
@@ -10115,6 +10439,319 @@ function totalUnscheduledAcrossBoards() {
   }
   return n;
 }
+
+// ============== v5.96 全局搜索 ==============
+const GS_SHORTCUT_KEY = 'kanban_global_search_shortcut_v1';
+const GS_DEFAULT_SHORTCUT = { key: 'k', code: 'KeyK', ctrl: true, meta: true, alt: false, shift: false };
+let gsShortcut = null;
+let gsActiveIndex = -1;
+let gsResultItems = [];
+let gsRecordingShortcut = false;
+
+function loadGsShortcut() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(GS_SHORTCUT_KEY) || 'null');
+    if (raw && raw.key) {
+      gsShortcut = {
+        key: String(raw.key).toLowerCase(),
+        code: raw.code || '',
+        ctrl: !!raw.ctrl,
+        meta: !!raw.meta,
+        alt: !!raw.alt,
+        shift: !!raw.shift
+      };
+      return;
+    }
+  } catch {}
+  gsShortcut = { ...GS_DEFAULT_SHORTCUT };
+}
+function saveGsShortcut() {
+  try { localStorage.setItem(GS_SHORTCUT_KEY, JSON.stringify(gsShortcut)); } catch {}
+}
+function formatGsShortcut(sc) {
+  if (!sc) return '';
+  const parts = [];
+  if (sc.ctrl) parts.push('Ctrl');
+  if (sc.meta) parts.push('⌘');
+  if (sc.alt) parts.push('Alt');
+  if (sc.shift) parts.push('Shift');
+  const k = (sc.key || '').length === 1 ? (sc.key || '').toUpperCase() : (sc.key || '');
+  if (k) parts.push(k);
+  return parts.join(' + ');
+}
+function renderGsShortcutDisplay() {
+  const el = document.getElementById('gsShortcutDisplay');
+  if (!el) return;
+  const label = formatGsShortcut(gsShortcut) || '未设置';
+  el.innerHTML = String(label).split(' + ').map(p => `<span class="gs-kbd">${escapeHtml(p)}</span>`).join('');
+}
+function eventMatchesGsShortcut(e) {
+  if (!gsShortcut || !gsShortcut.key) return false;
+  if (['Control', 'Meta', 'Alt', 'Shift'].includes(e.key)) return false;
+  const key = (e.key || '').toLowerCase();
+  if (key !== gsShortcut.key && e.code !== gsShortcut.code) return false;
+  // 默认 Ctrl/Meta 任一即可（跨平台）
+  const wantCtrlOrMeta = gsShortcut.ctrl || gsShortcut.meta;
+  if (wantCtrlOrMeta) {
+    if (!(e.ctrlKey || e.metaKey)) return false;
+  } else {
+    if (e.ctrlKey || e.metaKey) return false;
+  }
+  if (!!gsShortcut.alt !== !!e.altKey) return false;
+  if (!!gsShortcut.shift !== !!e.shiftKey) return false;
+  return true;
+}
+function collectGlobalSearchItems() {
+  const items = [];
+  // 看板：项目 + 任务
+  for (const boardKey of Object.keys(store.boards || {})) {
+    const board = store.boards[boardKey];
+    if (!board) continue;
+    const boardLabel = formatBoardLabel(board);
+    for (const project of (board.projects || [])) {
+      const projName = project.name || '未命名项目';
+      const projDesc = project.description || '';
+      items.push({
+        type: 'project',
+        id: 'p:' + project.id,
+        title: projName,
+        subtitle: boardLabel + (projDesc ? ' · ' + projDesc.slice(0, 60) : ''),
+        boardKey,
+        projectId: project.id,
+        hay: [projName, projDesc, board.name || ''].join(' ').toLowerCase()
+      });
+      for (const task of (project.tasks || [])) {
+        const title = task.title || '(无标题)';
+        const notes = task.notes || '';
+        const checklist = Array.isArray(task.checklist) ? task.checklist.map(c => c.text || '').join(' ') : '';
+        items.push({
+          type: 'task',
+          id: 't:' + task.id,
+          title,
+          subtitle: `${boardLabel} · ${projName}${task.due ? ' · 截止 ' + task.due : ''}${task.done ? ' · 已完成' : ''}`,
+          boardKey,
+          projectId: project.id,
+          taskId: task.id,
+          hay: [title, notes, checklist, projName, board.name || ''].join(' ').toLowerCase()
+        });
+      }
+    }
+    // 回收站
+    for (const tr of (board.trash || [])) {
+      const isProject = tr.type === 'project';
+      const data = tr.data || {};
+      const name = isProject ? (data.name || '(已删除项目)') : (data.title || '(已删除任务)');
+      const extra = isProject ? (data.description || '') : (data.notes || '');
+      items.push({
+        type: 'trash',
+        id: 'tr:' + (data.id || name) + ':' + (tr.deletedAt || ''),
+        title: name,
+        subtitle: `${boardLabel} · 回收站 · ${isProject ? '项目' : '任务'}`,
+        boardKey,
+        hay: [name, extra, board.name || '', '回收站'].join(' ').toLowerCase()
+      });
+    }
+  }
+  // 归档 / 工时
+  for (const monthKey of Object.keys(store.archive || {})) {
+    for (const a of (store.archive[monthKey] || [])) {
+      const title = a.title || '(无标题)';
+      const proj = a.projectName || '';
+      const notes = a.notes || '';
+      const boardName = a.boardName || '';
+      let trans = '';
+      try {
+        if (a.translations && typeof a.translations === 'object') {
+          trans = Object.values(a.translations).map(v => (v && v.text) || v || '').join(' ');
+        }
+      } catch {}
+      items.push({
+        type: 'archive',
+        id: 'a:' + a.taskId,
+        title,
+        subtitle: `${boardName ? boardName + ' · ' : ''}${proj} · 工时归档 ${monthKey}${a.completedAt ? ' · ' + a.completedAt : ''}`,
+        taskId: a.taskId,
+        boardKey: a.boardKey || '',
+        hay: [title, proj, notes, boardName, trans, monthKey].join(' ').toLowerCase()
+      });
+    }
+  }
+  // 诉讼
+  for (const rec of (store.litigationRecords || [])) {
+    if (!rec || String(rec.id || '').startsWith('lit_demo_')) continue;
+    const caseName = rec.caseName || '(未命名案件)';
+    const fields = [rec.caseNumber, rec.court, rec.contact, rec.note].filter(Boolean).join(' · ');
+    const timelineText = (rec.timeline || []).map(line => {
+      const todos = (line.todos || []).map(t => t.text || '').join(' ');
+      return [line.date, line.progress, line.note, todos].filter(Boolean).join(' ');
+    }).join(' ');
+    items.push({
+      type: 'litigation',
+      id: 'l:' + rec.id,
+      title: caseName,
+      subtitle: fields || '诉讼案件',
+      recordId: rec.id,
+      hay: [caseName, fields, timelineText].join(' ').toLowerCase()
+    });
+  }
+  return items;
+}
+function runGlobalSearch(query) {
+  const q = String(query || '').trim().toLowerCase();
+  const all = collectGlobalSearchItems();
+  if (!q) return [];
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const scored = [];
+  for (const item of all) {
+    let ok = true;
+    let score = 0;
+    for (const tok of tokens) {
+      if (!item.hay.includes(tok)) { ok = false; break; }
+      if (item.title.toLowerCase().includes(tok)) score += 8;
+      else score += 2;
+    }
+    if (!ok) continue;
+    if (item.title.toLowerCase().startsWith(tokens[0])) score += 5;
+    scored.push({ item, score });
+  }
+  scored.sort((a, b) => b.score - a.score || a.item.title.localeCompare(b.item.title, 'zh'));
+  return scored.slice(0, 80).map(s => s.item);
+}
+function gsTypeLabel(type) {
+  return ({ task: '任务', project: '项目', archive: '工时', litigation: '诉讼', trash: '回收站' })[type] || type;
+}
+function renderGlobalSearchResults(query) {
+  const body = document.getElementById('gsBody');
+  if (!body) return;
+  const q = String(query || '').trim();
+  if (!q) {
+    gsResultItems = [];
+    gsActiveIndex = -1;
+    body.innerHTML = '<div class="gs-empty">输入关键词，检索整个平台的数据<br><span style="opacity:.75">可搜：任务名 / 项目名 / 备注 / 案号 / 归档工时</span></div>';
+    return;
+  }
+  gsResultItems = runGlobalSearch(q);
+  gsActiveIndex = gsResultItems.length ? 0 : -1;
+  if (!gsResultItems.length) {
+    body.innerHTML = `<div class="gs-empty">没有找到与「${escapeHtml(q)}」相关的内容</div>`;
+    return;
+  }
+  const order = ['task', 'project', 'archive', 'litigation', 'trash'];
+  const groups = {};
+  for (const it of gsResultItems) {
+    (groups[it.type] || (groups[it.type] = [])).push(it);
+  }
+  let html = '';
+  let flatIdx = 0;
+  for (const type of order) {
+    const list = groups[type];
+    if (!list || !list.length) continue;
+    html += `<div class="gs-group-title">${gsTypeLabel(type)} · ${list.length}</div>`;
+    for (const it of list) {
+      const active = flatIdx === gsActiveIndex ? ' is-active' : '';
+      html += `<button type="button" class="gs-item${active}" data-gs-idx="${flatIdx}">
+        <span class="gs-item-badge ${it.type}">${gsTypeLabel(it.type)}</span>
+        <span class="gs-item-main">
+          <div class="gs-item-title">${escapeHtml(it.title)}</div>
+          <div class="gs-item-sub">${escapeHtml(it.subtitle || '')}</div>
+        </span>
+      </button>`;
+      flatIdx++;
+    }
+  }
+  body.innerHTML = html;
+}
+function updateGsActiveItem(nextIdx) {
+  if (!gsResultItems.length) return;
+  const n = gsResultItems.length;
+  gsActiveIndex = ((nextIdx % n) + n) % n;
+  const body = document.getElementById('gsBody');
+  if (!body) return;
+  body.querySelectorAll('.gs-item').forEach((el, i) => {
+    el.classList.toggle('is-active', i === gsActiveIndex);
+  });
+  const active = body.querySelector('.gs-item.is-active');
+  if (active) active.scrollIntoView({ block: 'nearest' });
+}
+function openGlobalSearch(prefill) {
+  const modal = document.getElementById('globalSearchModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  document.body.classList.add('modal-open');
+  renderGsShortcutDisplay();
+  const input = document.getElementById('gsInput');
+  if (input) {
+    input.value = prefill != null ? String(prefill) : '';
+    renderGlobalSearchResults(input.value);
+    setTimeout(() => { input.focus(); input.select(); }, 20);
+  }
+}
+function closeGlobalSearch() {
+  const modal = document.getElementById('globalSearchModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  document.body.classList.remove('modal-open');
+  gsRecordingShortcut = false;
+  const btn = document.getElementById('gsShortcutBtn');
+  if (btn) {
+    btn.classList.remove('is-recording');
+    btn.textContent = '设置快捷键';
+  }
+}
+function jumpToGlobalSearchResult(item) {
+  if (!item) return;
+  closeGlobalSearch();
+  try {
+    if (item.type === 'task') {
+      if (item.boardKey && item.boardKey !== store.currentBoard) switchBoard(item.boardKey);
+      setView('board');
+      const hit = findTaskAcrossBoards(item.taskId);
+      if (hit && typeof openTaskDetail === 'function') {
+        setTimeout(() => openTaskDetail(hit.task, hit.project), 60);
+      } else if (typeof showToast === 'function') {
+        showToast('已定位到看板，但任务可能已移动');
+      }
+      return;
+    }
+    if (item.type === 'project') {
+      if (item.boardKey && item.boardKey !== store.currentBoard) switchBoard(item.boardKey);
+      setView('board');
+      const hit = findProjectAcrossBoards(item.projectId);
+      if (hit && typeof openProjectEditModal === 'function') {
+        setTimeout(() => openProjectEditModal(hit.project), 60);
+      }
+      return;
+    }
+    if (item.type === 'archive') {
+      setView('timesheet');
+      if (item.taskId && typeof openTsEditModal === 'function') {
+        setTimeout(() => openTsEditModal(item.taskId), 80);
+      }
+      return;
+    }
+    if (item.type === 'litigation') {
+      setView('litigation');
+      if (typeof showToast === 'function') showToast('已切换到诉讼视图');
+      return;
+    }
+    if (item.type === 'trash') {
+      if (item.boardKey && item.boardKey !== store.currentBoard) switchBoard(item.boardKey);
+      if (typeof openTrashModal === 'function') openTrashModal();
+      return;
+    }
+  } catch (err) {
+    console.warn('global search jump failed', err);
+    if (typeof showToast === 'function') showToast('打开失败，请重试');
+  }
+}
+loadGsShortcut();
+document.getElementById('gsInput')?.addEventListener('input', e => {
+  renderGlobalSearchResults(e.target.value);
+});
+document.getElementById('gsInput')?.addEventListener('keydown', e => {
+  // 避免回车把搜索表单默认提交；方向键交给全局 keydown
+  if (e.key === 'Enter') e.preventDefault();
+});
 
 // ============== 看板切换 ==============
 function formatBoardLabel(board) {
@@ -10967,10 +11604,48 @@ function updateRolloverDueMenuLabel() {
   const on = !(store.prefs && store.prefs.autoRolloverDue === false);
   btn.textContent = on ? '截止日期自动滚到今天：开' : '截止日期自动滚到今天：关';
 }
+function isAutoSortTasksByDue() {
+  return !!(store.prefs && store.prefs.autoSortTasksByDue);
+}
+function updateSortByDueMenuLabel() {
+  const btn = document.getElementById('dataMenuSortByDue');
+  if (!btn) return;
+  const on = isAutoSortTasksByDue();
+  btn.textContent = on ? '任务按截止日期排序：开' : '任务按截止日期排序：关';
+}
+/** v5.97: 项目内任务按截止日期排序 — 未完成优先，有日期的越紧急越靠上，无日期靠后，已完成最后 */
+function compareTasksByDue(a, b) {
+  const aDone = !!a.done;
+  const bDone = !!b.done;
+  if (aDone !== bDone) return aDone ? 1 : -1;
+  const ad = a.due || '';
+  const bd = b.due || '';
+  if (ad && bd) return ad < bd ? -1 : (ad > bd ? 1 : 0);
+  if (ad && !bd) return -1;
+  if (!ad && bd) return 1;
+  return 0;
+}
+function sortProjectTasksByDue(project) {
+  if (!project || !Array.isArray(project.tasks) || project.tasks.length < 2) return false;
+  const before = project.tasks.map(t => t.id).join(',');
+  project.tasks.sort(compareTasksByDue);
+  return project.tasks.map(t => t.id).join(',') !== before;
+}
+function sortAllProjectsTasksByDue() {
+  let changed = 0;
+  for (const board of Object.values(store.boards || {})) {
+    for (const p of (board.projects || [])) {
+      if (sortProjectTasksByDue(p)) changed++;
+    }
+  }
+  return changed;
+}
 // 启动时执行一次过期滚动
 try {
   updateRolloverDueMenuLabel();
+  updateSortByDueMenuLabel();
   rolloverOverdueTaskDues();
+  if (isAutoSortTasksByDue()) sortAllProjectsTasksByDue();
 } catch (_) {}
 
 function bindTsMobileDelegates() {
@@ -12907,6 +13582,10 @@ function updateSearchCount(visibleCount) {
 
 function render() {
   if (typeof syncAllLitigationLinks === 'function') syncAllLitigationLinks();
+  // v5.101: 本轮渲染消费手动排序保护位（renderCard 内读 __skipAutoSortOnce）
+  // 在函数末尾及各 early-return 前都会清掉，避免残留
+  const _consumeSkipAutoSort = !!__skipAutoSortOnce;
+  const _clearSkip = () => { if (_consumeSkipAutoSort) __skipAutoSortOnce = false; };
   document.body.dataset.filter = currentFilter;
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
@@ -12958,6 +13637,7 @@ function render() {
     if (timesheet) timesheet.classList.add('hidden');
     if (litigation) litigation.classList.add('hidden');
     renderCalendar();
+    _clearSkip();
     return;
   }
   if (currentView === 'timesheet') {
@@ -12971,6 +13651,7 @@ function render() {
       renderTimesheet();
     }
     if (litigation) litigation.classList.add('hidden');
+    _clearSkip();
     return;
   }
   if (currentView === 'litigation') {
@@ -12983,6 +13664,7 @@ function render() {
     // v3.0: 进入诉讼页时,扫一下到期的提醒(toast 弹出来,列表加红点)
     fireDueLitigationReminders();
     renderLitigation();
+    _clearSkip();
     return;
   }
   if (litigation) litigation.classList.add('hidden');
@@ -12992,6 +13674,7 @@ function render() {
     empty.classList.remove('hidden');
     grid.classList.remove('hidden');
     if (searchEmpty) searchEmpty.classList.add('hidden');
+    _clearSkip();
     return;
   }
   empty.classList.add('hidden');
@@ -13039,6 +13722,8 @@ function render() {
   if (typeof renderTimerPanel === 'function') {
     renderTimerPanel();
   }
+  // v5.101: 手动排序保护位在本轮 render 结束后清除
+  _clearSkip();
 }
 
 // ============== 页面标题（看板 / 月历年月 / v1.6 工时单） ==============
@@ -13539,6 +14224,7 @@ function enterCalEdit(cell) {
     const project = found.project;
     pushHistory();
     project.tasks.push({ id: uid(), title, due: dateStr, done: false });
+    if (isAutoSortTasksByDue()) sortProjectTasksByDue(project);
     save();
     render();
   });
@@ -13551,6 +14237,9 @@ function renderCard(p) {
   const card = document.createElement('div');
   card.className = 'card';
   card.dataset.projectId = p.id;
+  // v5.97: 开启后渲染前按截止日期整理项目内任务
+  // v5.101: 手动拖动排序后本轮跳过，避免立刻被自动排序覆盖
+  if (isAutoSortTasksByDue() && !__skipAutoSortOnce) sortProjectTasksByDue(p);
   // v1.3: 进度条已删除 — 用 hasUrgent 一个红点提示紧急任务就够了
   const hasUrgent = p.tasks.some(t => !t.done && (dueClass(t.due) === 'overdue' || dueClass(t.due) === 'today'));
 
@@ -13596,7 +14285,8 @@ function renderTask(t, project, opts = {}) {
   //       但 renderUnifiedCard 生成的 unified card 没有这个属性,
   //       导致今日页/明天页/本周页/搜索视图下勾选完成、编辑日期、打开详情等都坏)
   li.dataset.projectId = project.id;
-  li.draggable = true;
+  // v5.98: 默认不可拖，长按后再允许
+  li.draggable = false;
   // v2.7: 计时入口只保留在“今天”页的专用计时区和任务徽章中
   // 普通看板 / 明天 / 本周不再渲染小时钟，释放任务文字空间
   const inBoard = currentView === 'board';
@@ -13626,16 +14316,15 @@ function renderTask(t, project, opts = {}) {
   ` : '';
   // v5.37: 手机端用手柄拖动排序，不再渲染上下箭头
   const reorderHtml = '';
-  // 手机端关闭整行 HTML5 drag（改由手柄 pointer 拖动），桌面保留
-  const isMob = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
-  li.draggable = !isMob;
+  // v5.98: 默认不可拖；桌面长按后才可拖；手机仍由手柄 pointer 拖动
+  li.draggable = false;
   li.innerHTML = `
     <span class="task-handle" title="拖动排序" aria-label="拖动排序">⋮⋮</span>
     ${opts.showProjectLabel
       ? `<span class="task-project-label" data-action="open-project-from-label" data-project-id="${project.id}" style="--proj-color:${projectColor(project)}" title="${escapeHtml(project.name)} · 点击编辑项目">${escapeHtml(project.name)}</span>`
       : ''}
     <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} data-action="toggle">
-    <span class="task-title" data-action="open-detail" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</span>
+    <span class="task-title" data-action="open-detail">${escapeHtml(t.title)}</span>
     <span class="task-date-stack">
       ${startBadge}
       <span class="task-due ${dueClass(t.due, t.done)}" data-action="edit-due" title="点击修改日期">${t.due ? dueLabel(t.due) : '设日期'}</span>
@@ -13839,6 +14528,7 @@ function openCardAddForm(card, project) {
     if (!title) { titleInput.focus(); return false; }
     pushHistory();
     project.tasks.push({ id: uid(), title, due: dueInput.value || '', done: false });
+    if (isAutoSortTasksByDue()) sortProjectTasksByDue(project);
     save();
     render();
     return true;
@@ -13960,6 +14650,7 @@ function openUnifiedInlineAddForm(project) {
       createdAt: Date.now(),
     };
     project.tasks.unshift(newTask);
+    if (isAutoSortTasksByDue()) sortProjectTasksByDue(project);
     save();
     form.remove();
     render();
@@ -14205,7 +14896,8 @@ function openTaskDetail(task, project) {
       <div class="task-detail-checklist">
         <ul class="task-detail-checklist-list" data-role="checklist-list">
           ${(Array.isArray(task.checklist) ? task.checklist : []).map(item => `
-            <li class="task-detail-checklist-item ${item.done ? 'is-done' : ''}" data-checklist-id="${item.id}">
+            <li class="task-detail-checklist-item ${item.done ? 'is-done' : ''}" data-checklist-id="${item.id}" draggable="false">
+              <span class="task-detail-checklist-handle" data-action="checklist-drag" title="拖动排序" aria-label="拖动排序">⠿</span>
               <input type="checkbox" class="task-detail-checklist-check" ${item.done ? 'checked' : ''} data-action="checklist-toggle" title="勾选 / 取消">
               <span class="task-detail-checklist-text" contenteditable="true" spellcheck="false" data-placeholder="子任务…" data-action="checklist-edit">${escapeHtml(item.text || '')}</span>
               <button type="button" class="task-detail-checklist-del" data-action="checklist-del" title="删除">×</button>
@@ -14278,7 +14970,8 @@ function openTaskDetail(task, project) {
     const emptyHint = '<li class="task-detail-checklist-empty">还没有子任务</li>';
     const items = task.checklist;
     checklistList.innerHTML = items.map(item => `
-      <li class="task-detail-checklist-item ${item.done ? 'is-done' : ''}" data-checklist-id="${item.id}">
+      <li class="task-detail-checklist-item ${item.done ? 'is-done' : ''}" data-checklist-id="${item.id}" draggable="false">
+        <span class="task-detail-checklist-handle" data-action="checklist-drag" title="拖动排序" aria-label="拖动排序">⠿</span>
         <input type="checkbox" class="task-detail-checklist-check" ${item.done ? 'checked' : ''} data-action="checklist-toggle" title="勾选 / 取消">
         <span class="task-detail-checklist-text" contenteditable="true" spellcheck="false" data-placeholder="子任务…" data-action="checklist-edit">${escapeHtml(item.text || '')}</span>
         <button type="button" class="task-detail-checklist-del" data-action="checklist-del" title="删除">×</button>
@@ -14288,6 +14981,19 @@ function openTaskDetail(task, project) {
   function saveChecklist() {
     pushHistory();
     try { save({ immediate: true }); } catch {}
+  }
+  function flushChecklistEdit(el) {
+    if (!el || el.dataset.action !== 'checklist-edit') return;
+    const li = el.closest('.task-detail-checklist-item');
+    const cid = li?.dataset.checklistId;
+    const item = task.checklist.find(x => x.id === cid);
+    if (!item) return;
+    const value = (el.innerText || '').replace(/\s+/g, ' ').trim();
+    if (value !== (item.text || '')) {
+      item.text = value;
+      el.textContent = value;
+      saveChecklist();
+    }
   }
 
   // checklist 交互: 添加 / 勾选 / 删除 / 编辑
@@ -14322,33 +15028,95 @@ function openTaskDetail(task, project) {
   // 编辑失焦同步
   checklistList.addEventListener('blur', e => {
     const t = e.target;
-    if (t.dataset.action === 'checklist-edit') {
-      const li = t.closest('.task-detail-checklist-item');
-      const cid = li?.dataset.checklistId;
-      const item = task.checklist.find(x => x.id === cid);
-      if (item) {
-        const value = (t.innerText || '').replace(/\s+/g, ' ').trim();
-        if (value !== (item.text || '')) { item.text = value; saveChecklist(); }
-      }
-    }
+    if (t.dataset.action === 'checklist-edit') flushChecklistEdit(t);
   }, true);
 
-  // checklist edit blur
-  checklistList.addEventListener('blur', e => {
-    const t = e.target;
-    if (t.dataset.action !== 'checklist-edit') return;
-    const li = t.closest('.task-detail-checklist-item');
-    const cid = li?.dataset.checklistId;
-    const item = task.checklist.find(x => x.id === cid);
-    if (!item) return;
-    const value = (t.innerText || '').replace(/\s+/g, ' ').trim();
-    if (value === (item.text || '')) return;
-    item.text = value;
-    t.textContent = value;
-    saveChecklist();
-  }, true);
+  // v5.97: 回车 → 下一条子任务（最后一条则新建）
   checklistList.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+    if (e.key !== 'Enter' || e.shiftKey) return;
+    const t = e.target;
+    if (!t || t.dataset.action !== 'checklist-edit') return;
+    e.preventDefault();
+    flushChecklistEdit(t);
+    const li = t.closest('.task-detail-checklist-item');
+    const items = [...checklistList.querySelectorAll('.task-detail-checklist-item')];
+    const idx = items.indexOf(li);
+    if (idx < 0) return;
+    if (idx < items.length - 1) {
+      const next = items[idx + 1].querySelector('.task-detail-checklist-text');
+      if (next) {
+        next.focus();
+        try {
+          const range = document.createRange();
+          range.selectNodeContents(next);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } catch {}
+      }
+      return;
+    }
+    task.checklist.push({ id: uid(), text: '', done: false });
+    rebuildChecklistDom();
+    saveChecklist();
+    const next = checklistList.querySelector('.task-detail-checklist-item:last-child .task-detail-checklist-text');
+    if (next) next.focus();
+  });
+
+  // v5.97: 子任务手柄拖拽排序（仅手柄可拖，避免与文字编辑冲突）
+  let ckDragId = null;
+  checklistList.addEventListener('mousedown', e => {
+    const handle = e.target.closest('[data-action="checklist-drag"]');
+    if (!handle) return;
+    const li = handle.closest('.task-detail-checklist-item');
+    if (!li) return;
+    li.setAttribute('draggable', 'true');
+  });
+  checklistList.addEventListener('dragstart', e => {
+    const li = e.target.closest('.task-detail-checklist-item');
+    if (!li || li.getAttribute('draggable') !== 'true') {
+      e.preventDefault();
+      return;
+    }
+    ckDragId = li.dataset.checklistId;
+    li.classList.add('is-dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', ckDragId || ''); } catch {}
+  });
+  checklistList.addEventListener('dragover', e => {
+    if (!ckDragId) return;
+    e.preventDefault();
+    const over = e.target.closest('.task-detail-checklist-item');
+    if (!over || over.dataset.checklistId === ckDragId) return;
+    const dragging = checklistList.querySelector(`.task-detail-checklist-item[data-checklist-id="${ckDragId}"]`);
+    if (!dragging) return;
+    const rect = over.getBoundingClientRect();
+    const before = e.clientY < rect.top + rect.height / 2;
+    if (before) checklistList.insertBefore(dragging, over);
+    else checklistList.insertBefore(dragging, over.nextSibling);
+  });
+  checklistList.addEventListener('drop', e => {
+    e.preventDefault();
+  });
+  checklistList.addEventListener('dragend', e => {
+    const li = e.target.closest('.task-detail-checklist-item') || checklistList.querySelector('.is-dragging');
+    if (li) {
+      li.classList.remove('is-dragging');
+      li.setAttribute('draggable', 'false');
+    }
+    if (!ckDragId) return;
+    const ids = [...checklistList.querySelectorAll('.task-detail-checklist-item')].map(x => x.dataset.checklistId);
+    const map = new Map(task.checklist.map(x => [x.id, x]));
+    const next = ids.map(id => map.get(id)).filter(Boolean);
+    if (next.length === task.checklist.length) {
+      const changed = next.some((x, i) => x.id !== task.checklist[i].id);
+      if (changed) {
+        task.checklist = next;
+        saveChecklist();
+      }
+    }
+    ckDragId = null;
   });
 
   modal.querySelectorAll('[data-action="close-detail"]').forEach(el => {
@@ -14398,6 +15166,32 @@ function openTaskDetail(task, project) {
 document.addEventListener('click', e => {
   const t = e.target;
 
+  // v5.96: 全局搜索
+  if (t.closest('#dataMenuGlobalSearch')) {
+    document.getElementById('headerDataMenu')?.removeAttribute('open');
+    openGlobalSearch();
+    return;
+  }
+  if (t.closest('[data-action="gs-close"]')) {
+    closeGlobalSearch();
+    return;
+  }
+  const gsItem = t.closest('#gsBody .gs-item');
+  if (gsItem) {
+    const idx = Number(gsItem.dataset.gsIdx);
+    if (!Number.isNaN(idx) && gsResultItems[idx]) jumpToGlobalSearchResult(gsResultItems[idx]);
+    return;
+  }
+  if (t.closest('#gsShortcutBtn')) {
+    gsRecordingShortcut = true;
+    const btn = document.getElementById('gsShortcutBtn');
+    if (btn) {
+      btn.classList.add('is-recording');
+      btn.textContent = '请按下组合键…';
+    }
+    return;
+  }
+
   // 顶部“数据”菜单：复用原有备份、同步与回收站功能
   const dataMenuAction = t.closest('#dataMenuExport, #dataMenuImport, #dataMenuSync, #dataMenuTrash');
   if (dataMenuAction) {
@@ -14409,6 +15203,23 @@ document.addEventListener('click', e => {
     };
     document.getElementById('headerDataMenu')?.removeAttribute('open');
     document.getElementById(targetMap[dataMenuAction.id])?.click();
+    return;
+  }
+  // v5.97: 项目内任务按截止日期自动排序
+  if (t.closest('#dataMenuSortByDue')) {
+    if (!store.prefs) store.prefs = {};
+    store.prefs.autoSortTasksByDue = !store.prefs.autoSortTasksByDue;
+    save({ skipVault: true });
+    updateSortByDueMenuLabel();
+    document.getElementById('headerDataMenu')?.removeAttribute('open');
+    if (store.prefs.autoSortTasksByDue) {
+      const n = sortAllProjectsTasksByDue();
+      save({ skipVault: true });
+      showToast(n > 0 ? `已开启：已整理 ${n} 个项目的任务顺序` : '已开启：任务将按截止日期自动排序');
+      if (typeof render === 'function') render();
+    } else {
+      showToast('已关闭：任务不再按截止日期自动排序');
+    }
     return;
   }
   // v5.69: 截止日期自动滚到今天 — 开关
@@ -14709,6 +15520,8 @@ document.addEventListener('click', e => {
   }
   if (action === 'open-detail') {
     const taskEl = t.closest('.task');
+    // v5.98: 长按拖动后抑制一次点击，避免误开详情
+    if (taskEl?.dataset.suppressClick === '1') return;
     const tid = taskEl.dataset.taskId;
     const task = project.tasks.find(x => x.id === tid);
     if (task) openTaskDetail(task, project);
@@ -14857,6 +15670,169 @@ function removeColDropzones() {
   document.querySelectorAll('.col-dropzone').forEach(el => el.remove());
 }
 
+// v5.101: 任务排序 — 手柄立即拖；桌面长按任务本体也可拖（纯指针，禁止 HTML5 误拖项目卡片）
+let taskPress = null; // { el, card, cardWasDraggable, timer, x, y, armed, dragging, id, targetId, after, pointerId, fromHandle }
+// 注：__skipAutoSortOnce 已在上方全局声明，供 render/renderCard 使用
+function restoreTaskPressCard(card, wasDraggable) {
+  if (!card) return;
+  if (card.classList.contains('unified-card')) {
+    card.draggable = false;
+    return;
+  }
+  card.draggable = wasDraggable !== false;
+}
+function clearTaskDropMarks() {
+  document.querySelectorAll('.task.task-drop-before, .task.task-drop-after, .task.task-handle-dragging, .task.task-longpress-ready, .task.task-pointer-dragging')
+    .forEach(el => el.classList.remove('task-drop-before', 'task-drop-after', 'task-handle-dragging', 'task-longpress-ready', 'task-pointer-dragging'));
+}
+function applyTaskPointerReorder(fromId, toId, after) {
+  if (!fromId || !toId || fromId === toId) return false;
+  const fromEl = document.querySelector(`.task[data-task-id="${CSS.escape(fromId)}"]`);
+  const pid = fromEl?.dataset.projectId;
+  if (!pid) return false;
+  const found = typeof findProjectAcrossBoards === 'function' ? findProjectAcrossBoards(pid) : null;
+  const project = found?.project || (typeof state !== 'undefined' ? state.projects.find(p => p.id === pid) : null);
+  if (!project || !Array.isArray(project.tasks)) return false;
+  let fromIdx = project.tasks.findIndex(t => t.id === fromId);
+  let toIdx = project.tasks.findIndex(t => t.id === toId);
+  if (fromIdx < 0 || toIdx < 0) return false;
+  if (typeof pushHistory === 'function') pushHistory();
+  const [moved] = project.tasks.splice(fromIdx, 1);
+  toIdx = project.tasks.findIndex(t => t.id === toId);
+  if (toIdx < 0) project.tasks.push(moved);
+  else project.tasks.splice(after ? toIdx + 1 : toIdx, 0, moved);
+  // 手动排序后本轮渲染不要被「按截止日期自动排序」覆盖
+  __skipAutoSortOnce = true;
+  if (typeof save === 'function') save();
+  if (typeof render === 'function') render();
+  return true;
+}
+function endTaskPress() {
+  if (!taskPress) return;
+  clearTimeout(taskPress.timer);
+  const st = taskPress;
+  taskPress = null;
+  try { st.el?.releasePointerCapture?.(st.pointerId); } catch {}
+  clearTaskDropMarks();
+  if (st.el) {
+    st.el.draggable = false;
+    if (st.armed || st.dragging || st.fromHandle) {
+      st.el.dataset.suppressClick = '1';
+      setTimeout(() => { try { delete st.el.dataset.suppressClick; } catch {} }, 450);
+    }
+  }
+  restoreTaskPressCard(st.card, st.cardWasDraggable);
+  if (st.dragging && st.targetId) {
+    applyTaskPointerReorder(st.id, st.targetId, st.after);
+  }
+}
+function beginTaskPointerDrag(task, e, fromHandle) {
+  endTaskPress();
+  const card = task.closest('.card');
+  const cardWasDraggable = card ? !!card.draggable : false;
+  if (card) card.draggable = false; // 锁住项目卡片，避免误拖
+  task.draggable = false;
+  const pointerId = e.pointerId;
+  taskPress = {
+    el: task,
+    card,
+    cardWasDraggable,
+    id: task.dataset.taskId,
+    pointerId,
+    x: e.clientX,
+    y: e.clientY,
+    armed: !!fromHandle, // 手柄：立刻武装
+    dragging: false,
+    targetId: null,
+    after: false,
+    fromHandle: !!fromHandle,
+    timer: null
+  };
+  if (fromHandle) {
+    task.classList.add('task-longpress-ready');
+    task.dataset.suppressClick = '1';
+    try { task.setPointerCapture(pointerId); } catch {}
+    try { e.preventDefault(); } catch {}
+  } else {
+    taskPress.timer = setTimeout(() => {
+      if (!taskPress || taskPress.el !== task) return;
+      taskPress.armed = true;
+      task.classList.add('task-longpress-ready');
+      task.dataset.suppressClick = '1';
+      try { task.setPointerCapture(pointerId); } catch {}
+      try { if (navigator.vibrate) navigator.vibrate(12); } catch {}
+    }, 280);
+  }
+}
+document.addEventListener('pointerdown', e => {
+  if (e.button != null && e.button !== 0) return;
+  // 1) 手柄：全端立即进入拖动（桌面 + 手机）
+  const handle = e.target.closest('.task-handle');
+  if (handle) {
+    const task = handle.closest('.task');
+    if (task && task.dataset.taskId) {
+      beginTaskPointerDrag(task, e, true);
+      return;
+    }
+  }
+  // 2) 任务本体长按：仅桌面/宽屏（手机继续用手柄，避免与滚动冲突）
+  const task = e.target.closest('.task');
+  if (!task || !task.dataset.taskId) return;
+  if (e.target.closest('.task-check, .task-due, .task-del, .task-timer-trigger, .task-project-label, .task-handle, .task-start, input, button, a, select, textarea')) return;
+  if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) return;
+  beginTaskPointerDrag(task, e, false);
+}, true);
+document.addEventListener('pointermove', e => {
+  if (!taskPress) return;
+  const st = taskPress;
+  // 只响应同一指针
+  if (st.pointerId != null && e.pointerId != null && e.pointerId !== st.pointerId) return;
+  const dx = Math.abs(e.clientX - st.x);
+  const dy = Math.abs(e.clientY - st.y);
+  // 未武装时：移动过大则取消长按（单击打开详情）
+  if (!st.armed && !st.dragging) {
+    if (dx > 12 || dy > 12) endTaskPress();
+    return;
+  }
+  // 已武装：稍一移动即进入拖动态
+  if (!st.dragging && (dx > 3 || dy > 3 || st.fromHandle)) {
+    st.dragging = true;
+    st.el.classList.add('task-pointer-dragging');
+    st.el.classList.remove('task-longpress-ready');
+  }
+  if (!st.dragging) return;
+  e.preventDefault();
+  const list = Array.from(st.el.closest('ul.tasks, ul')?.querySelectorAll(':scope > .task') || []);
+  clearTaskDropMarks();
+  st.el.classList.add('task-pointer-dragging');
+  let hit = null;
+  for (const el of list) {
+    if (el.dataset.taskId === st.id) continue;
+    const r = el.getBoundingClientRect();
+    if (e.clientY >= r.top && e.clientY <= r.bottom) {
+      hit = el;
+      st.after = e.clientY > (r.top + r.height / 2);
+      break;
+    }
+  }
+  if (hit) {
+    st.targetId = hit.dataset.taskId;
+    hit.classList.add(st.after ? 'task-drop-after' : 'task-drop-before');
+  } else {
+    st.targetId = null;
+  }
+}, { capture: true, passive: false });
+document.addEventListener('pointerup', e => {
+  if (!taskPress) return;
+  if (taskPress.pointerId != null && e.pointerId != null && e.pointerId !== taskPress.pointerId) return;
+  endTaskPress();
+}, true);
+document.addEventListener('pointercancel', e => {
+  if (!taskPress) return;
+  if (taskPress.pointerId != null && e.pointerId != null && e.pointerId !== taskPress.pointerId) return;
+  endTaskPress();
+}, true);
+
 document.addEventListener('dragstart', e => {
   // 月历未排期任务 chip（拖到 cell 设 DDL）
   const chip = e.target.closest('.cal-unscheduled-chip');
@@ -14876,34 +15852,30 @@ document.addEventListener('dragstart', e => {
     calTask.classList.add('dragging');
     return;
   }
-  // 任务优先（task 在 card 内，closest('.card') 也会命中）
-  const task = e.target.closest('.task');
-  if (task && !isInteractive(e.target)) {
-    const taskCard = task.closest('.card');
-    const pid = task.dataset.projectId || (taskCard ? taskCard.dataset.projectId : null);
-    drag = { kind: 'task', id: task.dataset.taskId, projectId: pid };
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', task.dataset.taskId);
-    task.classList.add('dragging');
+  // v5.100: 看板任务不走 HTML5 拖拽，避免拖起项目卡片
+  const taskEl = e.target.classList?.contains('task') ? e.target : e.target.closest?.('.task');
+  if (taskEl) {
+    e.preventDefault();
     return;
   }
   // 卡片
   const card = e.target.closest('.card');
   if (card && !isInteractive(e.target)) {
+    if (e.target.closest('.task')) {
+      e.preventDefault();
+      return;
+    }
     drag = {
       kind: 'project',
       id: card.dataset.projectId,
-      // v47: 拖动时拍快照,drop 后按这个还原其他列的位置
       _cardSnapshot: snapshotCardLayout(),
     };
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', card.dataset.projectId);
     card.classList.add('dragging');
-    // v2.0: 给所有空列注入 dropzone 浮层,允许把卡片拖到空列
     ensureColDropzones();
     return;
   }
-  // 不该拖的元素
   e.preventDefault();
 });
 
@@ -15168,7 +16140,20 @@ document.addEventListener('drop', e => {
 });
 
 document.addEventListener('dragend', e => {
-  document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+  document.querySelectorAll('.dragging').forEach(el => {
+    el.classList.remove('dragging');
+    // v5.99: 任务拖完后恢复不可拖，并恢复父级项目卡片可拖
+    if (el.classList.contains('task')) {
+      el.draggable = false;
+      el.classList.remove('task-longpress-ready');
+      el.dataset.suppressClick = '1';
+      setTimeout(() => { try { delete el.dataset.suppressClick; } catch {} }, 400);
+      const parentCard = el.closest('.card');
+      if (parentCard && !parentCard.classList.contains('unified-card')) {
+        parentCard.draggable = true;
+      }
+    }
+  });
   clearDropIndicators();
   // v2.0: 清掉空列 dropzone
   removeColDropzones();
@@ -15380,6 +16365,7 @@ function openDatePopover(buttonEl, project, task, opts = {}) {
         } else {
           if (dateStr !== (task.due || '')) pushHistory();
           task.due = dateStr;
+          if (isAutoSortTasksByDue()) sortProjectTasksByDue(project);
           save();
           closeDatePopover();
           render();
@@ -15408,6 +16394,7 @@ function openDatePopover(buttonEl, project, task, opts = {}) {
   function setDue(dateStr) {
     if (dateStr !== (task.due || '')) pushHistory();
     task.due = dateStr;
+    if (isAutoSortTasksByDue()) sortProjectTasksByDue(project);
     save();
     closeDatePopover();
     render();
@@ -21172,7 +22159,8 @@ self.addEventListener('fetch', e => {
     bindMobileNav();
     bindFab();
     bindMobileMenu();
-    bindMobileTaskHandleDrag();
+    // v5.101: 任务手柄拖动已由全局 pointer 系统统一处理（全端），不再单独绑定
+    // bindMobileTaskHandleDrag();
     bindMobileMenuFabDrag();
     bindModalClass();
     bindTimerPrefs();
