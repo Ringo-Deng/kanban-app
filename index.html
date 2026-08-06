@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · 工时单多选看板 v5.124</title>
+<title>Kanban · 工时单多选看板 v5.129</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="5_124_260806">
+<meta name="build-hash" content="5_129_260806">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -551,16 +551,23 @@ html[data-theme="astra"] #astraStickerLayer { display: block; }
 /* v5.50: 修复看板 — 禁止改 position/overflow（masonry 依赖 absolute+hidden）
    项目色条仍用 ::before；角标改用 ::after，不顶破布局 */
 html[data-theme="astra"] .card {
-  border: 1.5px solid color-mix(in srgb, #e85a9b 35%, #d4a84b 40%);
+  border: 1.5px solid color-mix(in srgb, #e85a9b calc(var(--card-frost, 48) * 0.35%), #d4a84b calc(var(--card-frost, 48) * 0.4%));
   box-shadow:
-    0 0 0 1px rgba(255,255,255,.45) inset,
-    0 4px 16px rgba(232,90,155,.12),
-    0 8px 22px rgba(201,160,212,.10);
+    0 0 0 1px rgba(255,255,255, calc(var(--card-frost, 48) * 0.0045)) inset,
+    0 4px 16px rgba(232,90,155, calc(var(--card-frost, 48) * 0.0012)),
+    0 8px 22px rgba(201,160,212, calc(var(--card-frost, 48) * 0.001));
   background:
-    linear-gradient(145deg, rgba(255,255,255,.22), transparent 42%),
+    linear-gradient(145deg, rgba(255,255,255, calc(var(--card-frost, 48) * 0.0022)), transparent 42%),
     color-mix(in srgb, var(--card-bg) calc(var(--card-frost, 48) * 1%), transparent);
-  backdrop-filter: saturate(140%) blur(14px);
-  -webkit-backdrop-filter: saturate(140%) blur(14px);
+  backdrop-filter: saturate(140%) blur(calc(var(--card-frost, 48) * 0.22px));
+  -webkit-backdrop-filter: saturate(140%) blur(calc(var(--card-frost, 48) * 0.22px));
+}
+html[data-theme="astra"] .card:hover {
+  background:
+    linear-gradient(145deg, rgba(255,255,255, 0.12), transparent 42%),
+    color-mix(in srgb, var(--card-bg) calc(min(100, max(var(--card-frost, 48) + 18, 34)) * 1%), transparent);
+  backdrop-filter: saturate(150%) blur(calc(max(8, min(100, max(var(--card-frost, 48) + 18, 34)) * 0.24) * 1px));
+  -webkit-backdrop-filter: saturate(150%) blur(calc(max(8, min(100, max(var(--card-frost, 48) + 18, 34)) * 0.24) * 1px));
 }
 html[data-theme="astra"] .card::before {
   /* 恢复项目色顶条，略加粉金光感 */
@@ -2183,15 +2190,18 @@ body[data-view="timesheet"] .board-layout {
 
 /* ====== 卡片(v42: JS masonry,absolute 定位,圆角 10px) ====== */
 .card {
-  /* v5.110: --card-frost 控制项目卡片实色占比 */
+  /* v5.110 / v5.128: --card-frost 0–100，0=完全透明可见背景 */
   --_card-frost: var(--card-frost, 48);
+  /* 悬停时至少抬到约 34%，保证字可读；高透明度时抬得更多 */
+  --_card-frost-hover: min(100, max(var(--_card-frost) + 18, 34));
   background: color-mix(in srgb, var(--card-bg) calc(var(--_card-frost) * 1%), transparent);
-  backdrop-filter: saturate(140%) blur(14px);
-  -webkit-backdrop-filter: saturate(140%) blur(14px);
+  /* 模糊随实色减弱，0% 时无磨砂遮挡背景 */
+  backdrop-filter: saturate(140%) blur(calc(var(--_card-frost) * 0.22px));
+  -webkit-backdrop-filter: saturate(140%) blur(calc(var(--_card-frost) * 0.22px));
   border-radius: 12px;
   padding: 14px 16px 12px;
-  border: 1px solid color-mix(in srgb, var(--card-border) 70%, transparent);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255,255,255,.18);
+  border: 1px solid color-mix(in srgb, var(--card-border) calc(max(12, var(--_card-frost) * 0.7) * 1%), transparent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, calc(var(--_card-frost) * 0.00045)), inset 0 1px 0 rgba(255,255,255, calc(var(--_card-frost) * 0.0018));
   display: flex;
   flex-direction: column;
   margin: 0;
@@ -2199,15 +2209,15 @@ body[data-view="timesheet"] .board-layout {
   top: 0;
   left: 0;
   width: 280px;
-  transition: box-shadow 0.18s, transform 0.18s, background 0.18s;
+  transition: box-shadow 0.18s, transform 0.18s, background 0.18s, backdrop-filter 0.18s, -webkit-backdrop-filter 0.18s;
   overflow: hidden;
   min-width: 0;
 }
 .card:hover {
-  background: color-mix(in srgb, var(--card-bg) calc((var(--_card-frost) + 12) * 1%), transparent);
-  backdrop-filter: saturate(150%) blur(16px);
-  -webkit-backdrop-filter: saturate(150%) blur(16px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255,255,255,.26);
+  background: color-mix(in srgb, var(--card-bg) calc(var(--_card-frost-hover) * 1%), transparent);
+  backdrop-filter: saturate(150%) blur(calc(max(8, var(--_card-frost-hover) * 0.24) * 1px));
+  -webkit-backdrop-filter: saturate(150%) blur(calc(max(8, var(--_card-frost-hover) * 0.24) * 1px));
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255,255,255,.22);
   transform: translateY(-1px);
 }
 
@@ -2479,7 +2489,8 @@ body[data-view="timesheet"] .board-layout {
   border-radius: 5px;
   line-height: 1.3;
 }
-.card-title:hover { background: #f5f5f7; }
+/* v5.128: 项目名悬停不再出现白底 */
+.card-title:hover { background: transparent; }
 .card-title-row {
   display: flex;
   align-items: center;
@@ -5949,6 +5960,38 @@ body[data-view="timesheet"] .ts-title-month-nav { display: inline-flex; }
   border-top: 0;
 }
 .ts-edit-footer [data-action="ts-edit-save"] { margin-left: auto; }
+/* v5.127: 新建工时「创建」与顶栏「+ 新增记录」同一套强调渐变配色 */
+#tsCreateEntryModal [data-action="ts-create-save"].btn-primary,
+#tsCreateEntryModal .modal-footer [data-action="ts-create-save"] {
+  margin-left: auto;
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%) !important;
+  color: #fff !important;
+  font-weight: 650;
+  text-shadow: none;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 40%, transparent) !important;
+}
+#tsCreateEntryModal [data-action="ts-create-save"].btn-primary:hover,
+#tsCreateEntryModal .modal-footer [data-action="ts-create-save"]:hover {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 50%, transparent) !important;
+  filter: brightness(1.05);
+  transform: none;
+}
+[data-theme="mint"] #tsCreateEntryModal [data-action="ts-create-save"].btn-primary,
+[data-theme="mint"] #tsCreateEntryModal .modal-footer [data-action="ts-create-save"] {
+  color: #fff !important;
+  background: linear-gradient(112deg, #ff2d95 0 45%, #00d4ff 100%) !important;
+  border-color: rgba(255,45,149,.45) !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+  box-shadow: 0 0 16px rgba(255,45,149,.35), 0 0 24px rgba(0,212,255,.18) !important;
+}
+[data-theme="mint"] #tsCreateEntryModal [data-action="ts-create-save"].btn-primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 22px rgba(255,45,149,.42), 0 0 28px rgba(0,212,255,.22) !important;
+}
 .ts-edit-content .ts-edit-hint:empty { display: none; }
 .ts-edit-row {
   display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
@@ -7058,6 +7101,75 @@ input, select, textarea, button, [contenteditable] {
   .mobile-ai-picker > .btn {
     min-height: 40px;
     justify-content: flex-start;
+  }
+
+  /* v5.125: 手机端看板背景图设置 */
+  .mobile-bg-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .mobile-bg-status {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: -2px;
+  }
+  .mobile-bg-status.has-bg {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .mobile-bg-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .mobile-bg-actions .btn {
+    min-height: 44px;
+    justify-content: center;
+  }
+  .mobile-bg-opacity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .mobile-bg-opacity input[type="range"] {
+    flex: 1;
+    min-width: 0;
+    accent-color: var(--accent);
+  }
+  .mobile-bg-opacity-val {
+    min-width: 40px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+  .mobile-bg-follow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text);
+    min-height: 40px;
+    padding: 4px 0;
+    cursor: pointer;
+    user-select: none;
+  }
+  .mobile-bg-follow input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+  }
+  .mobile-bg-follow.is-disabled {
+    opacity: 0.45;
+    pointer-events: none;
   }
 
   .mobile-theme-picker {
@@ -8359,13 +8471,39 @@ input, select, textarea, button, [contenteditable] {
     padding: 6px 8px !important;
     border-radius: 6px !important;
   }
-  /* v5.78: 手机诉讼视图在顶栏显示「新增案件」（与其它视图同位置的 viewAddRecord） */
+  /* v5.78 / v5.126: 手机诉讼 — 「诉讼」标题与「新增案件」同一行 */
+  body[data-view="litigation"] header {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  body[data-view="litigation"] .title-group {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    gap: 6px !important;
+  }
+  body[data-view="litigation"] .title-group h1 {
+    font-size: 20px !important;
+    white-space: nowrap;
+  }
+  body[data-view="litigation"] .toolbar {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    justify-content: flex-end !important;
+    flex-wrap: nowrap !important;
+    min-width: 0;
+  }
   body[data-view="litigation"] #viewAddRecord {
     display: inline-flex !important;
-    min-height: 40px;
-    padding: 8px 14px !important;
-    font-size: 14px !important;
+    align-items: center !important;
+    min-height: 36px;
+    height: 36px;
+    padding: 0 12px !important;
+    font-size: 13px !important;
     border-radius: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   /* 防止看板页横向溢出 */
@@ -8687,7 +8825,8 @@ input, select, textarea, button, [contenteditable] {
   cursor: pointer;
   user-select: none;
 }
-.settings-flyout .settings-bg-follow input[type="checkbox"] {
+.settings-flyout .settings-bg-follow.is-disabled { opacity: 0.45; pointer-events: none; }
+.settings-bg-follow input[type="checkbox"] {
   width: 15px;
   height: 15px;
   accent-color: var(--accent);
@@ -8928,9 +9067,13 @@ input, select, textarea, button, [contenteditable] {
               <button type="button" class="btn settings-bg-btn" id="boardBgUploadBtn">上传图片</button>
               <button type="button" class="btn settings-bg-btn" id="boardBgClearBtn">清除</button>
             </div>
+            <label class="settings-bg-follow" id="boardBgEnabledLabel" for="boardBgEnabled" title="关闭后隐藏背景图，但仍保留图片，可随时再开">
+              <input type="checkbox" id="boardBgEnabled" checked>
+              <span>显示背景图</span>
+            </label>
             <label class="settings-bg-opacity" for="boardBgOpacity" title="越高卡片越实，越低越能透出背景">
               <span>卡片透明度</span>
-              <input type="range" id="boardBgOpacity" min="15" max="85" value="48" step="1">
+              <input type="range" id="boardBgOpacity" min="0" max="100" value="48" step="1">
               <span id="boardBgOpacityVal">48%</span>
             </label>
             <label class="settings-bg-follow" for="boardBgFollowTheme" title="根据背景图主色自动调整强调色与文字色，背景图本身仍保持原样">
@@ -11178,22 +11321,27 @@ function boardBgImgKey(boardId) {
 function getCardFrost() {
   const b = currentBoardObj();
   if (b && typeof b.cardFrost === 'number' && !Number.isNaN(b.cardFrost)) {
-    return Math.min(85, Math.max(15, b.cardFrost));
+    return Math.min(100, Math.max(0, b.cardFrost));
   }
   try {
     const n = parseInt(localStorage.getItem(BOARD_BG_OPACITY_KEY_LEGACY) || '48', 10);
-    if (!Number.isNaN(n)) return Math.min(85, Math.max(15, n));
+    if (!Number.isNaN(n)) return Math.min(100, Math.max(0, n));
   } catch {}
   return 48;
 }
 
 function applyCardFrost(n) {
-  const v = Math.min(85, Math.max(15, n == null ? getCardFrost() : n));
+  const v = Math.min(100, Math.max(0, n == null ? getCardFrost() : n));
   document.documentElement.style.setProperty('--card-frost', String(v));
   const range = document.getElementById('boardBgOpacity');
   const val = document.getElementById('boardBgOpacityVal');
   if (range) range.value = String(v);
   if (val) val.textContent = v + '%';
+  // v5.125: 同步手机端控件
+  const mRange = document.getElementById('mobileBgOpacity');
+  const mVal = document.getElementById('mobileBgOpacityVal');
+  if (mRange) mRange.value = String(v);
+  if (mVal) mVal.textContent = v + '%';
 }
 
 function getBoardBgData() {
@@ -11211,6 +11359,14 @@ function isBoardBgFollowEnabled() {
   // 默认开启：未显式关闭即跟随
   if (!b) return true;
   return b.bgFollowTheme !== false;
+}
+
+/** v5.129: 背景图显示开关 — 关闭后隐藏但仍保留图片 */
+function isBoardBgEnabled() {
+  if (!getBoardBgData()) return false;
+  const b = currentBoardObj();
+  if (!b) return true;
+  return b.bgEnabled !== false;
 }
 
 function rgbToHex(r, g, b) {
@@ -11385,8 +11541,9 @@ function clearAdaptiveThemeVars() {
 function applyAdaptiveThemeFromBoard() {
   const b = currentBoardObj();
   const hasImg = !!getBoardBgData();
+  const enabled = isBoardBgEnabled();
   const follow = isBoardBgFollowEnabled();
-  if (!hasImg || !follow || !b || !b.bgPalette) {
+  if (!hasImg || !enabled || !follow || !b || !b.bgPalette) {
     clearAdaptiveThemeVars();
     return;
   }
@@ -11418,7 +11575,7 @@ function migrateLegacyBoardBgOnce() {
     const b = currentBoardObj();
     if (b && typeof b.cardFrost !== 'number') {
       const n = parseInt(localStorage.getItem(BOARD_BG_OPACITY_KEY_LEGACY) || '48', 10);
-      b.cardFrost = Number.isNaN(n) ? 48 : Math.min(85, Math.max(15, n));
+      b.cardFrost = Number.isNaN(n) ? 48 : Math.min(100, Math.max(0, n));
       if (typeof save === 'function') save({ immediate: true });
     }
     try {
@@ -11432,24 +11589,58 @@ function migrateLegacyBoardBgOnce() {
 
 function syncBoardBgUI() {
   const has = !!getBoardBgData();
+  const enabled = isBoardBgEnabled();
   const st = document.getElementById('settingsBgStatus');
-  if (st) st.textContent = has ? '已设置' : '未设置';
+  if (st) {
+    if (!has) st.textContent = '未设置';
+    else st.textContent = enabled ? '已开启' : '已关闭';
+  }
   applyCardFrost();
   const clearBtn = document.getElementById('boardBgClearBtn');
   if (clearBtn) clearBtn.disabled = !has;
+  const enableEl = document.getElementById('boardBgEnabled');
+  if (enableEl) {
+    enableEl.checked = enabled;
+    enableEl.disabled = !has;
+  }
+  const enableLabel = document.getElementById('boardBgEnabledLabel');
+  if (enableLabel) enableLabel.classList.toggle('is-disabled', !has);
   const follow = document.getElementById('boardBgFollowTheme');
   if (follow) {
     follow.checked = isBoardBgFollowEnabled();
-    follow.disabled = !has;
+    follow.disabled = !has || !enabled;
   }
+  const mSt = document.getElementById('mobileBgStatus');
+  if (mSt) {
+    if (!has) mSt.textContent = '未设置 · 仅作用于当前看板';
+    else mSt.textContent = enabled ? '当前看板背景已开启' : '已上传 · 显示已关闭';
+    mSt.classList.toggle('has-bg', has && enabled);
+  }
+  const mClear = document.getElementById('mobileBgClearBtn');
+  if (mClear) mClear.disabled = !has;
+  const mEnable = document.getElementById('mobileBgEnabled');
+  const mEnableLabel = document.getElementById('mobileBgEnabledLabel');
+  if (mEnable) {
+    mEnable.checked = enabled;
+    mEnable.disabled = !has;
+  }
+  if (mEnableLabel) mEnableLabel.classList.toggle('is-disabled', !has);
+  const mFollow = document.getElementById('mobileBgFollowTheme');
+  const mFollowLabel = document.getElementById('mobileBgFollowLabel');
+  if (mFollow) {
+    mFollow.checked = isBoardBgFollowEnabled();
+    mFollow.disabled = !has || !enabled;
+  }
+  if (mFollowLabel) mFollowLabel.classList.toggle('is-disabled', !has || !enabled);
 }
 
 function applyBoardBackground() {
   migrateLegacyBoardBgOnce();
   const layer = document.getElementById('boardBgLayer');
   const data = getBoardBgData();
+  const enabled = !!(data && isBoardBgEnabled());
   applyCardFrost();
-  if (data && layer) {
+  if (enabled && layer) {
     layer.style.backgroundImage = 'url("' + data.replace(/"/g, '\\"') + '")';
     document.body.classList.add('has-custom-bg');
   } else {
@@ -11458,7 +11649,7 @@ function applyBoardBackground() {
   }
   // 无主色、或旧版发白算法(v<2)：后台重算一次更清晰的强调色
   const b = currentBoardObj();
-  const needResample = !!(data && b && isBoardBgFollowEnabled() && (!b.bgPalette || b.bgPalette.v !== 3));
+  const needResample = !!(enabled && b && isBoardBgFollowEnabled() && (!b.bgPalette || b.bgPalette.v !== 3));
   if (needResample) {
     extractPaletteFromDataURL(data).then(pal => {
       const bb = currentBoardObj();
@@ -11486,6 +11677,7 @@ function clearBoardBackground() {
   const b = currentBoardObj();
   if (b) {
     delete b.bgPalette;
+    delete b.bgEnabled;
   }
   clearAdaptiveThemeVars();
   applyBoardBackground();
@@ -11558,7 +11750,8 @@ async function handleBoardBgFile(file) {
     }
     const b = currentBoardObj();
     if (b) {
-      // 新上传默认开启「主题跟随」
+      // 新上传默认开启显示 + 主题跟随
+      b.bgEnabled = true;
       if (typeof b.bgFollowTheme !== 'boolean') b.bgFollowTheme = true;
       try {
         b.bgPalette = await extractPaletteFromDataURL(dataUrl);
@@ -11600,7 +11793,8 @@ function initBoardBackgroundControls() {
     if (f) handleBoardBgFile(f);
   });
   range?.addEventListener('input', () => {
-    const v = parseInt(range.value, 10) || 48;
+    const raw = parseInt(range.value, 10);
+    const v = Number.isNaN(raw) ? 48 : Math.min(100, Math.max(0, raw));
     const b = currentBoardObj();
     if (b) b.cardFrost = v;
     applyCardFrost(v);
@@ -11629,9 +11823,81 @@ function initBoardBackgroundControls() {
       showToast(b.bgFollowTheme ? '主题色将跟随本看板背景' : '已恢复当前主题配色');
     }
   });
+
+  function onBgEnabledChange(checked) {
+    const b = currentBoardObj();
+    if (!b || !getBoardBgData()) return;
+    b.bgEnabled = !!checked;
+    if (typeof save === 'function') save();
+    applyBoardBackground();
+    if (typeof showToast === 'function') {
+      showToast(b.bgEnabled ? '已显示背景图' : '已隐藏背景图（图片仍保留）');
+    }
+  }
+  document.getElementById('boardBgEnabled')?.addEventListener('change', e => {
+    onBgEnabledChange(e.target.checked);
+  });
+  document.getElementById('mobileBgEnabled')?.addEventListener('change', e => {
+    onBgEnabledChange(e.target.checked);
+  });
+
   // 阻止 range / checkbox 点击关闭 details 菜单
   document.getElementById('settingsBgBlock')?.addEventListener('click', e => {
     e.stopPropagation();
+  });
+
+  // v5.125: 手机端「更多」里的背景图控件
+  const mUpload = document.getElementById('mobileBgUploadBtn');
+  const mClear = document.getElementById('mobileBgClearBtn');
+  const mFile = document.getElementById('mobileBgFile');
+  const mRange = document.getElementById('mobileBgOpacity');
+  const mFollow = document.getElementById('mobileBgFollowTheme');
+  mUpload?.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    mFile?.click();
+  });
+  mClear?.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    clearBoardBackground();
+  });
+  mFile?.addEventListener('change', () => {
+    const f = mFile.files && mFile.files[0];
+    mFile.value = '';
+    if (f) handleBoardBgFile(f);
+  });
+  mRange?.addEventListener('input', () => {
+    const raw = parseInt(mRange.value, 10);
+    const v = Number.isNaN(raw) ? 48 : Math.min(100, Math.max(0, raw));
+    const b = currentBoardObj();
+    if (b) b.cardFrost = v;
+    applyCardFrost(v);
+    if (typeof save === 'function') save();
+  });
+  mFollow?.addEventListener('change', () => {
+    const b = currentBoardObj();
+    if (!b) return;
+    b.bgFollowTheme = !!mFollow.checked;
+    // 与桌面 checkbox 保持一致
+    const deskFollow = document.getElementById('boardBgFollowTheme');
+    if (deskFollow) deskFollow.checked = b.bgFollowTheme;
+    if (b.bgFollowTheme && getBoardBgData() && !b.bgPalette) {
+      extractPaletteFromDataURL(getBoardBgData()).then(pal => {
+        const bb = currentBoardObj();
+        if (!bb) return;
+        bb.bgPalette = pal;
+        if (typeof save === 'function') save();
+        applyAdaptiveThemeFromBoard();
+      }).catch(() => applyAdaptiveThemeFromBoard());
+    } else {
+      applyAdaptiveThemeFromBoard();
+    }
+    if (typeof save === 'function') save();
+    if (typeof showToast === 'function') {
+      showToast(b.bgFollowTheme ? '主题色将跟随本看板背景' : '已恢复当前主题配色');
+    }
+    syncBoardBgUI();
   });
 }
 
@@ -22722,10 +22988,27 @@ document.getElementById('tsEditModal')?.addEventListener('click', e => {
   if (action === 'ts-edit-cancel') { closeTsEditModal(); return; }
   if (action === 'ts-edit-save') { commitTsEdit(); return; }
 });
-// v1.6.12: 直接创建工时 modal 事件
+// v1.6.12 / v5.126: 直接创建工时 modal 事件
+// 点遮罩 / 右上角 ×：有内容则尝试保存，无内容则取消关闭
+function tsCreateFormHasContent() {
+  const title = (document.getElementById('tsCreateTitle')?.value || '').trim();
+  const duration = (document.getElementById('tsCreateDuration')?.value || '').trim();
+  const notes = (document.getElementById('tsCreateNotes')?.value || '').trim();
+  const project = (document.getElementById('tsCreateProjectInput')?.value || '').trim();
+  const projectId = (document.getElementById('tsCreateProjectId')?.value || '').trim();
+  return !!(title || duration || notes || project || projectId);
+}
+function tsCreateTrySaveOnOutside() {
+  if (!tsCreateFormHasContent()) {
+    closeTsCreateEntryModal();
+    return;
+  }
+  // 有内容：走创建逻辑；校验失败时弹窗保持打开并提示
+  commitTsCreateEntry();
+}
 document.getElementById('tsCreateEntryModal')?.addEventListener('click', e => {
   const action = e.target.dataset?.action;
-  if (action === 'ts-create-close') { closeTsCreateEntryModal(); return; }
+  if (action === 'ts-create-close') { tsCreateTrySaveOnOutside(); return; }
   if (action === 'ts-create-cancel') { closeTsCreateEntryModal(); return; }
   if (action === 'ts-create-save') { commitTsCreateEntry(); return; }
 });
@@ -23520,6 +23803,29 @@ ${details.join('\n')}`;
         <div class="mobile-theme-label">🎨 主题 · 当前 <span id="mobileThemeCurrent">—</span></div>
         <div class="mobile-theme-grid" id="mobileThemeGrid"></div>
       </div>
+      <!-- v5.125: 手机端本看板背景图 -->
+      <div class="mobile-bg-picker" id="mobileBgPicker">
+        <div class="mobile-theme-label">🖼 本看板背景图</div>
+        <div class="mobile-bg-status" id="mobileBgStatus">未设置</div>
+        <div class="mobile-bg-actions">
+          <button type="button" class="btn" id="mobileBgUploadBtn">上传图片</button>
+          <button type="button" class="btn" id="mobileBgClearBtn" disabled>清除</button>
+        </div>
+        <label class="mobile-bg-follow" id="mobileBgEnabledLabel" for="mobileBgEnabled">
+          <input type="checkbox" id="mobileBgEnabled" checked>
+          <span>显示背景图</span>
+        </label>
+        <label class="mobile-bg-opacity" for="mobileBgOpacity">
+          <span>卡片透明度</span>
+          <input type="range" id="mobileBgOpacity" min="0" max="100" value="48" step="1">
+          <span class="mobile-bg-opacity-val" id="mobileBgOpacityVal">48%</span>
+        </label>
+        <label class="mobile-bg-follow" id="mobileBgFollowLabel" for="mobileBgFollowTheme">
+          <input type="checkbox" id="mobileBgFollowTheme" checked>
+          <span>主题色跟随背景图</span>
+        </label>
+        <input type="file" id="mobileBgFile" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+      </div>
       <!-- v5.36: AI 对话助手 + 工时 AI 优化，统一放进「⋯」更多菜单 -->
       <div class="mobile-ai-picker" id="mobileAiPicker">
         <div class="mobile-theme-label">✨ AI助手</div>
@@ -23840,6 +24146,8 @@ self.addEventListener('fetch', e => {
       renderMobileThemeGrid();
       // v5.34: 同步 AI 语言选中态与 API 状态
       syncMobileAiPanel();
+      // v5.125: 同步本看板背景图状态
+      if (typeof syncBoardBgUI === 'function') syncBoardBgUI();
       modal.hidden = false;
       document.body.classList.add('modal-open');
     });
