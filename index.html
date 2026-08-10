@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · 诉讼时间轴按钮与待办日期标签重排 v5.175</title>
+<title>Kanban · 编辑案件名时隐藏一键整理防放大 v5.190</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="5_175_260809">
+<meta name="build-hash" content="5_190_260810">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -732,7 +732,6 @@ html[data-theme="astra"] .ts-sys-badge.is-pending {
   background: color-mix(in srgb, #d4a84b 18%, white);
   border-color: color-mix(in srgb, #d4a84b 45%, transparent);
 }
-
 
 
 /* 墨金 — 深黑底 + 金属金点缀，高对比 */
@@ -4952,16 +4951,20 @@ button.card-add-due svg {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  cursor: grab;
+  /* v5.176: 悬停手指指针；v5.177: 任务条撑满格子宽度 */
+  cursor: pointer;
   line-height: 1.4;
   display: flex;
   align-items: center;
   gap: 4px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   transition: background 0.12s, opacity 0.15s;
 }
 .cal-task:hover { background: var(--task-bg-hover); }
 .cal-task:active { cursor: grabbing; }
-.cal-task.dragging { opacity: 0.35; }
+.cal-task.dragging { opacity: 0.35; cursor: grabbing; }
 .cal-task.done .cal-task-title {
   text-decoration: line-through;
   opacity: 0.55;
@@ -6729,7 +6732,31 @@ body[data-view="litigation"] #vaultBtn { display: none; }
 .litigation-table .lit-note { width:24%; }
 .litigation-table .lit-actions { width:54px; cursor:default; text-align:center; }
 .lit-cell-empty { color:var(--muted); font-weight:400; }
-.lit-edit { width:100%; height:34px; min-height:34px; max-height:96px; resize:none; overflow-y:auto; padding:5px 7px; border:1px solid var(--accent); border-radius:7px; background:var(--bg); color:var(--text); font:inherit; line-height:1.45; outline:none; box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 14%, transparent); }
+/* v5.189: 案件字段用 contenteditable 直接编辑，不插入 textarea，无底色框 */
+/* v5.190: 桌面端锁定 14px，覆盖全局 button/[contenteditable]{font-size:max(16px,1em)}，避免点进编辑后字号与下方工具条突然变大 */
+.litigation-table td[data-field][contenteditable="true"] {
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  caret-color: var(--text);
+  font-size: 14px !important;
+  line-height: 1.55;
+}
+.litigation-table td[data-field][contenteditable="true"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  font-size: 14px !important;
+}
+.litigation-table tr.lit-case-main:hover,
+.litigation-table tr.lit-case-main:focus-within {
+  background: transparent;
+}
+.litigation-table tr.lit-case-main:hover td,
+.litigation-table tr.lit-case-main:focus-within td {
+  /* 保持与静止态一致，避免编辑时格子换色 */
+  background: color-mix(in srgb, var(--card-bg-solid) 84%, transparent);
+}
 .litigation-table td.lit-timeline-row { padding:0; cursor:default; background:color-mix(in srgb, var(--card-bg-solid) 70%, transparent); }
 .lit-case-main td { border-top:1px solid var(--border); border-bottom:0; background:color-mix(in srgb, var(--card-bg-solid) 84%, transparent); }
 .lit-case-main td:first-child { border-left:1px solid var(--border); border-top-left-radius:14px; }
@@ -6738,7 +6765,7 @@ body[data-view="litigation"] #vaultBtn { display: none; }
 .lit-case-spacer td { height:14px; padding:0; border:0 !important; background:transparent !important; }
 .lit-timeline-wrap { padding:0 14px 8px; }
 .lit-case-timeline-tools { display:flex; align-items:center; gap:6px; margin-top:7px; }
-.lit-timeline-sort { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--border); border-radius:8px; padding:5px 9px; background:color-mix(in srgb, var(--card-bg-solid) 78%, transparent); color:var(--muted); font:inherit; font-size:11.5px; font-weight:700; cursor:pointer; }
+.lit-timeline-sort { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--border); border-radius:8px; padding:5px 9px; background:color-mix(in srgb, var(--card-bg-solid) 78%, transparent); color:var(--muted); font-family:inherit; font-size:11.5px !important; font-weight:700; line-height:1.3; cursor:pointer; }
 .lit-timeline-sort:hover { border-color:var(--accent); color:var(--accent); background:color-mix(in srgb, var(--accent) 7%, var(--card-bg-solid)); }
 .lit-timeline-sort:focus-visible { outline:2px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset:2px; }
 .lit-timeline-list { position:relative; display:flex; flex-direction:column; gap:3px; }
@@ -6773,16 +6800,6 @@ body[data-view="litigation"] #vaultBtn { display: none; }
 .lit-todo-list { display:flex; flex-direction:column; gap:3px; }
 /* v5.175: 待办顺序 = 日期标签 · checkbox · 内容 */
 .lit-todo-item { display:grid; grid-template-columns:auto 18px minmax(100px,1fr); gap:6px; align-items:center; }
-.lit-todo-due-wrap {
-  position:relative;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-width:52px;
-  height:24px;
-  cursor:pointer;
-  flex-shrink:0;
-}
 .lit-todo-due-tag {
   font-size:11px;
   font-weight:500;
@@ -6794,11 +6811,18 @@ body[data-view="litigation"] #vaultBtn { display: none; }
   border:1px solid transparent;
   white-space:nowrap;
   line-height:1.3;
-  pointer-events:none;
+  cursor:pointer;
+  flex-shrink:0;
+  min-width:52px;
+  height:24px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   transition:background .12s, color .12s, border-color .12s;
+  font:inherit;
 }
 .lit-todo-due-tag.is-empty { opacity:.65; }
-.lit-todo-due-wrap:hover .lit-todo-due-tag {
+.lit-todo-due-tag:hover {
   border-color:color-mix(in srgb, var(--accent) 35%, transparent);
   color:var(--accent);
   background:color-mix(in srgb, var(--accent) 10%, transparent);
@@ -6806,18 +6830,6 @@ body[data-view="litigation"] #vaultBtn { display: none; }
 .lit-todo-due-tag:not(.is-empty) {
   background:color-mix(in srgb, var(--accent) 12%, transparent);
   color:var(--accent);
-}
-.lit-todo-due {
-  position:absolute;
-  inset:0;
-  opacity:0;
-  width:100%;
-  height:100%;
-  margin:0;
-  padding:0;
-  border:0;
-  cursor:pointer;
-  font-size:16px; /* avoid iOS zoom */
 }
 .lit-tl-date, .lit-tl-text, .lit-todo-text { min-width:0; height:30px; padding:4px 6px; border:1px solid transparent; border-radius:6px; background:transparent; color:var(--text); font:inherit; font-size:12px; }
 .lit-tl-text, .lit-todo-text { display:block; width:100%; resize:none; overflow:hidden; line-height:1.35; min-height:30px; max-height:200px; white-space:pre-wrap; word-break:break-word; padding-left:18px; }
@@ -6874,9 +6886,9 @@ body[data-view="litigation"] #vaultBtn { display: none; }
 .lit-reminder-form-hint b { color:var(--text); font-weight:600; }
 .lit-reminder-form-default { display:flex; padding-bottom:4px; }
 .lit-reminder-form-default .btn { flex:1; padding:8px 10px; font-weight:600; }
-.lit-tl-add { width:26px; height:26px; border:1px solid var(--border); border-radius:50%; background:var(--card-bg-solid); color:var(--text); cursor:pointer; font-size:17px; line-height:22px; }
+.lit-tl-add { width:26px; height:26px; border:1px solid var(--border); border-radius:50%; background:var(--card-bg-solid); color:var(--text); cursor:pointer; font-size:17px !important; line-height:22px; }
 .lit-tl-add:hover { border-color:var(--accent); color:var(--accent); }
-.lit-inline-add { display:block; width:22px; height:22px; margin-top:5px; font-size:15px; line-height:18px; color:var(--muted); }
+.lit-inline-add { display:block; width:22px; height:22px; margin-top:5px; font-size:15px !important; line-height:18px; color:var(--muted); }
 .lit-case-timeline-tools .lit-inline-add { display:inline-flex; align-items:center; justify-content:center; margin-top:0; flex:0 0 22px; }
 .lit-delete { border:0; background:transparent; color:var(--muted); padding:5px 7px; border-radius:7px; cursor:pointer; font-size:16px; }
 .lit-delete:hover { color:#d64545; background:rgba(214,69,69,.1); }
@@ -7714,164 +7726,191 @@ input, select, textarea, button, [contenteditable] {
     cursor: pointer;
   }
   .lit-mob-section-title button:active { background: var(--task-bg); }
+  /* v5.180: 左侧时间轴 + 进程行(文本/日历/铃铛) + 待办行(勾选/文本/日历/+) */
   .lit-mob-timeline {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0;
     position: relative;
-    padding-left: 4px;
+    padding: 4px 0 4px 0;
   }
+  /* 轴线中心 x=10px（与圆点轴心对齐） */
   .lit-mob-timeline::before {
     content: '';
     position: absolute;
-    left: 11px;
-    top: 6px;
-    bottom: 6px;
+    left: 9px;
+    top: 16px;
+    bottom: 16px;
     width: 2px;
-    background: color-mix(in srgb, var(--accent) 30%, transparent);
+    background: color-mix(in srgb, var(--accent) 40%, var(--border));
+    border-radius: 1px;
   }
   .lit-mob-timeline-item {
-    background: var(--card-bg-solid);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 12px 10px 30px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0 0 10px 26px;
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
   }
+  /* v5.184: 单实心圆点，去掉外圈；圆心 left+5=10 与轴线中心对齐 */
   .lit-mob-timeline-item::before {
     content: '';
     position: absolute;
     left: 5px;
-    top: 16px;
-    width: 14px;
-    height: 14px;
+    top: 10px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--accent);
-    border: 3px solid var(--card-bg-solid);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 50%, transparent);
+    border: 0;
+    box-shadow: none;
+    z-index: 1;
   }
-  .lit-mob-line-date {
+  .lit-mob-progress-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 6px;
+    min-width: 0;
   }
-  .lit-mob-line-date input[type="date"] {
-    flex: 1;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 8px;
+  /* v5.183: 进程/待办去边框文本框，底部分隔线更一体化 */
+  .lit-mob-line-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    border-radius: 0;
+    padding: 4px 2px 6px;
     font: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    background: var(--card-bg);
+    font-size: 14px;
+    font-weight: 500;
+    background: transparent;
     color: var(--text);
-    color-scheme: light dark;
+    resize: none;
+    min-height: 28px;
+    line-height: 1.4;
+    box-shadow: none;
   }
-  .lit-mob-bell-btn {
-    flex-shrink: 0;
-    width: 32px; height: 32px;
-    border: 1px solid var(--border);
-    background: var(--card-bg);
+  .lit-mob-line-text:focus {
+    outline: none;
+    border-bottom-color: var(--accent);
+    box-shadow: none;
+    background: transparent;
+  }
+  .lit-mob-line-text::placeholder {
     color: var(--muted);
-    border-radius: 6px;
+    opacity: 0.55;
+    font-weight: 400;
+  }
+  .lit-mob-cal-btn,
+  .lit-mob-bell-btn,
+  .lit-mob-todo-add-btn {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 50%;
     font-size: 14px;
     cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lit-mob-cal-btn svg,
+  .lit-mob-todo-add-btn svg { width: 16px; height: 16px; display: block; }
+  .lit-mob-cal-btn:active,
+  .lit-mob-bell-btn:active,
+  .lit-mob-todo-add-btn:active {
+    background: var(--task-bg);
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .lit-mob-cal-btn.has-date,
+  .lit-mob-todo-cal.has-date {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
   }
   .lit-mob-bell-btn.has-reminders {
     background: color-mix(in srgb, var(--red) 12%, transparent);
     border-color: color-mix(in srgb, var(--red) 40%, transparent);
     color: var(--red);
   }
-  .lit-mob-line-text {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 10px;
-    font: inherit;
-    font-size: 13.5px;
-    background: var(--card-bg);
-    color: var(--text);
-    resize: vertical;
-    min-height: 36px;
-  }
-  .lit-mob-line-text:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+  .lit-mob-line-date-input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
   }
   .lit-mob-todos {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding: 6px 8px;
-    background: color-mix(in srgb, var(--task-bg) 50%, transparent);
-    border-radius: 6px;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
   }
   .lit-mob-todo {
-    display: grid;
-    grid-template-columns: 22px 1fr 24px;
-    grid-template-rows: auto auto;
-    gap: 4px;
-    align-items: start;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
   }
-  .lit-mob-todo > .lit-mob-todo-check { grid-column: 1; grid-row: 1; align-self:center; }
-  .lit-mob-todo > .lit-mob-todo-text  { grid-column: 2; grid-row: 1; }
-  .lit-mob-todo > .lit-mob-todo-del   { grid-column: 3; grid-row: 1; }
-  .lit-mob-todo > .lit-mob-todo-due   { grid-column: 1 / -1; grid-row: 2; }
   .lit-mob-todo.is-done .lit-mob-todo-text {
     text-decoration: line-through;
     color: var(--muted);
   }
-  .lit-mob-todo select,
-  .lit-mob-todo input,
-  .lit-mob-todo textarea {
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 4px 6px;
-    font: inherit;
-    font-size: 12px;
-    background: var(--card-bg-solid);
-    color: var(--text);
+  .lit-mob-todo input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+  }
+  .lit-mob-todo-text {
+    flex: 1 1 auto;
     min-width: 0;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    border-radius: 0;
+    padding: 3px 2px 5px;
+    font: inherit;
+    font-size: 13px;
+    background: transparent;
+    color: var(--text);
+    resize: none;
+    min-height: 28px;
+    line-height: 1.4;
+    box-shadow: none;
   }
-  .lit-mob-todo select { color-scheme: light dark; }
-  .lit-mob-todo input[type="checkbox"] { width:17px; height:17px; padding:0; border:0; accent-color:var(--accent); }
-  .lit-mob-todo input[type="date"] { color-scheme: light dark; }
-  .lit-mob-todo-text { resize: vertical; min-height: 28px; }
-  .lit-mob-todo-del {
-    border: 0; background: transparent; color: var(--muted);
-    font-size: 16px; line-height: 1; padding: 0; cursor: pointer;
-    width: 24px; height: 24px;
+  .lit-mob-todo-text:focus {
+    outline: none;
+    border-bottom-color: var(--accent);
+    box-shadow: none;
+    background: transparent;
   }
-  .lit-mob-todo-del:hover { color: var(--red); }
-  .lit-mob-empty {
-    font-size: 11.5px;
+  .lit-mob-todo-text::placeholder {
     color: var(--muted);
-    text-align: center;
-    padding: 4px 0;
-    font-style: italic;
+    opacity: 0.55;
+  }
+  .lit-mob-todo-add-row {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 0 0 0;
   }
   .lit-mob-line-actions {
-    display: flex;
-    gap: 6px;
-    justify-content: flex-end;
+    display: none; /* 删除进展改由长按/卡片级操作，避免挤布局 */
   }
-  .lit-mob-line-actions button {
-    border: 1px solid var(--border);
-    background: var(--card-bg);
-    color: var(--muted);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font: inherit;
-    font-size: 11.5px;
-    cursor: pointer;
-  }
-  .lit-mob-line-actions button:active { background: var(--task-bg); }
-  .lit-mob-line-actions button[data-variant="add"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
-  .lit-mob-line-actions button[data-variant="remove"]:hover { color: var(--red); border-color: var(--red); }
   .lit-mob-card-actions {
     display: flex;
     gap: 8px;
@@ -7952,11 +7991,9 @@ input, select, textarea, button, [contenteditable] {
   .lit-mob-fields-body .lit-mob-field label { font-size: 10.5px; }
 
   @media (max-width: 380px) {
-    .lit-mob-todo { grid-template-columns: 22px 1fr 22px; }
-    .lit-mob-todo > .lit-mob-todo-check { grid-column: 1; grid-row: 1; }
-    .lit-mob-todo > .lit-mob-todo-text  { grid-column: 2; grid-row: 1; }
-    .lit-mob-todo > .lit-mob-todo-del   { grid-column: 3; grid-row: 1; }
-    .lit-mob-todo > .lit-mob-todo-due   { grid-column: 1 / -1; grid-row: 2; }
+    .lit-mob-cal-btn,
+    .lit-mob-bell-btn,
+    .lit-mob-todo-add-btn { width: 30px; height: 30px; }
   }
 
   /* 底部导航 */
@@ -8074,13 +8111,41 @@ input, select, textarea, button, [contenteditable] {
     }
   }
 
-  /* v5.36: 手机端彻底隐藏黑色 AI 助手悬浮球，入口改到「⋯」更多菜单 */
-  #botFab,
-  .bot-fab {
+  /* v5.181: 手机端 AI 助手 — 显示模式下右下角入口可见；隐藏模式才彻底不显示 */
+  html[data-assistant-mode="hidden"] #botFab,
+  html[data-assistant-mode="hidden"] .bot-fab {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
     opacity: 0 !important;
+  }
+  html[data-assistant-mode="assistant"] #botFab.bot-fab,
+  html:not([data-assistant-mode]) #botFab.bot-fab {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    right: 16px !important;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 10025 !important;
+    position: fixed !important;
+  }
+  /* 面板打开时盖住底部导航，确保可见 */
+  #botPanel.bot-panel.open {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translateY(0) scale(1) !important;
+    z-index: 10050 !important;
+    right: 8px !important;
+    left: 8px !important;
+    bottom: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    height: calc(100dvh - 16px - env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(100dvh - 16px) !important;
+    border-radius: 16px !important;
+    background: var(--card-bg-solid, #fff) !important;
   }
 
   /* v5.39: 主 + 已移除，⋯ 回到右下角主位置 */
@@ -8232,16 +8297,21 @@ input, select, textarea, button, [contenteditable] {
   #calModeToggle { display: none !important; }
 
   /* ========== v5.163 手机月历：大格子 + 小任务字（仿 Todo 布局） ========== */
+  /* v5.179: 月历卡片独立实色底，避免自定义背景图时整页透穿看不清 */
   body[data-view="calendar"] .calendar {
     padding: 8px 6px 12px !important;
     border-radius: 14px !important;
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
+    border: 1px solid color-mix(in srgb, var(--card-border) 70%, transparent) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05) !important;
+    background: var(--card-bg-solid) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     flex: 1 1 auto !important;
     min-height: calc(100dvh - 140px) !important;
+  }
+  body.has-custom-bg[data-view="calendar"] .calendar {
+    background: var(--card-bg-solid) !important;
+    opacity: 1 !important;
   }
   body[data-view="calendar"] .cal-weekdays {
     margin-bottom: 4px !important;
@@ -8828,92 +8898,137 @@ input, select, textarea, button, [contenteditable] {
     font-weight: 500 !important;
   }
 
-  /* 去掉时间轴竖线与圆点，改成轻卡片列表 */
+  /* v5.182: 恢复时间轴竖线 + 圆点，把各条进程串成一条线（不再拆成独立卡片） */
   .lit-mob-timeline {
-    gap: 8px !important;
-    padding-left: 0 !important;
-    margin-top: 0 !important;
+    gap: 0 !important;
+    padding: 4px 0 8px !important;
+    margin-top: 4px !important;
+    position: relative !important;
   }
-  .lit-mob-timeline::before { display: none !important; }
+  .lit-mob-timeline::before {
+    display: block !important;
+    content: '' !important;
+    position: absolute !important;
+    left: 9px !important;
+    top: 16px !important;
+    bottom: 16px !important;
+    width: 2px !important;
+    background: color-mix(in srgb, var(--accent) 45%, var(--border)) !important;
+    border-radius: 1px !important;
+    z-index: 0 !important;
+  }
   .lit-mob-timeline-item {
-    background: var(--task-bg) !important;
+    background: transparent !important;
     border: none !important;
-    border-radius: 12px !important;
-    padding: 12px !important;
-    gap: 8px !important;
+    border-radius: 0 !important;
+    padding: 0 0 10px 26px !important;
+    gap: 4px !important;
+    position: relative !important;
+    box-shadow: none !important;
   }
-  .lit-mob-timeline-item::before { display: none !important; }
+  .lit-mob-timeline-item:last-child {
+    padding-bottom: 4px !important;
+  }
+  /* 单实心圆 · 圆心与轴线对齐 */
+  .lit-mob-timeline-item::before {
+    display: block !important;
+    content: '' !important;
+    position: absolute !important;
+    left: 5px !important;
+    top: 10px !important;
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 50% !important;
+    background: var(--accent) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    z-index: 1 !important;
+  }
 
+  .lit-mob-progress-row {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
   .lit-mob-line-date {
     margin-bottom: 0 !important;
     gap: 8px !important;
   }
-  .lit-mob-line-date input[type="date"],
-  .lit-mob-line-date-input {
-    min-height: 36px !important;
-    font-size: 13.5px !important;
-    font-weight: 600 !important;
-    border-radius: 9px !important;
-    padding: 6px 10px !important;
-    border: 1px solid var(--border) !important;
-    background: var(--card-bg-solid) !important;
-  }
-  .lit-mob-bell-btn {
-    width: 36px !important;
-    height: 36px !important;
-    font-size: 15px !important;
-    border-radius: 9px !important;
-    border: 1px solid var(--border) !important;
-    background: var(--card-bg-solid) !important;
+  .lit-mob-bell-btn,
+  .lit-mob-cal-btn,
+  .lit-mob-todo-add-btn {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 14px !important;
+    border-radius: 50% !important;
+    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent) !important;
+    background: transparent !important;
+    flex-shrink: 0 !important;
   }
   .lit-mob-line-text {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     font-size: 14px !important;
-    padding: 10px 12px !important;
-    min-height: 44px !important;
-    border-radius: 10px !important;
+    font-weight: 500 !important;
+    padding: 4px 2px 6px !important;
+    min-height: 28px !important;
+    border-radius: 0 !important;
     margin-top: 0 !important;
-    border: 1px solid var(--border) !important;
-    background: var(--card-bg-solid) !important;
-    resize: vertical;
+    border: 0 !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    resize: none;
+  }
+  .lit-mob-line-text:focus {
+    border-bottom-color: var(--accent) !important;
+    box-shadow: none !important;
+    background: transparent !important;
   }
 
-  /* 待办区：去掉双重底色，更干净 */
+  /* 待办区：底线式输入，更紧凑 */
   .lit-mob-todos {
-    gap: 6px !important;
+    gap: 4px !important;
     padding: 0 !important;
-    margin-top: 4px !important;
+    margin-top: 2px !important;
     border-radius: 0 !important;
     background: transparent !important;
   }
   .lit-mob-todo {
-    grid-template-columns: 20px 1fr 28px !important;
-    gap: 6px 8px !important;
-    padding: 0 !important;
+    display: flex !important;
     align-items: center !important;
+    gap: 6px !important;
+    padding: 0 !important;
   }
   .lit-mob-todo-text {
-    min-height: 34px !important;
-    font-size: 13.5px !important;
-    padding: 7px 10px !important;
-    border-radius: 8px !important;
-    border: 1px solid var(--border) !important;
-    background: var(--card-bg-solid) !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    min-height: 28px !important;
+    font-size: 13px !important;
+    padding: 3px 2px 5px !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent) !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
-  .lit-mob-todo-due {
-    min-height: 32px !important;
-    font-size: 12.5px !important;
-    padding: 4px 8px !important;
-    border-radius: 8px !important;
-    border: 1px solid var(--border) !important;
-    background: var(--card-bg-solid) !important;
+  .lit-mob-todo-text:focus {
+    border-bottom-color: var(--accent) !important;
+    box-shadow: none !important;
+    background: transparent !important;
   }
-  .lit-mob-todo-del {
-    color: var(--muted) !important;
-    opacity: 0.7;
+  .lit-mob-timeline-item {
+    padding: 0 0 10px 26px !important;
+    gap: 4px !important;
+  }
+  .lit-mob-todo input[type="checkbox"] {
+    width: 14px !important;
+    height: 14px !important;
   }
 
-  /* 操作按钮轻量化 */
+  /* 操作按钮轻量化（删除进展入口已隐藏） */
   .lit-mob-line-actions {
+    display: none !important;
     gap: 8px !important;
     margin-top: 2px !important;
   }
@@ -10830,17 +10945,24 @@ for (const record of store.litigationRecords) {
       if (line.todo || line.taskId || line.todoDue || line.status) {
         line.todos.push({
           id:'ltd_' + (line.id || Date.now().toString(36)),
-          text:line.todo || '', status:line.status || '待处理', due:line.todoDue || '', taskId:line.taskId || null
+          text:line.todo || '', status:line.status || '待处理', due:line.todoDue || '', startDate:null, taskId:line.taskId || null
         });
       }
       delete line.todo; delete line.status; delete line.todoDue; delete line.taskId;
       litigationTodosMigrated = true;
     }
+    // v5.178: 去掉历史自动塞入的空白待办（无文字、无日期、无关联任务）
+    const before = line.todos.length;
+    line.todos = line.todos.filter(todo =>
+      String(todo.text || '').trim() || todo.due || todo.startDate || todo.taskId || todo.status === '已完成'
+    );
+    if (line.todos.length !== before) litigationTodosMigrated = true;
     for (const todo of line.todos) {
       if (todo.status === '已延期') {
         todo.status = '待处理';
         litigationTodosMigrated = true;
       }
+      if (todo.startDate === undefined) todo.startDate = null;
     }
   }
 }
@@ -11240,13 +11362,6 @@ function fmtClock(ms) {
 }
 
 // 计算 task 的累计时间(从 timeEntries 实时求和,不依赖 project.taskTime 缓存)
-function getTaskTimeMs(taskId) {
-  if (!store.timeEntries) return 0;
-  return store.timeEntries
-    .filter(e => e.taskId === taskId)
-    .reduce((sum, e) => sum + Math.max(0, e.end - e.start), 0);
-}
-
 // 计算 task 今日累计时间
 function getTaskTodayTimeMs(taskId) {
   if (!store.timeEntries) return 0;
@@ -11745,48 +11860,10 @@ function isMultiDayTask(task) {
   }
 }
 
-function nextCalendarDateStr(dateStr) {
-  const d = new Date(String(dateStr).slice(0, 10) + 'T00:00:00');
-  if (Number.isNaN(d.getTime())) return '';
-  d.setDate(d.getDate() + 1);
-  return localDateStr(d);
-}
-
-/** 跨日任务：为指定日写一笔默认 1h 工时（当天则尽量贴近当前时间） */
-function logMultiDayDayTime(task, project, dayStr) {
-  if (!task || !project || !dayStr) return;
-  if (!store.timeEntries) store.timeEntries = [];
-  // 同一任务同一天已有工时则不再重复记
-  const exists = store.timeEntries.some(e =>
-    e && e.taskId === task.id && (e.localDate === dayStr ||
-      (e.start && localDateStr(new Date(e.start)) === dayStr))
-  );
-  if (exists) return;
-
-  const todayStr = today();
-  let endMs;
-  let startMs;
-  if (dayStr === todayStr) {
-    endMs = Date.now();
-    startMs = endMs - 60 * 60 * 1000; // 近 1 小时
-  } else {
-    const base = new Date(dayStr + 'T10:00:00').getTime();
-    startMs = base;
-    endMs = base + 60 * 60 * 1000;
-  }
-  pushTimeEntrySegments({
-    taskId: task.id,
-    projectId: project.id,
-    start: startMs,
-    end: endMs,
-    note: '跨日任务 · 当日完成',
-  });
-}
-
 /**
  * 跨日任务「完成当天」：
  * - 当天写入 archive（月历该日显示已打钩）
- * - 记一笔工时
+ * - 不自动记时长（仅归档进工时单）
  * - 若还有后续日期，在项目卡生成新的剩余跨日待办
  * @returns {'split'|'full'|false}
  */
@@ -11806,7 +11883,7 @@ function completeMultiDayDay(task, project, board, dayStr) {
   }
 
   const nextDays = keys.filter(k => k > day);
-  logMultiDayDayTime(task, project, day);
+  // v5.185: 完成任务只进工时单/归档，不再自动记默认 1h 时长
 
   // 备份后续任务字段
   const contTitle = task.title;
@@ -11986,8 +12063,8 @@ async function completeTaskWithCelebration(task, project, board, taskEl = null, 
     render();
     if (wasMulti && typeof showToast === 'function') {
       showToast(hadRemaining
-        ? '已完成当天 · 已记工时 · 后续日期已生成待办'
-        : '跨日任务已全部完成 · 已记工时');
+        ? '已完成当天 · 后续日期已生成待办'
+        : '跨日任务已全部完成');
     }
     return true;
   } catch (error) {
@@ -12015,11 +12092,6 @@ function pushHistory() {
     store: JSON.parse(JSON.stringify(store)),
   });
   if (undoStack.length > UNDO_MAX) undoStack.shift();
-  updateUndoBtn();
-}
-
-function clearHistory() {
-  undoStack.length = 0;
   updateUndoBtn();
 }
 
@@ -12224,14 +12296,6 @@ function relativeLuminance(r, g, b) {
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   };
   return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-}
-
-function mixRgb(a, b, t) {
-  return [
-    a[0] + (b[0] - a[0]) * t,
-    a[1] + (b[1] - a[1]) * t,
-    a[2] + (b[2] - a[2]) * t,
-  ];
 }
 
 function rgbToHsl(r, g, b) {
@@ -12977,7 +13041,6 @@ document.getElementById('headerDataMenu')?.addEventListener('toggle', () => {
 window.addEventListener('resize', () => closeAllSettingsFlyouts());
 
 
-
 // v5.103: 设置菜单内主题色块点击（不关闭菜单，方便连选）
 document.getElementById('settingsThemeGrid')?.addEventListener('click', e => {
   const chip = e.target.closest('.settings-theme-chip[data-theme]');
@@ -13344,16 +13407,6 @@ function findTaskAcrossBoards(taskId) {
   }
   return null;
 }
-function totalUnscheduledAcrossBoards() {
-  let n = 0;
-  for (const key of Object.keys(store.boards)) {
-    for (const p of (store.boards[key].projects || [])) {
-      n += p.tasks.filter(t => !t.due && !t.done).length;
-    }
-  }
-  return n;
-}
-
 // ============== v5.96 全局搜索 ==============
 const GS_SHORTCUT_KEY = 'kanban_global_search_shortcut_v1';
 const GS_DEFAULT_SHORTCUT = { key: 'k', code: 'KeyK', ctrl: true, meta: true, alt: false, shift: false };
@@ -13977,20 +14030,6 @@ function getTermLibrary(entryOrKey) {
   const key = typeof entryOrKey === 'string' ? entryOrKey : termProjectKey(entryOrKey);
   return { ...blankTermLibrary(), ...(ensureTermLibraries()[key] || {}) };
 }
-function listTermLibraryProjects() {
-  const items = new Map();
-  for (const [boardKey, board] of Object.entries(store.boards || {})) {
-    for (const project of (board.projects || [])) {
-      const key = project.id ? `id:${project.id}` : `name:${String(project.name || '未命名项目').trim()}`;
-      items.set(key, { key, label: `${project.name || '未命名项目'} · ${board.name || '默认看板'}` });
-    }
-  }
-  for (const entry of collectArchiveEntries()) {
-    const key = termProjectKey(entry);
-    if (!items.has(key)) items.set(key, { key, label: `${entry.projectName || '未命名项目'} · 已归档` });
-  }
-  return [...items.values()].sort((a, b) => a.label.localeCompare(b.label, 'zh-CN'));
-}
 function fillTermLibraryForm(key) {
   activeTermLibraryKey = key;
   const lib = getTermLibrary(key);
@@ -14278,12 +14317,6 @@ function tsEntriesForCurrentView() {
   const entries = tsEntriesForMonth(tsCurrentMonth);
   return tsSelectedDate ? entries.filter(e => e.completedAt === tsSelectedDate) : entries;
 }
-function tsAllMonths() {
-  const set = new Set(Object.keys(store.archive || {}));
-  // 也加当前月(即使没数据)
-  set.add(localDateStr(new Date()).slice(0, 7));
-  return Array.from(set).filter(m => /^\d{4}-\d{2}$/.test(m)).sort().reverse();
-}
 function tsFmtMonthLabel(ym) {
   if (!ym) return '全部月份';
   const [y, m] = ym.split('-');
@@ -14362,8 +14395,6 @@ function tsIsWeekday(dateStr) {
 }
 
 // ============== 每月工时概览 ==============
-function isWorkday(dateStr) { return tsIsWeekday(dateStr); }
-
 function getMonthWorkdays(year, month) {
   let count = 0;
   const end = new Date(year, month, 0).getDate();
@@ -14484,66 +14515,6 @@ function toggleMonthlyOverview() {
   if (!panel) return;
   panel.classList.remove('hidden');
   renderMonthlyOverview();
-}
-
-function renderTsSummary(entries) {
-  const el = document.getElementById('tsSummary');
-  if (!el) return;
-  const totalMs = entries.reduce((s, e) => s + (e.totalTimeMs || 0), 0);
-  const timedEntries = entries.filter(e => e.totalTimeMs > 0);
-  const projectCount = new Set(entries.map(e => e.projectId)).size;
-  const weekdayEntries = timedEntries.filter(e => tsIsWeekday(e.completedAt));
-  const weekdayTotalMs = weekdayEntries.reduce((s, e) => s + (e.totalTimeMs || 0), 0);
-  const workdayCount = new Set(weekdayEntries.map(e => e.completedAt)).size;
-  const avgDayMs = workdayCount > 0 ? weekdayTotalMs / workdayCount : 0;
-  el.innerHTML = `
-    <div class="ts-summary-card">
-      <div class="ts-summary-label">累计工时</div>
-      <div class="ts-summary-value">${tsFmtHours(totalMs)}</div>
-      <div class="ts-summary-meta">${timedEntries.length} 条有效计时记录</div>
-    </div>
-    <div class="ts-summary-card">
-      <div class="ts-summary-label">完成任务</div>
-      <div class="ts-summary-value">${entries.length}</div>
-      <div class="ts-summary-meta">已归档工作事项</div>
-    </div>
-    <div class="ts-summary-card">
-      <div class="ts-summary-label">项目 / 案件</div>
-      <div class="ts-summary-value">${projectCount}</div>
-      <div class="ts-summary-meta">本期涉及项目数</div>
-    </div>
-    <div class="ts-summary-card">
-      <div class="ts-summary-label">工作日日均</div>
-      <div class="ts-summary-value">${tsFmtHours(avgDayMs)}</div>
-      <div class="ts-summary-meta">${workdayCount > 0 ? `周一至周五 · ${workdayCount} 个有记录工作日` : '暂无工作日工时'}</div>
-    </div>
-  `;
-  renderTsInsights(entries, totalMs, workdayCount);
-}
-
-function renderTsInsights(entries, totalMs, totalDays) {
-  const el = document.getElementById('tsInsights');
-  if (!el) return;
-  const projects = tsAggregateByProject(entries).slice(0, 5);
-  const bars = projects.length ? projects.map(p => {
-    const ratio = totalMs > 0 ? Math.max(2, (p.totalTimeMs / totalMs) * 100) : 0;
-    return `<div class="ts-project-bar-row">
-      <div class="ts-project-bar-name" title="${escapeHtml(p.projectName)}">${escapeHtml(p.projectName)}</div>
-      <div class="ts-project-bar-track"><div class="ts-project-bar-fill" style="width:${ratio.toFixed(1)}%;--bar-color:${p.projectColor}"></div></div>
-      <div class="ts-project-bar-value">${tsFmtHours(p.totalTimeMs)}</div>
-    </div>`;
-  }).join('') : '<div class="ts-summary-meta">暂无项目工时数据</div>';
-  const top = projects[0];
-  el.innerHTML = `
-    <div class="ts-insight-card">
-      <div class="ts-insight-head"><div class="ts-insight-title">项目工时分布</div><div class="ts-insight-note">按累计工时排序 · 前 5 项</div></div>
-      <div class="ts-project-bars">${bars}</div>
-    </div>
-    <div class="ts-insight-card ts-period-note">
-      <div class="ts-period-kicker">Period overview</div>
-      <div class="ts-period-main">${top ? escapeHtml(top.projectName) : '暂无工作记录'}</div>
-      <div class="ts-period-copy">${top ? `本期投入最多，共 ${tsFmtHours(top.totalTimeMs)}，占总工时 ${totalMs > 0 ? Math.round(top.totalTimeMs / totalMs * 100) : 0}%。` : '完成看板任务后，工时会自动归集到这里。'}${totalDays > 0 ? ` 共覆盖 ${totalDays} 个工作日。` : ''}</div>
-    </div>`;
 }
 
 function renderTsTable(entries) {
@@ -14863,11 +14834,6 @@ function tsLocateArchiveEntry(taskId) {
     if (i >= 0) return { monthKey: mk, index: i, entry: arr[i], arr };
   }
   return null;
-}
-function tsClearEntryDropIndicators() {
-  document.querySelectorAll('.ts-entry.ts-drop-before, .ts-entry.ts-drop-after, .ts-entry.ts-entry-dragging').forEach(el => {
-    el.classList.remove('ts-drop-before', 'ts-drop-after', 'ts-entry-dragging');
-  });
 }
 function tsApplyEntryReorder(dragId, targetId, after) {
   if (!dragId || !targetId || dragId === targetId) return false;
@@ -15978,12 +15944,6 @@ function taskDateRangeLabel(task) {
   return '设日期';
 }
 // 当前是否在 [startDate, due] 区间内(用于徽章高亮)
-function isTaskInProgress(t) {
-  if (!t.startDate || !t.due) return false;
-  const tStr = today();
-  return t.startDate <= tStr && tStr <= t.due;
-}
-
 // ============== 过滤 ==============
 function taskMatchesFilter(t) {
   if (!taskMatchesSearch(t)) return false;
@@ -16254,15 +16214,6 @@ function stopActiveTimer() {
   refreshAllCardTimeDisplays();
 }
 
-function cancelActiveTimer() {
-  // 取消(不保存),跟 stop 区别:不写 timeEntry
-  activeTimer = null;
-  timerDraftNote = '';
-  persistTimerRuntime();
-  stopTimerInterval();
-  renderTimerPanel();
-}
-
 // v1.2: 启动一个番茄钟(对当前选中任务)
 function startPomodoro(taskId) {
   if (!taskId) {
@@ -16390,29 +16341,7 @@ function pomodoroPhaseEnd() {
 }
 
 // 跳过当前休息 → 直接进入下一个 focus 准备态
-function skipPomodoroBreak() {
-  if (!activeTimer || !activeTimer.pomodoro) return;
-  const p = activeTimer.pomodoro;
-  if (p.mode === 'focus') return;  // focus 不能 skip
-  p.mode = 'focus';
-  p.totalMs = p.focusMs;
-  p.targetEnd = Date.now() + p.focusMs;
-  activeTimer.start = Date.now();
-  persistTimerRuntime();
-  notify('🍅 跳过休息', '下一个 25 分钟番茄开始');
-  renderTimerPanel();
-}
-
 // 取消番茄(不写额外 entry,只把当前 activeTimer 清掉)
-function cancelPomodoro() {
-  if (!activeTimer) return;
-  activeTimer = null;
-  persistTimerRuntime();
-  stopTimerInterval();
-  refreshAllCardTimeDisplays();
-  renderTimerPanel();
-}
-
 // ============== 通知 + 声音 ==============
 // v1.2: 通知 API — 只在浏览器已授权时才发系统通知,否则只走 toast
 // (永远不再弹权限请求对话框)
@@ -16908,8 +16837,13 @@ function render() {
   } else {
     applyMasonryLayout();
   }
-  // v5.39: 手机端在项目列表底部放「+ 新建项目」（替代右下角 FAB）
-  if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches && currentView === 'board') {
+  // v5.39 / v5.181: 手机端仅「看板 · 全部」显示「+ 新建项目」；今天/明天/本周不显示
+  if (
+    window.matchMedia && window.matchMedia('(max-width: 767px)').matches
+    && currentView === 'board'
+    && currentFilter === 'all'
+    && !currentSearch
+  ) {
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
     addBtn.className = 'mobile-add-project-btn';
@@ -17194,9 +17128,8 @@ function renderCalendar() {
                 <div class="cal-task litigation" data-task-id="${t.id}" data-litigation="1" data-record-id="${escapeHtml(t.recordId || '')}" data-timeline-id="${escapeHtml(t.timelineId || '')}" draggable="false"
                      style="border-left-color:var(--red)"
                      data-case-tip="${escapeHtml(litTip)}"
-                     title="${escapeHtml(litTip)}"
                      aria-label="诉讼 · ${escapeHtml(caseLabel)} · ${escapeHtml(t.title || '')}">
-                  <span class="cal-task-lit-icon" aria-hidden="true">⚖️</span><span class="cal-task-title">${escapeHtml(t.title)}</span>
+                  <span class="cal-task-title">${escapeHtml(t.caseName || t.title || '诉讼')}</span>
                 </div>`;
                 }
                 const isCrossBoard = t.boardKey !== store.currentBoard;
@@ -17206,21 +17139,15 @@ function renderCalendar() {
                 const spanClass = t._calSpan
                   ? ` cal-span cal-span-${spanRole || 'mid'}`
                   : '';
-                const spanMark = t._calSpan
-                  ? (spanRole === 'start' ? '▸' : spanRole === 'end' ? '◂' : '·')
-                  : '';
                 const rangeTip = (t.startDate && t.due)
                   ? ` · ${t.startDate} → ${t.due}`
                   : (t.due ? ' · ' + t.due : '');
                 return `
                 <div class="cal-task ${t.done ? 'done' : ''} ${isCrossBoard ? 'cross-board' : ''} ${isArchived ? 'archived' : ''}${spanClass}" data-task-id="${t.id}" data-project-id="${t.project.id}" data-board-key="${t.boardKey}" draggable="${!isArchived}"
                      style="border-left-color:${pc}; --project-color:${pc}"
-                     title="${isArchived ? '已完成 · ' + (t.completedAt || '') : ''}${escapeHtml(t.project.name)} · ${escapeHtml(t.title)}${rangeTip}${isCrossBoard ? ' · ' + formatBoardLabel(t.board) : ''}"
                      aria-label="${escapeHtml(t.project.name)} · ${escapeHtml(t.title)}${rangeTip}${isCrossBoard ? ' · ' + formatBoardLabel(t.board) : ''}${isArchived ? ' · 已完成' : ''}${t._calSpan ? ' · 跨日' : ''}">
                   <input type="checkbox" class="cal-task-check" ${t.done ? 'checked' : ''} data-action="${isArchived ? 'cal-task-archived' : 'cal-task-toggle'}">
-                  ${spanMark ? `<span class="cal-task-span-mark" aria-hidden="true">${spanMark}</span>` : ''}
                   <span class="cal-task-title">${escapeHtml(t.title)}</span>
-                  ${isCrossBoard ? `<span class="cal-task-board" title="来自 ${formatBoardLabel(t.board)}">${t.board?.icon || '📋'}</span>` : ''}
                 </div>
               `;}).join('')}
               ${tasks.length > maxVisible ? (() => {
@@ -17776,8 +17703,6 @@ function renderTimelineCard() {
 }
 
 // 兼容旧调用(stats card 现在独立渲染,不再从 unified card 调用)
-function fillUnifiedStatsFooter(_card) { /* noop — 已迁出 unified card */ }
-
 
 // 标题拉长输入 + 日期框（缩窄到只露图标宽度）+ 绿色大圆 + 提交
 function openCardAddForm(card, project) {
@@ -18874,10 +18799,18 @@ document.addEventListener('click', e => {
     }
     return;
   }
-  // 月历任务文字部分点击：不做跳转（保持原状态，拖动仍可用）
-  // 这里故意 no-op：checkbox 切换 + 拖动改 DDL 已足够
+  // v5.176: 月历任务单击打开任务详情；拖动改期后不触发点击
   const calTask = t.closest('.cal-task');
   if (calTask) {
+    if (typeof suppressCalTaskClick !== 'undefined' && suppressCalTaskClick) return;
+    if (calTask.dataset.litigation === '1') return;
+    if (t.closest('.cal-task-check')) return;
+    const tid = calTask.dataset.taskId;
+    if (!tid) return;
+    const found = typeof findTaskAcrossBoards === 'function' ? findTaskAcrossBoards(tid) : null;
+    if (found && found.task && typeof openTaskDetail === 'function') {
+      openTaskDetail(found.task, found.project);
+    }
     return;
   }
 
@@ -19375,6 +19308,7 @@ document.addEventListener('pointercancel', e => {
   endTaskPress();
 }, true);
 
+let suppressCalTaskClick = false;
 document.addEventListener('dragstart', e => {
   // 月历未排期任务 chip（拖到 cell 设 DDL）
   const chip = e.target.closest('.cal-unscheduled-chip');
@@ -19694,6 +19628,11 @@ document.addEventListener('drop', e => {
 });
 
 document.addEventListener('dragend', e => {
+  // v5.176: 刚结束拖动时抑制紧随的 click，避免误开详情
+  if (e.target && e.target.closest && e.target.closest('.cal-task, .cal-unscheduled-chip')) {
+    suppressCalTaskClick = true;
+    setTimeout(() => { suppressCalTaskClick = false; }, 120);
+  }
   document.querySelectorAll('.dragging').forEach(el => {
     el.classList.remove('dragging');
     // v5.99: 任务拖完后恢复不可拖，并恢复父级项目卡片可拖
@@ -19747,49 +19686,6 @@ function finishRename(el) {
 // - 空描述显示斜体 placeholder
 // - 保留换行(white-space: pre-wrap + textContent 拿原始字符串)
 // - 描述变化才推 undo
-function startEditDescription(el, project) {
-  if (el.contentEditable === 'true') return;  // 已经在编辑
-  const original = project.description || '';
-  el.contentEditable = 'true';
-  el.classList.remove('empty');
-  if (!original) el.textContent = '';   // 空时清掉 placeholder,光标在空行
-  el.focus();
-  // 把光标放末尾(而不是全选,方便继续追加)
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  range.collapse(false);
-  const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(range);
-
-  const finish = () => {
-    el.contentEditable = 'false';
-    const newDesc = el.textContent;  // textContent 保留换行
-    if (newDesc !== original) pushHistory();
-    project.description = newDesc;
-    save();
-    render();  // 重新渲染 → placeholder 状态、空描述样式都正确
-  };
-  el.addEventListener('blur', finish, { once: true });
-  el.addEventListener('keydown', e => {
-    // Esc 取消编辑(还原原值)
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      el.textContent = original;
-      el.blur();
-    }
-    // Cmd/Ctrl+Enter 立即保存并退出
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault();
-      el.blur();
-    }
-    // 单 Enter 允许换行(contentEditable 默认行为)
-  });
-  // 阻止点击事件冒泡到 card(避免触发其他逻辑)
-  el.addEventListener('click', e => e.stopPropagation());
-  el.addEventListener('mousedown', e => e.stopPropagation());
-}
-
 function startEditTaskTitle(el, project) {
   const original = el.textContent;
   el.contentEditable = 'true';
@@ -20093,41 +19989,6 @@ function closeDatePopoverOnEsc(e) {
   }
 }
 
-function startEditDue(el, project) {
-  if (el.querySelector('input')) return; // 已经在编辑
-  const taskEl = el.closest('.task');
-  const tid = taskEl.dataset.taskId;
-  const task = project.tasks.find(x => x.id === tid);
-  if (!task) return;
-
-  const input = document.createElement('input');
-  input.type = 'date';
-  input.value = task.due || today();
-  el.textContent = '';
-  el.appendChild(input);
-  el.classList.add('future');
-  // v47: 直接调 showPicker() 弹原生日期选择器,不用先 focus 再点图标
-  if (typeof input.showPicker === 'function') {
-    try { input.showPicker(); } catch { input.focus(); }
-  } else {
-    input.focus();
-  }
-
-  input.addEventListener('change', () => {
-    if (input.value !== (task.due || '')) pushHistory();
-    task.due = input.value;
-    save();
-    render();
-  }, { once: true });
-  input.addEventListener('blur', () => {
-    // change 已触发时 render 会移除 input；否则只重建
-    if (document.body.contains(input)) render();
-  }, { once: true });
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); input.value = task.due || ''; render(); }
-  });
-}
-
 // ============== 导入导出 ==============
 // ============== v2.1 诉讼进度表 ==============
 const LIT_FIELDS = [
@@ -20177,13 +20038,13 @@ function syncLitigationTodo(record, line, todo, preferLitigation = false) {
   const archived = todo.taskId ? litigationArchiveEntry(todo.taskId) : null;
   if (archived) { todo.status = '已完成'; todo.text = archived.title || todo.text; todo.due = archived.due || todo.due || ''; return; }
   if (!task && String(todo.text || '').trim()) {
-    task = { id:todo.taskId || ('litt_' + uid()), title:todo.text.trim(), done:false, due:todo.due || '', startDate:null, notes:'来自诉讼进度表', createdAt:Date.now(), litigationRecordId:record.id, litigationTimelineId:line.id, litigationTodoId:todo.id };
+    task = { id:todo.taskId || ('litt_' + uid()), title:todo.text.trim(), done:false, due:todo.due || '', startDate:todo.startDate || null, notes:'来自诉讼进度表', createdAt:Date.now(), litigationRecordId:record.id, litigationTimelineId:line.id, litigationTodoId:todo.id };
     todo.taskId = task.id; linked.project.tasks.push(task);
   }
   if (!task) return;
   task.litigationRecordId = record.id; task.litigationTimelineId = line.id; task.litigationTodoId = todo.id;
-  if (preferLitigation) { task.title = String(todo.text || '').trim(); task.due = todo.due || ''; }
-  else { todo.text = task.title || ''; todo.due = task.due || ''; }
+  if (preferLitigation) { task.title = String(todo.text || '').trim(); task.due = todo.due || ''; task.startDate = todo.startDate || null; }
+  else { todo.text = task.title || ''; todo.due = task.due || ''; todo.startDate = task.startDate || null; }
   if (!todo.status || todo.status === '已完成') todo.status = '待处理';
 }
 function completeLitigationTodo(record, line, todo) {
@@ -20225,13 +20086,22 @@ function syncAllLitigationLinks() {
   if (changed) _writeStorage();
 }
 
-/** v5.175: 待办截止日期显示为短标签 7/28；空则「日期」 */
-function litTodoDueLabel(due) {
-  if (!due || String(due).length < 10) return '日期';
-  const m = parseInt(String(due).slice(5, 7), 10);
-  const d = parseInt(String(due).slice(8, 10), 10);
-  if (!m || !d) return '日期';
-  return m + '/' + d;
+/** v5.178: 待办日期标签 — 支持开始～截止，空则「日期」 */
+function litTodoRangeLabel(todo) {
+  if (!todo) return '日期';
+  const s = todo.startDate || '';
+  const e = todo.due || '';
+  if (!s && !e) return '日期';
+  if (typeof taskDateRangeLabel === 'function') return taskDateRangeLabel({ startDate: s, due: e });
+  // fallback
+  const fmt = (ymd) => {
+    if (!ymd || String(ymd).length < 10) return '';
+    return parseInt(String(ymd).slice(5, 7), 10) + '/' + parseInt(String(ymd).slice(8, 10), 10);
+  };
+  const a = fmt(s), b = fmt(e);
+  if (a && b) return a + '～' + b;
+  if (a) return a + '～';
+  return b || '日期';
 }
 
 function renderLitigation() {
@@ -20251,11 +20121,11 @@ function renderLitigation() {
     if (!Array.isArray(record.timeline)) record.timeline = [];
     const timeline = record.timeline.map(line => {
       if (!Array.isArray(line.todos)) line.todos = [];
-      if (line.todos.length === 0) line.todos.push({ id:'ltd_' + uid(), text:'', status:'待处理', due:'', taskId:null });
+      // v5.178: 不自动塞空待办；只有点圆形 + 才新增
       const todos = line.todos.map(todo => {
-        const dueLabel = litTodoDueLabel(todo.due);
-        const dueEmpty = !todo.due;
-        return `<div class="lit-todo-item ${todo.status === '已完成' ? 'is-done' : ''}" data-todo-id="${escapeHtml(todo.id)}"><label class="lit-todo-due-wrap" title="待办截止日期"><span class="lit-todo-due-tag ${dueEmpty ? 'is-empty' : ''}">${escapeHtml(dueLabel)}</span><input class="lit-todo-due" type="date" value="${escapeHtml(todo.due || '')}" aria-label="待办截止日期"></label><input class="lit-todo-check" type="checkbox" ${todo.status === '已完成' ? 'checked' : ''} aria-label="标记待办完成"><textarea class="lit-todo-text" rows="1" placeholder="待办事项" aria-label="待办事项">${escapeHtml(todo.text || '')}</textarea></div>`;
+        const rangeLabel = litTodoRangeLabel(todo);
+        const rangeEmpty = !(todo.startDate || todo.due);
+        return `<div class="lit-todo-item ${todo.status === '已完成' ? 'is-done' : ''}" data-todo-id="${escapeHtml(todo.id)}"><button type="button" class="lit-todo-due-tag ${rangeEmpty ? 'is-empty' : ''}" data-action="lit-todo-date-range" title="设置开始与截止日期">${escapeHtml(rangeLabel)}</button><input class="lit-todo-check" type="checkbox" ${todo.status === '已完成' ? 'checked' : ''} aria-label="标记待办完成"><textarea class="lit-todo-text" rows="1" placeholder="待办事项" aria-label="待办事项">${escapeHtml(todo.text || '')}</textarea></div>`;
       }).join('');
       // v5.175: 顺序 × · 手柄 · 铃铛 · 日期 · 事件 · 加号 · 待办(日期标签/勾选/内容)
       const bellInfo = bellBadgeMap.get(line.id) || { count: 0, hasActive: false };
@@ -20396,32 +20266,36 @@ function renderLitMobileCard(record, bellBadgeMap) {
 
 function renderLitMobileLine(record, line, bellBadgeMap) {
   if (!Array.isArray(line.todos)) line.todos = [];
-  // 至少一个 todo 槽位
-  if (line.todos.length === 0) {
-    line.todos.push({ id: 'ltd_' + uid(), text: '', status: '待处理', due: '', taskId: null });
-  }
-  const todosHtml = line.todos.map(todo => `
+  // v5.180: 不自动塞空待办；点右侧 + 才新增
+  const calSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+  const todosHtml = line.todos.map((todo, idx) => {
+    const hasDate = !!(todo.startDate || todo.due);
+    const rangeTip = typeof litTodoRangeLabel === 'function' ? litTodoRangeLabel(todo) : (todo.due || '日期');
+    const isLast = idx === line.todos.length - 1;
+    return `
     <div class="lit-mob-todo ${todo.status === '已完成' ? 'is-done' : ''}" data-todo-id="${escapeHtml(todo.id)}">
       <input class="lit-mob-todo-check" type="checkbox" ${todo.status === '已完成' ? 'checked' : ''} data-line-id="${escapeHtml(line.id)}" data-todo-id="${escapeHtml(todo.id)}" aria-label="标记待办完成">
       <textarea class="lit-mob-todo-text" rows="1" placeholder="待办事项" data-line-id="${escapeHtml(line.id)}" data-todo-id="${escapeHtml(todo.id)}" aria-label="待办事项">${escapeHtml(todo.text || '')}</textarea>
-      <input class="lit-mob-todo-due" type="date" value="${escapeHtml(todo.due || '')}" data-line-id="${escapeHtml(line.id)}" data-todo-id="${escapeHtml(todo.id)}" aria-label="待办截止日">
-      <button class="lit-mob-todo-del" type="button" data-action="lit-mob-todo-del" data-line-id="${escapeHtml(line.id)}" data-todo-id="${escapeHtml(todo.id)}" aria-label="删除待办">×</button>
-    </div>
-  `).join('');
+      <button type="button" class="lit-mob-cal-btn lit-mob-todo-cal ${hasDate ? 'has-date' : ''}" data-action="lit-mob-todo-date" data-line-id="${escapeHtml(line.id)}" data-todo-id="${escapeHtml(todo.id)}" data-record-id="${escapeHtml(record.id)}" title="${escapeHtml(rangeTip)}" aria-label="设置待办日期">${calSvg}</button>
+      ${isLast ? `<button type="button" class="lit-mob-todo-add-btn" data-action="lit-mob-add-todo" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}" title="新建待办" aria-label="新建待办">+</button>` : `<span style="width:32px;flex-shrink:0" aria-hidden="true"></span>`}
+    </div>`;
+  }).join('');
 
   const bellInfo = bellBadgeMap.get(line.id) || { count: 0, hasActive: false };
+  const hasLineDate = !!(line.date);
+  const addRow = line.todos.length === 0
+    ? `<div class="lit-mob-todo-add-row"><button type="button" class="lit-mob-todo-add-btn" data-action="lit-mob-add-todo" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}" title="新建待办" aria-label="新建待办">+</button></div>`
+    : '';
   return `
     <div class="lit-mob-timeline-item" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}">
-      <div class="lit-mob-line-date">
-        <input class="lit-mob-line-date-input" type="date" value="${escapeHtml(line.date || '')}" data-line-id="${escapeHtml(line.id)}" data-field="date" aria-label="进展日期">
+      <div class="lit-mob-progress-row">
+        <textarea class="lit-mob-line-text" rows="1" placeholder="案件进程" data-line-id="${escapeHtml(line.id)}" data-field="text" aria-label="案件进程">${escapeHtml(line.text || '')}</textarea>
+        <button type="button" class="lit-mob-cal-btn ${hasLineDate ? 'has-date' : ''}" data-action="lit-mob-line-date" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}" title="${escapeHtml(line.date || '设置日期')}" aria-label="设置进程日期">${calSvg}</button>
+        <input class="lit-mob-line-date-input" type="date" value="${escapeHtml(line.date || '')}" data-line-id="${escapeHtml(line.id)}" data-field="date" aria-label="进展日期" tabindex="-1">
         <button class="lit-mob-bell-btn ${bellInfo.count > 0 ? 'has-reminders' : ''}" type="button" data-action="lit-mob-bell" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}" title="设置提醒${bellInfo.count > 0 ? ' · 已设 ' + bellInfo.count + ' 条' : ''}" aria-label="设置提醒">🔔${bellInfo.count > 0 ? ' ' + bellInfo.count : ''}</button>
       </div>
-      <textarea class="lit-mob-line-text" rows="1" placeholder="进展内容" data-line-id="${escapeHtml(line.id)}" data-field="text" aria-label="诉讼进展">${escapeHtml(line.text || '')}</textarea>
       <div class="lit-mob-todos">${todosHtml}</div>
-      <div class="lit-mob-line-actions">
-        <button type="button" data-variant="add" data-action="lit-mob-add-todo" data-line-id="${escapeHtml(line.id)}">+ 待办</button>
-        <button type="button" data-variant="remove" data-action="lit-mob-del-line" data-line-id="${escapeHtml(line.id)}">删除进展</button>
-      </div>
+      ${addRow}
     </div>
   `;
 }
@@ -20578,7 +20452,7 @@ function bindLitigationMobileEvents() {
           id: 'line_' + uid(),
           date: localDateStr(new Date()),
           text: '',
-          todos: [{ id: 'ltd_' + uid(), text: '', status: '待处理', due: '', taskId: null }],
+          todos: [],
         });
         rec.updatedAt = Date.now();
         save({ immediate: true });
@@ -20603,20 +20477,51 @@ function bindLitigationMobileEvents() {
         const found = findLitTimelineByIdLocal(lineId);
         if (!found) return;
         if (!Array.isArray(found.line.todos)) found.line.todos = [];
-        found.line.todos.push({ id: 'ltd_' + uid(), text: '', status: '待处理', due: '', taskId: null });
+        found.line.todos.push({ id: 'ltd_' + uid(), text: '', status: '待处理', due: '', startDate: null, taskId: null });
         found.record.updatedAt = Date.now();
         save({ immediate: true });
         renderLitigation();
         break;
       }
+      case 'lit-mob-line-date': {
+        // 点日历图标 → 打开隐藏的 date input
+        const item = actionEl.closest('.lit-mob-timeline-item');
+        const dateInput = item?.querySelector('.lit-mob-line-date-input');
+        if (dateInput) {
+          try {
+            if (typeof dateInput.showPicker === 'function') dateInput.showPicker();
+            else { dateInput.style.pointerEvents = 'auto'; dateInput.focus(); dateInput.click(); }
+          } catch (_) {
+            dateInput.style.pointerEvents = 'auto';
+            dateInput.click();
+          }
+        }
+        break;
+      }
+      case 'lit-mob-todo-date': {
+        // 待办起止日期 — 复用看板双日历
+        const found = findLitTimelineByIdLocal(lineId);
+        if (!found) return;
+        const todo = (found.line.todos || []).find(t => t.id === todoId);
+        if (!todo) return;
+        const draft = { startDate: todo.startDate || '', due: todo.due || '' };
+        openDatePopover(actionEl, null, draft, {
+          draft: true,
+          onChange: ({ startDate, due }) => {
+            todo.startDate = startDate || null;
+            todo.due = due || '';
+            actionEl.classList.toggle('has-date', !!(todo.startDate || todo.due));
+            actionEl.title = typeof litTodoRangeLabel === 'function' ? litTodoRangeLabel(todo) : (todo.due || '日期');
+            if (typeof syncLitigationTodo === 'function') syncLitigationTodo(found.record, found.line, todo, true);
+            found.record.updatedAt = Date.now();
+            save({ immediate: true });
+          }
+        });
+        break;
+      }
       case 'lit-mob-todo-del': {
         const found = findLitTimelineByIdLocal(lineId);
         if (!found) return;
-        const len = (found.line.todos || []).length;
-        if (len <= 1) {
-          alert('每条进展至少保留 1 个待办槽位');
-          return;
-        }
         found.line.todos = found.line.todos.filter(t => t.id !== todoId);
         found.record.updatedAt = Date.now();
         save({ immediate: true });
@@ -20701,6 +20606,14 @@ function bindLitigationMobileEvents() {
         found.line[field] = el.value;
         found.record.updatedAt = Date.now();
         save();
+        if (field === 'date') {
+          const item = el.closest('.lit-mob-timeline-item');
+          const calBtn = item?.querySelector('.lit-mob-progress-row .lit-mob-cal-btn');
+          if (calBtn) {
+            calBtn.classList.toggle('has-date', !!el.value);
+            calBtn.title = el.value || '设置日期';
+          }
+        }
         // text 变化时更新"最近进展"摘要
         if (field === 'text') {
           const card = el.closest('.lit-mob-card');
@@ -21017,26 +20930,6 @@ function findLitigationTimelineById(timelineId) {
   }
   return null;
 }
-function addLitigationReminder(timelineId, targetDateTime, message) {
-  if (!Array.isArray(store.litigationReminders)) store.litigationReminders = [];
-  pushHistory();
-  const reminder = {
-    id: 'lr_' + uid(),
-    timelineId,
-    recordId: findLitigationTimelineById(timelineId)?.recordId || null,
-    targetDate: targetDateTime,
-    eventDate: findLitigationTimelineById(timelineId)?.line?.date || '',
-    message: message || '',
-    createdAt: new Date().toISOString(),
-    firedAt: null,
-    dismissedAt: null,
-  };
-  store.litigationReminders.push(reminder);
-  try { save({ immediate: true }); } catch {}
-  showToast('已添加提醒');
-  openLitigationReminderModal(timelineId);  // 重开 modal 刷新列表
-  renderLitigation();
-}
 function toggleLitigationReminder(timelineId, targetDate, message, eventDate = '') {
   if (!Array.isArray(store.litigationReminders)) store.litigationReminders = [];
   const active = store.litigationReminders.filter(r => r.timelineId === timelineId && !r.dismissedAt && String(r.targetDate).slice(0, 10) === targetDate);
@@ -21064,13 +20957,6 @@ function dismissLitigationReminder(reminderId) {
   r.dismissedAt = new Date().toISOString();
   try { save({ immediate: true }); } catch {}
   showToast('已标记为处理');
-  renderLitigation();
-}
-function deleteLitigationReminder(reminderId, timelineId) {
-  store.litigationReminders = (store.litigationReminders || []).filter(x => x.id !== reminderId);
-  try { save({ immediate: true }); } catch {}
-  showToast('已删除');
-  if (timelineId) openLitigationReminderModal(timelineId);
   renderLitigation();
 }
 // v3.0: 诉讼表行点击代理 — 点铃铛打开 modal
@@ -21119,55 +21005,86 @@ function sortLitigationTimelineByDate(recordId) {
 }
 
 function beginLitigationEdit(cell) {
-  if (!cell || cell.querySelector('.lit-edit')) return;
-  if (activeLitEditor && document.body.contains(activeLitEditor)) activeLitEditor.blur();
+  if (!cell || cell.getAttribute('contenteditable') === 'true') return;
+  if (activeLitEditor && document.body.contains(activeLitEditor)) {
+    try { activeLitEditor.blur(); } catch (_) {}
+  }
   const row = cell.closest('[data-record-id]');
   const record = litigationRecord(row?.dataset.recordId);
   const field = cell.dataset.field;
   if (!record || !LIT_FIELDS.some(f => f[0] === field)) return;
+
   const original = String(record[field] || '');
-  const input = document.createElement('textarea');
-  input.className = 'lit-edit'; input.value = original;
-  cell.textContent = ''; cell.appendChild(input); activeLitEditor = input;
-  const fitEditor = () => { input.style.height = '34px'; input.style.height = Math.min(96, Math.max(34, input.scrollHeight)) + 'px'; };
-  input.addEventListener('input', fitEditor); fitEditor();
-  input.focus(); input.setSelectionRange(input.value.length, input.value.length);
+  // v5.190: 编辑时不保留案件名下的「+ / 一键整理」工具条
+  // 原因：整格 contenteditable 会触发全局 font-size:max(16px,1em)，工具按钮视觉突然放大；且编辑名称时工具条也无必要
+  cell.querySelectorAll('.lit-cell-empty, .lit-case-timeline-tools').forEach(el => el.remove());
+  // 只保留纯文本节点作为可编辑内容
+  const textNode = document.createTextNode(original);
+  cell.innerHTML = '';
+  cell.appendChild(textNode);
+
+  cell.setAttribute('contenteditable', 'true');
+  cell.setAttribute('spellcheck', 'false');
+  cell.focus();
+  activeLitEditor = cell;
+
+  // 光标移到文本末尾
+  try {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    if (textNode.nodeValue.length) {
+      range.setStart(textNode, textNode.nodeValue.length);
+      range.collapse(true);
+    } else {
+      range.selectNodeContents(cell);
+      range.collapse(true);
+    }
+    sel.removeAllRanges();
+    sel.addRange(range);
+  } catch (_) {}
+
   let cancelled = false;
+  let finished = false;
   const finish = () => {
-    if (!document.body.contains(input)) return;
-    if (!cancelled && input.value !== original) {
+    if (finished) return;
+    finished = true;
+    cell.removeAttribute('contenteditable');
+    if (activeLitEditor === cell) activeLitEditor = null;
+    // 提取纯文本（编辑态已无工具条，直接取文本）
+    let value = (cell.innerText || cell.textContent || '').replace(/\u00a0/g, ' ').trim();
+    if (!cancelled && value !== original.trim()) {
       pushHistory();
-      record[field] = input.value.trim(); record.updatedAt = Date.now(); save({ immediate:true });
-      if (field === 'caseName' && record.caseName) { ensureLitigationProject(record, true); save({ immediate:true }); }
+      record[field] = value;
+      record.updatedAt = Date.now();
+      save({ immediate: true });
+      if (field === 'caseName' && typeof renderCalendar === 'function') {
+        try { renderCalendar(); } catch (_) {}
+      }
     }
-    const displayed = cancelled ? original : String(record[field] || '');
-    cell.textContent = '';
-    if (displayed) cell.textContent = displayed;
-    else {
-      const placeholder = document.createElement('span');
-      placeholder.className = 'lit-cell-empty'; placeholder.textContent = '点击填写';
-      cell.appendChild(placeholder);
-    }
-    if (field === 'caseName') {
-      const tools = document.createElement('div');
-      tools.className = 'lit-case-timeline-tools';
-      const add = document.createElement('button');
-      add.className = 'lit-tl-add lit-inline-add'; add.type = 'button'; add.title = '新增时间线'; add.setAttribute('aria-label','新增时间线'); add.textContent = '+';
-      const sort = document.createElement('button');
-      sort.className = 'lit-timeline-sort'; sort.type = 'button'; sort.dataset.action = 'lit-sort-timeline';
-      sort.title = '将当前案件的时间线按日期从早到晚排列';
-      sort.setAttribute('aria-label', '按日期从早到晚整理时间线');
-      sort.innerHTML = '<span aria-hidden="true">⇅</span> 一键整理';
-      tools.append(add, sort);
-      cell.appendChild(tools);
-    }
-    activeLitEditor = null;
+    // 用统一渲染恢复占位与工具条，避免残留 contenteditable 状态
+    if (typeof renderLitigation === 'function') renderLitigation();
   };
-  input.addEventListener('blur', finish, { once:true });
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); cancelled = true; input.blur(); }
-    else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); input.blur(); }
-  });
+
+  const onBlur = () => {
+    cell.removeEventListener('blur', onBlur);
+    cell.removeEventListener('keydown', onKey);
+    finish();
+  };
+  const onKey = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelled = true;
+      cell.blur();
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      // 单行字段：回车结束；备注类可 Shift+Enter 换行
+      if (field !== 'note' && field !== 'contact') {
+        e.preventDefault();
+        cell.blur();
+      }
+    }
+  };
+  cell.addEventListener('blur', onBlur);
+  cell.addEventListener('keydown', onKey);
 }
 document.getElementById('litigationTableBody')?.addEventListener('click', e => {
   // v3.0: 铃铛点击 → 打开提醒 modal
@@ -21185,11 +21102,42 @@ document.getElementById('litigationTableBody')?.addEventListener('click', e => {
     if (record) {
       if (!Array.isArray(record.timeline)) record.timeline = [];
       pushHistory();
-      record.timeline.push({ id:'tle_' + uid(), date:today(), text:'', todos:[{ id:'ltd_' + uid(), text:'', status:'待处理', due:'', taskId:null }] });
+      record.timeline.push({ id:'tle_' + uid(), date:today(), text:'', todos:[] });
       record.updatedAt = Date.now(); save({ immediate:true }); renderLitigation();
       const inputs = document.querySelectorAll(`#litigationTableBody tr[data-record-id="${record.id}"] .lit-tl-text`);
       if (inputs.length) inputs[inputs.length - 1].focus();
     }
+    return;
+  }
+  // v5.178: 待办起止日期 — 复用看板双日历 popover
+  const litTodoDateBtn = e.target.closest('[data-action="lit-todo-date-range"]');
+  if (litTodoDateBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const row = litTodoDateBtn.closest('[data-record-id]');
+    const lineEl = litTodoDateBtn.closest('[data-timeline-id]');
+    const todoEl = litTodoDateBtn.closest('[data-todo-id]');
+    const record = litigationRecord(row?.dataset.recordId);
+    const line = (record?.timeline || []).find(x => x.id === lineEl?.dataset.timelineId);
+    const todo = (line?.todos || []).find(x => x.id === todoEl?.dataset.todoId);
+    if (!todo) return;
+    const draft = { startDate: todo.startDate || '', due: todo.due || '' };
+    openDatePopover(litTodoDateBtn, null, draft, {
+      draft: true,
+      onChange: ({ startDate, due }) => {
+        pushHistory();
+        todo.startDate = startDate || null;
+        todo.due = due || '';
+        litTodoDateBtn.textContent = litTodoRangeLabel(todo);
+        litTodoDateBtn.classList.toggle('is-empty', !(todo.startDate || todo.due));
+        if (typeof syncLitigationTodo === 'function') syncLitigationTodo(record, line, todo, true);
+        record.updatedAt = Date.now();
+        save({ immediate: true });
+        if (document.body.dataset.view === 'calendar' && typeof renderCalendar === 'function') {
+          try { renderCalendar(); } catch (_) {}
+        }
+      }
+    });
     return;
   }
   const todoAdd = e.target.closest('.lit-todo-add');
@@ -21200,7 +21148,7 @@ document.getElementById('litigationTableBody')?.addEventListener('click', e => {
     const line = (record?.timeline || []).find(x => x.id === lineEl?.dataset.timelineId);
     if (line) {
       pushHistory();
-      line.todos.push({ id:'ltd_' + uid(), text:'', status:'待处理', due:'', taskId:null });
+      line.todos.push({ id:'ltd_' + uid(), text:'', status:'待处理', due:'', startDate:null, taskId:null });
       save({ immediate:true }); renderLitigation();
       const created = document.querySelector(`[data-todo-id="${line.todos[line.todos.length - 1].id}"] .lit-todo-text`);
       created?.focus();
@@ -21234,6 +21182,8 @@ document.getElementById('litigationTableBody')?.addEventListener('click', e => {
     }
     return;
   }
+  // 点到按钮/工具条时不进入字段编辑
+  if (e.target.closest('button, a, input, textarea, select, .lit-case-timeline-tools, .lit-case-actions')) return;
   beginLitigationEdit(e.target.closest('td[data-field]'));
 });
 // v3.0: 诉讼 textarea 自动撑高(lit-tl-text / lit-todo-text)
@@ -21247,7 +21197,7 @@ document.getElementById('litigationTableBody')?.addEventListener('input', e => {
 });
 
 document.getElementById('litigationTableBody')?.addEventListener('change', e => {
-  if (!e.target.matches('.lit-tl-date, .lit-tl-text, .lit-todo-text, .lit-todo-check, .lit-todo-due')) return;
+  if (!e.target.matches('.lit-tl-date, .lit-tl-text, .lit-todo-text, .lit-todo-check')) return;
   const row = e.target.closest('[data-record-id]');
   const itemEl = e.target.closest('[data-timeline-id]');
   const record = litigationRecord(row?.dataset.recordId);
@@ -21261,14 +21211,6 @@ document.getElementById('litigationTableBody')?.addEventListener('change', e => 
     const todo = (line.todos || []).find(x => x.id === todoEl?.dataset.todoId);
     if (!todo) return;
     if (e.target.classList.contains('lit-todo-text')) todo.text = e.target.value.trim();
-    else if (e.target.classList.contains('lit-todo-due')) {
-      todo.due = e.target.value;
-      const tag = e.target.closest('.lit-todo-due-wrap')?.querySelector('.lit-todo-due-tag');
-      if (tag) {
-        tag.textContent = litTodoDueLabel(todo.due);
-        tag.classList.toggle('is-empty', !todo.due);
-      }
-    }
     else if (e.target.classList.contains('lit-todo-check')) {
       const wasComplete = todo.status === '已完成';
       todo.status = e.target.checked ? '已完成' : '待处理';
@@ -21279,7 +21221,14 @@ document.getElementById('litigationTableBody')?.addEventListener('change', e => 
     if (e.target.classList.contains('lit-todo-text') && !todo.text) {
       const linked = ensureLitigationProject(record, false);
       if (linked && todo.taskId) linked.project.tasks = linked.project.tasks.filter(t => t.id !== todo.taskId);
-      todo.taskId = null; todo.due = ''; todo.status = '待处理';
+      todo.taskId = null; todo.due = ''; todo.startDate = null; todo.status = '待处理';
+      // 完全空白的待办（未写内容也无日期）从列表移除，避免残留空行
+      if (!todo.due && !todo.startDate) {
+        line.todos = (line.todos || []).filter(x => x.id !== todo.id);
+        record.updatedAt = Date.now(); save({ immediate:true });
+        renderLitigation();
+        return;
+      }
     } else if (!e.target.classList.contains('lit-todo-check')) syncLitigationTodo(record, line, todo, true);
   }
   record.updatedAt = Date.now(); save({ immediate:true });
@@ -22344,21 +22293,6 @@ function refreshVaultLog() {
   ).join('');
 }
 
-function queueVaultOperation(label, operation) {
-  const run = async () => {
-    if (!vaultDirHandle) return { changed: false, skipped: true };
-    vaultSyncInFlight = true;
-    try { return await operation(); }
-    finally { vaultSyncInFlight = false; }
-  };
-  vaultOperationChain = vaultOperationChain.catch(() => {}).then(run);
-  return vaultOperationChain.catch(err => {
-    addVaultLog(`${label}失败: ${err.message}`, 'error');
-    setVaultError(err.message);
-    throw err;
-  });
-}
-
 function setVaultError(message, conflict = false) {
   vaultConflict = conflict ? { message, detectedAt: Date.now() } : vaultConflict;
   updateVaultBtn(conflict ? 'conflict' : 'error');
@@ -22393,9 +22327,6 @@ function safeFileBase(name) {
   // 限制长度
   if (s.length > 60) s = s.slice(0, 60);
   return s || 'untitled';
-}
-function projectShortId(project) {
-  return (project.id || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 8) || Math.random().toString(36).slice(2, 8);
 }
 function projectFileName(project) {
   // 文件名 = `<月份>-<fileName>.md`,月份前缀防跨月重名 + 看文件名知道哪月工作
@@ -22491,132 +22422,7 @@ function idbDelete(db, store, key) {
 }
 
 // ====== 连接 / 断开 ======
-async function connectVault() {
-  // 兼容旧入口：统一转到手动同步连接，后续旧逻辑不再执行。
-  return connectManualVault();
-  // 调试模式:URL 带 ?debugVault=<path> 时跳过 picker,直接读这个目录
-  const debugPath = new URLSearchParams(location.search).get('debugVault');
-  if (debugPath) {
-    addVaultLog(`DEBUG 模式:跳过 picker,使用目录 ${debugPath}`);
-    return await connectVaultDebug(debugPath);
-  }
-  if (!('showDirectoryPicker' in window)) {
-    alert('当前浏览器不支持 File System Access API。\n请用 Chrome / Edge / Brave 等 Chromium 内核浏览器。');
-    return false;
-  }
-  try {
-    const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
-    vaultDirHandle = handle;
-    if (!store.vaultConfig) store.vaultConfig = {};
-    store.vaultConfig.directoryName = handle.name;
-    if (!store.vaultConfig.fileMap) store.vaultConfig.fileMap = {};
-    await persistVaultHandle(handle);
-    save({ skipVault: true, immediate: true });
-    updateVaultBtn();
-    // 先检查 vault，再决定是否写入，避免首次连接直接覆盖已有且较新的笔记。
-    let initialPull = null;
-    try { initialPull = await pullFromVault(); }
-    catch (err) { addVaultLog(`连接后拉取失败: ${err.message}`, 'error'); }
-    if (!vaultConflict && initialPull && initialPull.vaultFiles === 0) await syncAllToVault({ reason: 'connect-empty-vault' });
-    startVaultPolling();
-    addVaultLog('已启动自适应同步检查');
-    return true;
-  } catch (err) {
-    if (err.name !== 'AbortError') {
-      console.error('连接 vault 失败:', err);
-      alert('连接失败:' + err.message);
-    }
-    return false;
-  }
-}
-
 // ====== DEBUG 模式:用 fetch(file://) 直读真实目录(绕过 picker) ======
-async function connectVaultDebug(debugPath) {
-  if (!window.__debugFiles) {
-    addVaultLog(`DEBUG 失败:window.__debugFiles 未注入`, 'error');
-    return false;
-  }
-  const dirName = debugPath.split('/').pop() || 'debug-vault';
-  const handle = {
-    name: dirName,
-    __debug: true,
-    async queryPermission() { return 'granted'; },
-    async requestPermission() { return 'granted'; },
-    async *entries() {
-      for (const f of window.__debugFiles) {
-        yield [f.name, {
-          kind: 'file',
-          name: f.name,
-          async getFile() {
-            // v1.6.14 修复: 优先用 __debugGetFileContent (jsdom 测试), fallback 到 fetch
-            let text;
-            if (window.__debugGetFileContent) {
-              text = await window.__debugGetFileContent(f.name);
-            } else {
-              const r = await fetch(`file://${f.path}`);
-              text = await r.text();
-            }
-            return {
-              lastModified: f.mtime,
-              size: text.length,
-              async text() { return text; }
-            };
-          }
-        }];
-      }
-    },
-    async getFileHandle(name) {
-      return {
-        async createWritable() {
-          return {
-            content: '',
-            async write(text) { this.content = text; },
-            async close() {
-              if (window.__debugWriteFile) {
-                try { await window.__debugWriteFile(name, this.content); addVaultLog(`[DEBUG] 写入: ${name}`); }
-                catch (e) { addVaultLog(`[DEBUG] 写失败: ${e.message}`, 'error'); }
-              } else {
-                addVaultLog(`[DEBUG] 模拟写: ${name} (${this.content.length} bytes)`);
-              }
-            }
-          };
-        }
-      };
-    },
-    async removeEntry(name) {
-      if (window.__debugDeleteFile) {
-        try { await window.__debugDeleteFile(name); addVaultLog(`[DEBUG] 删除: ${name}`); }
-        catch (e) { addVaultLog(`[DEBUG] 删除失败: ${e.message}`, 'error'); }
-      }
-    }
-  };
-  vaultDirHandle = handle;
-  if (!store.vaultConfig) store.vaultConfig = {};
-  store.vaultConfig.directoryName = dirName;
-  if (!store.vaultConfig.fileMap) store.vaultConfig.fileMap = {};
-  save({ skipVault: true, immediate: true });
-  updateVaultBtn();
-  addVaultLog('DEBUG:句柄创建完成,准备 syncAllToVault...');
-  addVaultLog('DEBUG:准备先检查 vault...');
-  let initialPull = null;
-  try { initialPull = await pullFromVault(); }
-  catch (err) { addVaultLog(`DEBUG:连接后拉取失败: ${err.message}`, 'error'); }
-  if (!vaultConflict && initialPull && initialPull.vaultFiles === 0) await syncAllToVault({ reason: 'connect-debug-empty-vault' });
-  startVaultPolling();
-  addVaultLog('DEBUG:已启动自适应同步检查');
-  return true;
-}
-async function disconnectVault() {
-  return disconnectManualVault();
-  if (!confirm('断开后,看板改动不再同步到 vault。\n(已写入的 .md 文件不会被删除,需要时手动清理)\n确认断开?')) return;
-  stopVaultPolling();
-  vaultDirHandle = null;
-  if (store.vaultConfig) store.vaultConfig.directoryName = null;
-  await clearVaultHandle();
-  save();
-  updateVaultBtn();
-}
-
 // ====== .md 序列化(项目 → markdown) ======
 function projectToMarkdown(project) {
   // 找项目所在月份(用于 frontmatter)
@@ -22720,78 +22526,7 @@ async function writeProjectFile(project, existingFiles = null, force = false) {
   return true;
 }
 
-async function deleteProjectFile(project) {
-  if (!vaultDirHandle) return;
-  if (!store.vaultConfig || !store.vaultConfig.fileMap) return;
-  const filename = store.vaultConfig.fileMap[project.id];
-  if (!filename) return;
-  try {
-    await vaultDirHandle.removeEntry(filename);
-  } catch (err) {
-    console.warn('删除 .md 失败(可能已被移走):', filename, err);
-  }
-  delete store.vaultConfig.fileMap[project.id];
-}
 
-// ====== 全量同步(看板 → vault) ======
-async function _syncAllToVault(opts = {}) {
-  updateVaultBtn('syncing');
-  try {
-    // 权限检查(重新打开后可能需要重新请求)
-    const perm = await vaultDirHandle.queryPermission({ mode: 'readwrite' });
-    if (perm !== 'granted') {
-      const req = await vaultDirHandle.requestPermission({ mode: 'readwrite' });
-      if (req !== 'granted') {
-        updateVaultBtn('error');
-        return;
-      }
-    }
-    // 扫描 vault 现有 .md,知道哪些是孤儿
-    const before = await scanVaultMetadata();
-    const externalChanged = lastPullSnapshot !== null && before.snapshot !== lastPullSnapshot;
-    if (!opts.force && externalChanged && hasUnsyncedLocalChanges()) {
-      setVaultError('Obsidian 与看板两边都有未合并修改，已停止自动覆盖。请点击“立即同步”确认以看板版本覆盖。', true);
-      return { changed: false, conflict: true };
-    }
-    const existingFiles = new Set(before.files.map(f => f.name));
-    // 收集当前所有项目
-    const allProjects = [];
-    const projectIds = new Set();
-    for (const boardKey of Object.keys(store.boards)) {
-      for (const p of (store.boards[boardKey].projects || [])) {
-        allProjects.push(p);
-        projectIds.add(p.id);
-      }
-    }
-    // 写入/更新每个项目
-    let written = 0;
-    for (const p of allProjects) if (await writeProjectFile(p, existingFiles, !!opts.force)) written++;
-    // 删除孤儿文件(vault 里存在,但看板里没有的项目 .md)
-    if (store.vaultConfig && store.vaultConfig.fileMap) {
-      for (const [pid, fname] of Object.entries(store.vaultConfig.fileMap)) {
-        if (!projectIds.has(pid)) {
-          try { await vaultDirHandle.removeEntry(fname); } catch (e) { /* ignore */ }
-          delete store.vaultConfig.fileMap[pid];
-        }
-      }
-    }
-    const after = await scanVaultMetadata();
-    lastPullSnapshot = after.snapshot;
-    if (store.vaultConfig) {
-      store.vaultConfig.lastSyncAt = Date.now();
-      store.vaultConfig.localChangedAt = store.vaultConfig.lastSyncAt;
-    }
-    vaultConflict = null;
-    save({ skipVault: true, immediate: true });
-    updateVaultBtn('connected');
-    if (written) addVaultLog(`已写入 ${written} 个变更项目`);
-    return { changed: written > 0, written };
-  } catch (err) {
-    console.error('同步失败:', err);
-    setVaultError(err.message || '未知错误');
-    throw err;
-  }
-}
 
 function syncAllToVault(opts = {}) {
   // 兼容旧调用：只展示上传预览，不直接写入。
@@ -23641,25 +23376,9 @@ document.addEventListener('keydown', e => {
 // 合并到看板 store(用 frontmatter 的 project_id 找已有项目,新 .md 创建新项目)
 // (vaultPollTimer/lastPullSnapshot/vaultLog/addVaultLog/refreshVaultLog 已定义在文件早期)
 
-function startVaultPolling() {
-  // 自动读写已关闭。保留空函数只为兼容旧调用。
-  stopVaultPolling();
-}
 function stopVaultPolling() {
   if (vaultPollTimer) { clearTimeout(vaultPollTimer); vaultPollTimer = null; }
 }
-function nextVaultPollDelay() {
-  const hidden = document.visibilityState === 'hidden';
-  const min = hidden ? VAULT_POLL_HIDDEN_MIN : VAULT_POLL_VISIBLE_MIN;
-  const max = hidden ? VAULT_POLL_HIDDEN_MAX : VAULT_POLL_VISIBLE_MAX;
-  const steps = Math.min(vaultNoChangeCount + vaultFailureCount * 2, 5);
-  return Math.min(max, min * Math.pow(2, steps));
-}
-function scheduleNextVaultPoll(delay = nextVaultPollDelay()) {
-  // v5.104: 不再实时/自动轮询同步
-  stopVaultPolling();
-}
-
 document.addEventListener('visibilitychange', () => {
   if (!vaultDirHandle) return;
   if (document.visibilityState === 'visible') {
@@ -23745,83 +23464,7 @@ function parseProjectMarkdown(content) {
   return result;
 }
 
-// ====== 从 vault 拉取 ======
-async function _pullFromVault(opts = {}) {
-  if (!vaultDirHandle) {
-    if (!opts.silent) addVaultLog('拉取跳过:无 vault 连接', 'warn');
-    return { changed: false };
-  }
-  if (!opts.silent) updateVaultBtn('pulling');
-  try {
-    // 权限检查
-    let perm;
-    try { perm = await vaultDirHandle.queryPermission({ mode: 'readwrite' }); }
-    catch (err) { addVaultLog(`queryPermission 失败: ${err.message}`, 'error'); throw err; }
-    if (perm !== 'granted') {
-      addVaultLog('权限已过期,重新请求...', 'warn');
-      const req = await vaultDirHandle.requestPermission({ mode: 'readwrite' });
-      if (req !== 'granted') {
-        addVaultLog('用户拒绝授权,无法读取 vault', 'error');
-        updateVaultBtn('error');
-        return { changed: false };
-      }
-    }
-    // 扫描 .md 文件
-    let scan;
-    try { scan = await scanVaultMetadata(); }
-    catch (err) {
-      addVaultLog(`扫描 vault 失败: ${err.message}`, 'error');
-      throw err;
-    }
-    const filesMeta = scan.files;
-    if (!opts.silent) addVaultLog(`扫描到 ${filesMeta.length} 个 .md 文件`);
-    // 检测 mtime 变化
-    const snapshot = scan.snapshot;
-    if (opts.silent && lastPullSnapshot === snapshot) {
-      updateVaultBtn('connected');
-      return { changed: false, vaultFiles: filesMeta.length };
-    }
-    const snapshotChanged = lastPullSnapshot !== snapshot;
-    const externalChanged = lastPullSnapshot === null ? filesMeta.length > 0 : snapshotChanged;
-    if (!opts.force && externalChanged && hasUnsyncedLocalChanges()) {
-      setVaultError('检测到 Obsidian 文件变化，同时看板也有较新的本地修改；自动拉取已暂停，未覆盖任何一方。', true);
-      return { changed: false, conflict: true, vaultFiles: filesMeta.length };
-    }
-    lastPullSnapshot = snapshot;
-    if (!opts.silent) addVaultLog(`snapshot 变化: ${snapshotChanged}`);
-    // 解析所有 .md
-    const parsed = [];
-    for (const f of filesMeta) {
-      try {
-        const text = await f.handle.text();
-        const p = parseProjectMarkdown(text);
-        if (p) parsed.push({ filename: f.name, mtime: f.mtime, ...p });
-      } catch (err) {
-        addVaultLog(`解析 ${f.name} 失败: ${err.message}`, 'error');
-      }
-    }
-    // 合并到看板
-    const mergeResult = mergeVaultToStore(parsed);
-    if (!opts.silent) addVaultLog(`合并结果: ${JSON.stringify(mergeResult)}`);
-    if (mergeResult.changed) {
-      save({ skipVault: true, immediate: true });
-      render();
-    }
-    if (store.vaultConfig) {
-      store.vaultConfig.lastSyncAt = Date.now();
-      store.vaultConfig.localChangedAt = store.vaultConfig.lastSyncAt;
-    }
-    vaultConflict = null;
-    save({ skipVault: true, immediate: true });
-    if (!opts.silent) updateVaultBtn('connected');
-    return { ...mergeResult, vaultFiles: filesMeta.length };
-  } catch (err) {
-    console.error('vault 拉取失败:', err);
-    addVaultLog(`拉取异常: ${err.message}`, 'error');
-    if (!opts.silent) updateVaultBtn('error');
-    throw err;
-  }
-}
+
 
 function pullFromVault(opts = {}) {
   // 兼容旧调用：只展示下载预览，不直接合并。
@@ -24844,6 +24487,47 @@ html[data-assistant-mode="hidden"] #botFab,html[data-assistant-mode="hidden"] #b
   <div class="bot-compose"><textarea class="bot-input" id="botInput" placeholder="问我该先做什么，或粘贴会议笔记、微信记录…"></textarea><button class="bot-send" id="botSend" type="button">发送</button></div>
 </aside>
 
+<style>
+.pwa-notice{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));z-index:10050;transform:translateX(-50%);width:min(520px,calc(100vw - 28px));display:flex;align-items:center;gap:12px;padding:12px 13px 12px 15px;border:1px solid var(--card-border);border-radius:14px;background:color-mix(in srgb,var(--card-bg-solid) 92%,transparent);color:var(--text);box-shadow:0 14px 42px rgba(0,0,0,.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.pwa-notice[hidden]{display:none}.pwa-notice-copy{min-width:0;flex:1;display:grid;gap:2px}.pwa-notice-copy strong{font-size:13px}.pwa-notice-copy span{font-size:11px;line-height:1.4;color:var(--muted)}.pwa-notice-action{border:0;border-radius:9px;padding:8px 12px;background:var(--accent);color:#fff;font:700 12px/1 inherit;cursor:pointer;white-space:nowrap}.pwa-notice-close{border:0;background:transparent;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:4px}.pwa-offline{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));z-index:10060;transform:translateX(-50%);padding:6px 10px;border-radius:999px;background:#282b32;color:#fff;font:700 11px/1.2 system-ui,-apple-system,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.22)}.pwa-offline[hidden]{display:none}
+@media(max-width:600px){.pwa-notice{align-items:flex-start}.pwa-notice-action{align-self:center}.pwa-offline{top:max(6px,env(safe-area-inset-top))}}
+</style>
+
+<!-- ===== 3.1 iOS PWA: 移动端底部导航 + FAB + PWA 提示元素 ===== -->
+<!-- 底部四项导航(只在 mobile 断点下通过 CSS 显示) -->
+<nav class="mobile-nav" id="mobileNav" aria-label="主导航">
+  <button class="mobile-nav-item active" data-view="board" type="button" aria-label="看板">
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M15 4v16"/><path d="M9 9h.01M15 11h.01M9 14h.01"/></svg>
+    </span>
+    <span class="label">看板</span>
+  </button>
+  <button class="mobile-nav-item" data-view="calendar" type="button" aria-label="日程">
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></svg>
+    </span>
+    <span class="label">日程</span>
+  </button>
+  <button class="mobile-nav-item" data-view="timesheet" type="button" aria-label="工时">
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+    </span>
+    <span class="label">工时</span>
+  </button>
+  <button class="mobile-nav-item" data-view="litigation" type="button" aria-label="诉讼">
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M7 7l-2.5 6a2.5 2.5 0 1 0 5 0L7 7"/><path d="M17 7l-2.5 6a2.5 2.5 0 1 0 5 0L17 7"/><path d="M9 21h6"/></svg>
+    </span>
+    <span class="label">诉讼</span>
+  </button>
+</nav>
+
+<!-- 移动端浮动按钮: 当前 board 视图下显示,点击新建任务(打开项目 → 添加任务) -->
+<button class="mobile-fab" id="mobileFab" type="button" aria-label="新建项目" title="新建项目">
+  <span aria-hidden="true">+</span>
+</button>
+
+
 <script>
 // ===== 3.0 对话式任务助手 =====
 (function initConversationBot(){
@@ -24891,8 +24575,15 @@ html[data-assistant-mode="hidden"] #botFab,html[data-assistant-mode="hidden"] #b
     const title=document.getElementById('botTitle');if(title)title.textContent='AI 助手 · 智能工作台';
     fab.setAttribute('aria-label','打开 AI 助手');
     fab.title='AI 助手：点击开始对话';
-    if(assistantMode==='hidden')setOpen(false);
-    else if(!panel.classList.contains('open')&&!isMobile())fab.style.display='flex';
+    if(assistantMode==='hidden'){
+      setOpen(false);
+      fab.style.display='none';
+    } else if(!panel.classList.contains('open')){
+      fab.style.display='flex';
+      fab.style.visibility='visible';
+      fab.style.opacity='1';
+      fab.style.pointerEvents='auto';
+    }
     window.dispatchEvent(new CustomEvent('kanban-assistant-mode-change',{detail:{mode:assistantMode}}));
   }
   function setAssistantMode(mode){
@@ -24911,16 +24602,37 @@ html[data-assistant-mode="hidden"] #botFab,html[data-assistant-mode="hidden"] #b
     if(open&&assistantMode==='hidden')return;
     panel.classList.toggle('open',open); panel.setAttribute('aria-hidden',String(!open));
     fab.setAttribute('aria-expanded',String(open));
-    // v5.36: 手机端 fab 始终由 CSS 隐藏，不要被 inline display 拉出来
-    if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
+    const mobile = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+    if (assistantMode==='hidden') {
       fab.style.display = 'none';
+    } else if (mobile) {
+      // 手机：面板打开时藏入口，关闭后显示入口
+      fab.style.display = open ? 'none' : 'flex';
+      fab.style.visibility = open ? 'hidden' : 'visible';
+      fab.style.opacity = open ? '0' : '1';
+      fab.style.pointerEvents = open ? 'none' : 'auto';
     } else {
-      fab.style.display = (open || assistantMode==='hidden') ? 'none' : 'flex';
+      fab.style.display = open ? 'none' : 'flex';
     }
-    if(open){applySavedPosition();setTimeout(()=>input.focus(),180);}else closeShortcutEditor();
+    if(open){
+      // 手机不沿用桌面拖拽定位，避免面板飞出屏幕
+      if(!mobile) applySavedPosition();
+      else {
+        panel.style.left = '';
+        panel.style.top = '';
+        panel.style.right = '';
+        panel.style.bottom = '';
+      }
+      setTimeout(()=>{ try{ input.focus(); }catch(_){ } },180);
+    } else closeShortcutEditor();
   }
   // 供手机「更多」菜单调用
-  window.__openBotPanel = function(){ setOpen(true); };
+  window.__openBotPanel = function(){
+    if(assistantMode==='hidden'){
+      setAssistantMode('assistant');
+    }
+    setOpen(true);
+  };
   function addMessage(text, role='bot', extraClass=''){
     const el=document.createElement('div'); el.className=`bot-msg ${role} ${extraClass}`; el.textContent=text; messages.appendChild(el); messages.scrollTop=messages.scrollHeight;
     if(text&&!String(extraClass).includes('bot-loading')){conversationHistory.push({role:role==='user'?'user':'assistant',content:String(text).slice(0,1800)});conversationHistory=conversationHistory.slice(-14);}
@@ -25411,46 +25123,6 @@ ${details.join('\n')}`;
   bindPanelDrag();bindFabDrag();loadShortcuts();renderShortcuts();syncAssistantModeUI();addMessage('我现在能理解当前任务、项目、工时和诉讼上下文，也可以帮你判断优先级、生成工作简报，或新增、延期、拆分和完成任务。明确的修改指令会直接执行；只有缺少必要信息时才会请你补充。');
 })();
 </script>
-<style>
-.pwa-notice{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));z-index:10050;transform:translateX(-50%);width:min(520px,calc(100vw - 28px));display:flex;align-items:center;gap:12px;padding:12px 13px 12px 15px;border:1px solid var(--card-border);border-radius:14px;background:color-mix(in srgb,var(--card-bg-solid) 92%,transparent);color:var(--text);box-shadow:0 14px 42px rgba(0,0,0,.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-.pwa-notice[hidden]{display:none}.pwa-notice-copy{min-width:0;flex:1;display:grid;gap:2px}.pwa-notice-copy strong{font-size:13px}.pwa-notice-copy span{font-size:11px;line-height:1.4;color:var(--muted)}.pwa-notice-action{border:0;border-radius:9px;padding:8px 12px;background:var(--accent);color:#fff;font:700 12px/1 inherit;cursor:pointer;white-space:nowrap}.pwa-notice-close{border:0;background:transparent;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:4px}.pwa-offline{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));z-index:10060;transform:translateX(-50%);padding:6px 10px;border-radius:999px;background:#282b32;color:#fff;font:700 11px/1.2 system-ui,-apple-system,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.22)}.pwa-offline[hidden]{display:none}
-@media(max-width:600px){.pwa-notice{align-items:flex-start}.pwa-notice-action{align-self:center}.pwa-offline{top:max(6px,env(safe-area-inset-top))}}
-</style>
-
-<!-- ===== 3.1 iOS PWA: 移动端底部导航 + FAB + PWA 提示元素 ===== -->
-<!-- 底部四项导航(只在 mobile 断点下通过 CSS 显示) -->
-<nav class="mobile-nav" id="mobileNav" aria-label="主导航">
-  <button class="mobile-nav-item active" data-view="board" type="button" aria-label="看板">
-    <span class="icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M15 4v16"/><path d="M9 9h.01M15 11h.01M9 14h.01"/></svg>
-    </span>
-    <span class="label">看板</span>
-  </button>
-  <button class="mobile-nav-item" data-view="calendar" type="button" aria-label="日程">
-    <span class="icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></svg>
-    </span>
-    <span class="label">日程</span>
-  </button>
-  <button class="mobile-nav-item" data-view="timesheet" type="button" aria-label="工时">
-    <span class="icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
-    </span>
-    <span class="label">工时</span>
-  </button>
-  <button class="mobile-nav-item" data-view="litigation" type="button" aria-label="诉讼">
-    <span class="icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M7 7l-2.5 6a2.5 2.5 0 1 0 5 0L7 7"/><path d="M17 7l-2.5 6a2.5 2.5 0 1 0 5 0L17 7"/><path d="M9 21h6"/></svg>
-    </span>
-    <span class="label">诉讼</span>
-  </button>
-</nav>
-
-<!-- 移动端浮动按钮: 当前 board 视图下显示,点击新建任务(打开项目 → 添加任务) -->
-<button class="mobile-fab" id="mobileFab" type="button" aria-label="新建项目" title="新建项目">
-  <span aria-hidden="true">+</span>
-</button>
-
 <!-- 移动端抽屉入口(浮动在底部 nav 上方,聚合导出/导入/主题/回收站) -->
 <button class="mobile-fab mobile-fab-secondary" id="mobileMenuFab" type="button" aria-label="更多" title="更多">
   <span aria-hidden="true">⋯</span>
