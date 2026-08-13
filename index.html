@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · 编辑案件名时隐藏一键整理防放大 v5.190</title>
+<title>Kanban · 高区分度项目色 v5.196</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="5_190_260810">
+<meta name="build-hash" content="5_196_260810">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -3330,39 +3330,40 @@ body[data-view="board"][data-filter="all"] .card:not(.unified-card) .task-title:
   max-height: 90vh;
   overflow-y: auto;
 }
+/* v5.194: 任务详情前三行统一为 项目/任务/日期 标签行 */
 .task-detail-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 2px;
+  display: none; /* 项目改到下方下拉，不再单独做顶栏 */
 }
-.task-detail-project {
-  font-size: 15px; font-weight: 700;
+.task-detail-project-select {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
   color: var(--text);
-  padding: 2px 0 4px;
-  text-transform: none;
-  max-width: 280px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  opacity: 0.9;
-  border-bottom: 1px solid var(--border);
-}
-.task-detail-status {
-  font-size: 11px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--orange) 15%, transparent);
-  color: var(--orange);
-}
-.task-detail-status.is-done {
-  background: color-mix(in srgb, var(--green) 15%, transparent);
-  color: var(--green);
-}
-.task-detail-header .modal-close { margin-left: auto; }
-.task-detail-title {
-  font-size: 18px;
+  font: inherit;
+  font-size: 14px;
   font-weight: 600;
-  padding: 10px 12px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% + 2px), calc(100% - 12px) calc(50% + 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 28px;
+  transition: border-color .15s;
+}
+.task-detail-project-select:focus {
+  border-color: var(--accent);
+}
+.task-detail-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--card-bg);
@@ -3373,7 +3374,6 @@ body[data-view="board"][data-filter="all"] .card:not(.unified-card) .task-title:
 }
 .task-detail-title:focus { border-color: var(--accent); box-shadow: none; }
 .task-detail-title:focus-visible { outline: none; box-shadow: none; }
-/* v5.147: 开始/截止合并为单行「日期」；子任务按钮改到 footer 左下 */
 .task-detail-row {
   display: flex;
   align-items: center;
@@ -3383,10 +3383,10 @@ body[data-view="board"][data-filter="all"] .card:not(.unified-card) .task-title:
 .task-detail-row label {
   font-size: 12px;
   color: var(--muted);
-  font-weight: 500;
+  font-weight: 600;
   flex-shrink: 0;
   white-space: nowrap;
-  min-width: 2.4em;
+  min-width: 2.6em;
 }
 .task-detail-checklist-btn {
   padding: 0 12px;
@@ -4164,6 +4164,35 @@ button:focus-visible,
 }
 
 /* v47: 项目编辑 modal */
+/* v5.193: 项目颜色选择 */
+.project-color-picker {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 0 10px;
+  overflow-x: auto;
+}
+.project-color-swatch {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+  transition: transform .12s, box-shadow .12s;
+}
+.project-color-swatch:hover { transform: scale(1.08); }
+.project-color-swatch.active {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--text) 22%, transparent), inset 0 0 0 1px rgba(0,0,0,.06);
+}
+.project-color-swatch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .project-edit-content { max-width: 540px; }
 .project-edit-body { display: flex; flex-direction: column; gap: 8px; }
 .project-edit-label {
@@ -4942,16 +4971,16 @@ button.card-add-due svg {
   flex: 1;
   overflow: hidden;
 }
+/* v5.195: 月历任务底色以项目色为基底 · 左边条同色 · 诉讼固定红 */
 .cal-task {
   font-size: 12.5px;
   padding: 2px 6px 2px 4px;
-  border-left: 3px solid;
-  background: var(--task-bg);
+  border-left: 3px solid var(--project-color, var(--accent));
+  background: color-mix(in srgb, var(--project-color, var(--accent)) 24%, var(--task-bg));
   border-radius: 3px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  /* v5.176: 悬停手指指针；v5.177: 任务条撑满格子宽度 */
   cursor: pointer;
   line-height: 1.4;
   display: flex;
@@ -4962,28 +4991,33 @@ button.card-add-due svg {
   box-sizing: border-box;
   transition: background 0.12s, opacity 0.15s;
 }
-.cal-task:hover { background: var(--task-bg-hover); }
+.cal-task:hover {
+  background: color-mix(in srgb, var(--project-color, var(--accent)) 34%, var(--task-bg-hover));
+}
 .cal-task:active { cursor: grabbing; }
 .cal-task.dragging { opacity: 0.35; cursor: grabbing; }
 .cal-task.done .cal-task-title {
   text-decoration: line-through;
   opacity: 0.55;
 }
-/* v2.0: 已归档(从 board 移除但月历仍展示)的任务 — 整体更灰,checkbox 显示绿勾对勾感
-   注:checkbox 现在可以点击 → 取消勾选会从 archive 恢复到 board,不算只读 */
-.cal-task.archived { opacity: 0.6; cursor: default; }
-.cal-task.archived:hover { background: var(--task-bg-hover); }
+.cal-task.done,
+.cal-task.archived {
+  opacity: 0.62;
+}
+.cal-task.archived { cursor: default; }
+.cal-task.archived:hover {
+  background: color-mix(in srgb, var(--project-color, var(--accent)) 22%, var(--task-bg-hover));
+}
 .cal-task.archived .cal-task-check { accent-color: #5cb85c; cursor: pointer; }
-/* v5.63: 诉讼进度进月历 */
 .cal-task.litigation {
   cursor: pointer;
-  background: color-mix(in srgb, var(--red) 10%, var(--task-bg));
+  background: color-mix(in srgb, var(--red) 14%, var(--task-bg));
   border-left-color: var(--red);
   color: var(--text);
   position: relative;
 }
 .cal-task.litigation:hover {
-  background: color-mix(in srgb, var(--red) 16%, var(--task-bg-hover));
+  background: color-mix(in srgb, var(--red) 22%, var(--task-bg-hover));
 }
 .cal-task.litigation:active { cursor: pointer; }
 .cal-task-lit-icon {
@@ -4991,9 +5025,8 @@ button.card-add-due svg {
   font-size: 11px;
   line-height: 1;
 }
-/* v5.124: 跨日任务 — 起/中/止 视觉连贯 */
 .cal-task.cal-span {
-  background: color-mix(in srgb, var(--project-color, var(--accent)) 14%, var(--task-bg));
+  background: color-mix(in srgb, var(--project-color, var(--accent)) 30%, var(--task-bg));
 }
 .cal-task.cal-span-start {
   border-radius: 5px 2px 2px 5px;
@@ -8216,9 +8249,9 @@ input, select, textarea, button, [contenteditable] {
 }
 .cal-agenda-item {
   display: flex; align-items: center; gap: 10px;
-  background: var(--card-bg-solid);
+  background: color-mix(in srgb, var(--project-color, var(--accent)) 14%, var(--card-bg-solid));
   border: 1px solid var(--border);
-  border-left-width: 4px;
+  border-left: 4px solid var(--project-color, var(--accent));
   border-radius: 10px;
   padding: 10px 12px;
   min-height: 44px;
@@ -8408,7 +8441,8 @@ input, select, textarea, button, [contenteditable] {
     border-radius: 2px !important;
     gap: 2px !important;
     min-height: 0 !important;
-    background: color-mix(in srgb, var(--task-bg) 80%, transparent) !important;
+    /* v5.195: 保留项目色底，不再冲掉 */
+    background: color-mix(in srgb, var(--project-color, var(--accent)) 26%, var(--task-bg)) !important;
   }
   body[data-view="calendar"] .cal-task-title {
     font-size: 9px !important;
@@ -10108,6 +10142,8 @@ input, select, textarea, button, [contenteditable] {
       <input type="text" class="project-edit-name" maxlength="80" placeholder="输入项目名称…">
       <label class="project-edit-label">项目描述</label>
       <textarea class="project-edit-desc" placeholder="项目描述…比如目标、关键节点、背景说明等" rows="8"></textarea>
+      <label class="project-edit-label">项目颜色 <span class="project-edit-hint">用于看板标签与月历任务条</span></label>
+      <div class="project-color-picker" id="projectColorPicker" role="listbox" aria-label="选择项目颜色"></div>
       <div class="project-edit-footer">
         <button class="btn" data-action="delete-project" title="移到回收站">删除项目</button>
         <button class="btn" data-action="open-project-move" title="移动到其他看板" id="projectMoveBtn">移动到看板</button>
@@ -13337,11 +13373,31 @@ function initViewPillReorder() {
 // v46: 撤销按钮点击
 document.getElementById('undoBtn')?.addEventListener('click', () => undo());
 
-// 项目颜色（按 id hash 到固定调色板）
-const PROJECT_COLORS = ['#007aff', '#34c759', '#ff9500', '#af52de', '#ff2d55', '#5ac8fa', '#ffcc00', '#5856d6'];
+// 项目颜色调色板（创建默认按 id hash；可在项目编辑中更换）
+// v5.196: 高区分度 14 色（色相拉开，避免近邻同系）
+// 玫红 · 橙 · 琥珀 · lime · 绿 · 青绿 · 青 · 天蓝 · 蓝 · 靛 · 紫 · 品红 · 褐 · 石板
+const PROJECT_COLORS = [
+  '#E11D48', // 玫红
+  '#EA580C', // 橙
+  '#D97706', // 琥珀
+  '#65A30D', // 黄绿
+  '#16A34A', // 绿
+  '#0D9488', // 青绿
+  '#0891B2', // 青
+  '#0284C7', // 天蓝
+  '#2563EB', // 蓝
+  '#4F46E5', // 靛
+  '#7C3AED', // 紫
+  '#C026D3', // 品红
+  '#B45309', // 褐
+  '#475569'  // 石板灰蓝
+];
 function projectColor(p) {
+  // v5.193: 优先用项目已保存的 color
+  const stored = p && typeof p.color === 'string' ? p.color.trim() : '';
+  if (/^#[0-9a-fA-F]{3,8}$/.test(stored)) return stored;
   let h = 0;
-  for (const c of p.id) h = ((h << 5) - h + c.charCodeAt(0)) | 0;
+  for (const c of (p && p.id) || '') h = ((h << 5) - h + c.charCodeAt(0)) | 0;
   return PROJECT_COLORS[Math.abs(h) % PROJECT_COLORS.length];
 }
 
@@ -16913,9 +16969,23 @@ function updatePageTitle() {
 // ============== 月历渲染 ==============
 
 // v5.63: 诉讼进度（时间线日期）→ 月历提醒
+function getLitigationBoardKey() {
+  // v5.191: 月历/筛选用真实诉讼看板 id，空则尝试从 boards 里找
+  let key = store.litigationBoardId;
+  if (key && store.boards && store.boards[key]) return key;
+  if (store.boards) {
+    key = Object.keys(store.boards).find(k => store.boards[k] && store.boards[k]._litigationBoard);
+    if (key) return key;
+  }
+  return '';
+}
 function collectLitigationCalendarEvents() {
   const out = [];
   const records = Array.isArray(store.litigationRecords) ? store.litigationRecords : [];
+  const litBoardKey = getLitigationBoardKey();
+  const litBoard = (litBoardKey && store.boards && store.boards[litBoardKey])
+    ? store.boards[litBoardKey]
+    : { icon: '⚖️', name: '诉讼看板' };
   for (const rec of records) {
     const caseName = String(rec.caseName || rec.caseNumber || '诉讼案件').trim() || '诉讼案件';
     const lines = Array.isArray(rec.timeline) ? rec.timeline : [];
@@ -16936,8 +17006,9 @@ function collectLitigationCalendarEvents() {
         caseName,
         progressText: progress,
         project: { id: '__litigation__', name: '诉讼进度' },
-        boardKey: '',
-        board: { icon: '⚖️', name: '诉讼' },
+        // v5.191: 绑定真实诉讼看板，供月历「看板选择」筛选
+        boardKey: litBoardKey || '',
+        board: { icon: litBoard.icon || '⚖️', name: litBoard.name || '诉讼看板' },
         archived: false,
       });
     }
@@ -16947,6 +17018,8 @@ function collectLitigationCalendarEvents() {
 function mergeLitigationIntoTasksByDate(tasksByDate) {
   if (!tasksByDate) return tasksByDate;
   for (const ev of collectLitigationCalendarEvents()) {
+    // v5.191: 与普通任务一致，受月历看板多选筛选
+    if (typeof calBoardMatches === 'function' && !calBoardMatches(ev.boardKey || '')) continue;
     if (!tasksByDate[ev.due]) tasksByDate[ev.due] = [];
     if (tasksByDate[ev.due].some(x => x.id === ev.id)) continue;
     tasksByDate[ev.due].push(ev);
@@ -17126,7 +17199,6 @@ function renderCalendar() {
                   ].filter(Boolean).join('\n');
                   return `
                 <div class="cal-task litigation" data-task-id="${t.id}" data-litigation="1" data-record-id="${escapeHtml(t.recordId || '')}" data-timeline-id="${escapeHtml(t.timelineId || '')}" draggable="false"
-                     style="border-left-color:var(--red)"
                      data-case-tip="${escapeHtml(litTip)}"
                      aria-label="诉讼 · ${escapeHtml(caseLabel)} · ${escapeHtml(t.title || '')}">
                   <span class="cal-task-title">${escapeHtml(t.caseName || t.title || '诉讼')}</span>
@@ -17241,7 +17313,9 @@ function renderCalendarAgenda() {
     });
   }
   // v5.63: 诉讼时间线并入日程列表
+  // v5.191: 同样受月历看板筛选
   for (const ev of collectLitigationCalendarEvents()) {
+    if (typeof calBoardMatches === 'function' && !calBoardMatches(ev.boardKey || '')) continue;
     if (currentSearch) {
       const q = currentSearch.toLowerCase();
       if (!(ev.title || '').toLowerCase().includes(q) && !(ev.caseName || '').toLowerCase().includes(q)) continue;
@@ -17323,7 +17397,6 @@ function renderCalendarAgenda() {
               return `
               <li class="cal-agenda-item litigation"
                   data-task-id="${t.id}" data-litigation="1" data-record-id="${escapeHtml(t.recordId || '')}" data-timeline-id="${escapeHtml(t.timelineId || '')}"
-                  style="border-left-color:var(--red)"
                   data-case-tip="${escapeHtml(litTip)}"
                   title="${escapeHtml(litTip)}"
                   aria-label="诉讼 · ${escapeHtml(caseLabel)} · ${escapeHtml(t.title || '')}">
@@ -17341,10 +17414,11 @@ function renderCalendarAgenda() {
             const spanLabel = (t.startDate && t.due && t.startDate !== t.due)
               ? (`${t.startDate.slice(5)} → ${t.due.slice(5)}`)
               : '';
+            const pc = projectColor(t.project);
             return `
               <li class="cal-agenda-item ${t.done ? 'done' : ''} ${isCrossBoard ? 'cross-board' : ''} ${t.archived ? 'archived' : ''} ${t._calSpan ? 'cal-span' : ''}"
                   data-task-id="${t.id}" data-project-id="${t.project.id}" data-board-key="${t.boardKey}"
-                  style="border-left-color:${projectColor(t.project)}"
+                  style="border-left-color:${pc}; --project-color:${pc}"
                   aria-label="${escapeHtml(t.project.name)} · ${escapeHtml(t.title)}${spanLabel ? ' · ' + spanLabel : ''}">
                 <input type="checkbox" class="cal-agenda-check" ${t.done ? 'checked' : ''} data-action="${t.archived ? 'cal-task-archived' : 'cal-task-toggle'}">
                 <div class="cal-agenda-body">
@@ -17375,8 +17449,7 @@ function renderCalendarAgenda() {
         </header>
         <ul class="cal-agenda-items">
           ${unscheduledTasks.map(t => `
-            <li class="cal-agenda-item cross-board" data-task-id="${t.id}" data-project-id="${t.project.id}" data-board-key="${t.boardKey}"
-                style="border-left-color:${projectColor(t.project)}">
+            <li class="cal-agenda-item cross-board" data-task-id="${t.id}" data-project-id="${t.project.id}" data-board-key="${t.boardKey}">
               <div class="cal-agenda-body">
                 <div class="cal-agenda-title">${escapeHtml(t.title)}</div>
                 <div class="cal-agenda-meta">
@@ -17994,6 +18067,27 @@ function openProjectEditModal(project, opts) {
   modal.dataset.editingProjectId = project.id;
   if (isNew) modal.dataset.isNewProject = '1';
   else delete modal.dataset.isNewProject;
+  // v5.193: 渲染项目颜色选择器
+  const picker = modal.querySelector('#projectColorPicker');
+  if (picker) {
+    const current = projectColor(project);
+    modal.dataset.editingProjectColor = current;
+    picker.innerHTML = PROJECT_COLORS.map(c => {
+      const on = c.toLowerCase() === String(current).toLowerCase();
+      return `<button type="button" class="project-color-swatch${on ? ' active' : ''}" data-color="${c}" style="background:${c}" title="${c}" aria-label="颜色 ${c}" role="option" aria-selected="${on ? 'true' : 'false'}"></button>`;
+    }).join('');
+    picker.onclick = (e) => {
+      const sw = e.target.closest('.project-color-swatch');
+      if (!sw || !sw.dataset.color) return;
+      e.preventDefault();
+      modal.dataset.editingProjectColor = sw.dataset.color;
+      picker.querySelectorAll('.project-color-swatch').forEach(btn => {
+        const active = btn.dataset.color === sw.dataset.color;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+    };
+  }
   // v5.145: 新建项目不显示「移动到看板」；仅当存在其他看板时显示
   const moveBtn = modal.querySelector('#projectMoveBtn') || modal.querySelector('[data-action="open-project-move"]');
   if (moveBtn) {
@@ -18041,6 +18135,7 @@ function closeProjectEditModal() {
   modal.classList.add('hidden');
   delete modal.dataset.editingProjectId;
   delete modal.dataset.isNewProject;
+  delete modal.dataset.editingProjectColor;
   const nameInput = modal.querySelector('.project-edit-name');
   if (nameInput) {
     nameInput.onfocus = null;
@@ -18058,10 +18153,12 @@ function saveProjectEdit() {
   const descArea = modal.querySelector('.project-edit-desc');
   const newName = nameInput.value.trim() || '未命名';
   const newDesc = descArea.value;
-  const changed = newName !== project.name || newDesc !== (project.description || '');
+  const newColor = (modal.dataset.editingProjectColor || projectColor(project) || '').trim();
+  const changed = newName !== project.name || newDesc !== (project.description || '') || newColor !== (project.color || '');
   if (changed) pushHistory();
   project.name = newName;
   project.description = newDesc;
+  if (/^#[0-9a-fA-F]{3,8}$/.test(newColor)) project.color = newColor;
   // 同步 fileName（若仍是旧默认名）
   if (project.fileName === project.name || /^新项目(\s+\d+)?$/.test(String(project.fileName || ''))) {
     project.fileName = newName;
@@ -18069,6 +18166,9 @@ function saveProjectEdit() {
   save();
   closeProjectEditModal();
   render();
+  if (typeof currentView !== 'undefined' && currentView === 'calendar' && typeof renderCalendar === 'function') {
+    try { renderCalendar(); } catch (_) {}
+  }
 }
 
 function deleteProjectFromModal() {
@@ -18236,20 +18336,30 @@ function openTaskDetail(task, project) {
   document.querySelectorAll('.task-detail-modal').forEach(m => m.remove());
   const modal = document.createElement('div');
   modal.className = 'task-detail-modal';
-  // 确保 project 有效
-  const projName = (project && project.name) ? project.name : '未命名项目';
+  // v5.194: 可切换所属项目
+  let currentProject = project;
   const dateRangeText = taskDateRangeLabel(task);
   const dateEmpty = !(task.startDate || task.due);
+  const projectOptions = (typeof allProjects === 'function' ? allProjects() : [])
+    .map(({ project: p, board }) => {
+      const selected = p.id === (currentProject && currentProject.id) ? ' selected' : '';
+      const boardName = board && board.name ? ` · ${board.name}` : '';
+      return `<option value="${escapeHtml(p.id)}"${selected}>${escapeHtml((p.name || '未命名项目') + boardName)}</option>`;
+    }).join('');
   modal.innerHTML = `
     <div class="modal-backdrop" data-action="close-detail"></div>
     <div class="task-detail-content">
-      <div class="task-detail-header">
-        <span class="task-detail-project">${escapeHtml(projName)}</span>
+      <div class="task-detail-row">
+        <label>项目</label>
+        <select class="task-detail-project-select" aria-label="选择项目">${projectOptions}</select>
       </div>
-      <input class="task-detail-title" placeholder="任务名…" value="${escapeHtml(task.title)}" maxlength="200">
+      <div class="task-detail-row">
+        <label>任务</label>
+        <input class="task-detail-title" placeholder="任务名…" value="${escapeHtml(task.title)}" maxlength="200">
+      </div>
       <div class="task-detail-row">
         <label>日期</label>
-        <button type="button" class="task-detail-due-trigger ${dateEmpty ? 'empty' : ''}" data-action="open-date-range-popover" title="选择开始与截止日期">${escapeHtml(dateRangeText)}</button>
+        <button type="button" class="task-detail-due-trigger ${dateEmpty ? 'empty' : ''}" data-action="open-date-range-popover" title="选择开始与截止日期">${escapeHtml(dateEmpty ? '设日期' : dateRangeText)}</button>
         <button class="btn" data-action="clear-detail-dates" style="padding: 5px 10px; font-size: 11px;" title="清除开始与截止日期">清除</button>
       </div>
       <textarea class="task-detail-notes" placeholder="补充说明、链接、注意事项…">${escapeHtml(task.notes || '')}</textarea>
@@ -18276,6 +18386,7 @@ function openTaskDetail(task, project) {
   document.body.appendChild(modal);
 
   const titleInput = modal.querySelector('.task-detail-title');
+  const projectSelect = modal.querySelector('.task-detail-project-select');
   const dueTrigger = modal.querySelector('[data-action="open-date-range-popover"]');
   const notesArea = modal.querySelector('.task-detail-notes');
 
@@ -18296,10 +18407,30 @@ function openTaskDetail(task, project) {
         }
       }
     }
-    const changed = newTitle !== task.title
+    // v5.194: 切换所属项目（先记变更，再统一 pushHistory）
+    let projectMoved = false;
+    let destProject = null;
+    const newPid = projectSelect ? projectSelect.value : '';
+    if (newPid && currentProject && newPid !== currentProject.id && typeof findProjectAcrossBoards === 'function') {
+      const dest = findProjectAcrossBoards(newPid);
+      if (dest && dest.project) {
+        destProject = dest.project;
+        projectMoved = true;
+      }
+    }
+    const changed = projectMoved
+                 || newTitle !== task.title
                  || newDue !== (task.due || '')
                  || newNotes !== (task.notes || '');
     if (changed) pushHistory();
+    if (projectMoved && destProject) {
+      const idx = currentProject.tasks.findIndex(t => t.id === task.id);
+      if (idx >= 0) {
+        currentProject.tasks.splice(idx, 1);
+        destProject.tasks.push(task);
+        currentProject = destProject;
+      }
+    }
     task.title = newTitle;
     task.due = newDue;
     task.notes = newNotes;
@@ -18309,7 +18440,7 @@ function openTaskDetail(task, project) {
   if (dueTrigger) {
     dueTrigger.addEventListener('click', e => {
       e.stopPropagation();
-      openDatePopover(dueTrigger, project, task);
+      openDatePopover(dueTrigger, currentProject, task);
     });
   }
   // 输入即保存（失焦 / 改日期 / 完成）
@@ -18492,11 +18623,11 @@ function openTaskDetail(task, project) {
   modal.querySelector('[data-action="delete-detail"]').addEventListener('click', () => {
     commit();
     pushHistory();
-    const idx = project.tasks.findIndex(t => t.id === task.id);
+    const idx = currentProject.tasks.findIndex(t => t.id === task.id);
     if (idx >= 0) {
-      const [removed] = project.tasks.splice(idx, 1);
+      const [removed] = currentProject.tasks.splice(idx, 1);
       if (!state.trash) state.trash = [];
-      state.trash.push({ type: 'task', data: removed, deletedAt: Date.now(), fromProjectId: project.id });
+      state.trash.push({ type: 'task', data: removed, deletedAt: Date.now(), fromProjectId: currentProject.id });
       try { save(); } catch {}
       updateTrashCount();
     }
