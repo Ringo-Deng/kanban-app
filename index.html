@@ -10779,7 +10779,7 @@ body[data-view="learning"] #calNav { display:none !important; }
 .learning-review-edit:active,
 .learning-review-delete:active { transform:scale(.94); }
 .learning-review-card { padding:22px 22px 18px; min-height:405px; display:flex; flex-direction:column; }
-/* v5.242: 未翻面时，整张今日复习卡都可点击显示答案 */
+/* v5.243: 未翻面时，整张今日复习卡都可点击显示答案 */
 .learning-review-card[data-learning-action="reveal-card"] { cursor:pointer; }
 .learning-review-card[data-learning-action="reveal-card"] .learning-rate-btn { cursor:pointer; }
 .learning-stage-line { display:flex; align-items:center; gap:4px; margin-bottom:20px; overflow:hidden; }
@@ -11578,6 +11578,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
       <div class="vault-mobile-actions" id="vaultMobileActions">
         <button class="btn btn-primary" id="vaultExportFile" type="button">导出同步文件</button>
         <button class="btn" id="vaultImportFileBtn" type="button">从文件导入</button>
+        <button class="btn btn-ghost" id="vaultRestoreLocal" type="button" style="display:none">恢复导入前数据</button>
         <button class="btn btn-ghost" id="vaultShareFile" type="button" style="display:none">分享到…</button>
         <input type="file" id="vaultImportFile" accept=".md,text/markdown,application/json,.json" hidden>
       </div>
@@ -25937,7 +25938,9 @@ const MANUAL_SYNC_DIR = 'Kanban同步';
 const MANUAL_SYNC_FILE = 'Kanban数据同步.md';
 const MANUAL_BACKUP_DIR = '历史备份';
 const MANUAL_BACKUP_LIMIT = 10;
-const MANUAL_SYNC_SCHEMA = 1;
+const MANUAL_SYNC_SCHEMA = 2;
+const MANUAL_SYNC_COMPAT_SCHEMAS = [1, 2];
+const MANUAL_LOCAL_RECOVERY_KEY = 'kanban_manual_sync_local_recovery_v2';
 const MANUAL_SYNC_START = '<!-- KANBAN_SYNC_DATA_START -->';
 const MANUAL_SYNC_END = '<!-- KANBAN_SYNC_DATA_END -->';
 let manualRemoteSnapshot = null;
@@ -25955,6 +25958,8 @@ function buildBusinessData() {
     timeEntries: cloneSyncValue(store.timeEntries, []),
     archive: cloneSyncValue(store.archive, {}),
     litigationRecords: cloneSyncValue(store.litigationRecords, []),
+    // v5.243: 学习词库与完整复习状态一并同步（stage / nextReview / history / 队列顺序等均保留）
+    learningCards: cloneSyncValue(store.learningCards, []),
   };
 }
 
@@ -25969,7 +25974,7 @@ function syncHash(value) {
 }
 
 function summarizeBusinessData(data) {
-  const summary = { boards: 0, projects: 0, activeTasks: 0, archivedTasks: 0, timeEntries: 0, litigation: 0 };
+  const summary = { boards: 0, projects: 0, activeTasks: 0, archivedTasks: 0, timeEntries: 0, litigation: 0, learningCards: 0 };
   const boards = data && data.boards && typeof data.boards === 'object' ? data.boards : {};
   summary.boards = Object.keys(boards).length;
   for (const board of Object.values(boards)) {
@@ -25981,16 +25986,17 @@ function summarizeBusinessData(data) {
   for (const entries of Object.values((data && data.archive) || {})) summary.archivedTasks += Array.isArray(entries) ? entries.length : 0;
   summary.timeEntries = Array.isArray(data && data.timeEntries) ? data.timeEntries.length : 0;
   summary.litigation = Array.isArray(data && data.litigationRecords) ? data.litigationRecords.length : 0;
+  summary.learningCards = Array.isArray(data && data.learningCards) ? data.learningCards.length : 0;
   summary.totalTasks = summary.activeTasks + summary.archivedTasks;
   return summary;
 }
 
 function syncSummaryText(summary) {
-  return `${summary.projects} 个项目 · ${summary.totalTasks} 个任务\n${summary.timeEntries} 条工时 · ${summary.litigation} 条诉讼记录`;
+  return `${summary.projects} 个项目 · ${summary.totalTasks} 个任务\n${summary.timeEntries} 条工时 · ${summary.litigation} 条诉讼记录 · ${summary.learningCards || 0} 个学习词汇`;
 }
 
 function hasMeaningfulBusinessData(summary) {
-  return summary.projects > 0 || summary.totalTasks > 0 || summary.timeEntries > 0 || summary.litigation > 0;
+  return summary.projects > 0 || summary.totalTasks > 0 || summary.timeEntries > 0 || summary.litigation > 0 || summary.learningCards > 0;
 }
 
 function currentDeviceLabel() {
@@ -26030,7 +26036,7 @@ function buildSyncMarkdown(envelope, kind = '主同步文件') {
   return [
     '---',
     'kanban_sync: true',
-    `schema: ${MANUAL_SYNC_SCHEMA}`,
+    `schema: ${envelope.schemaVersion || MANUAL_SYNC_SCHEMA}`,
     `updated: ${new Date(envelope.updatedAt).toISOString()}`,
     `source_device: ${envelope.sourceDevice}`,
     '---',
@@ -26041,7 +26047,7 @@ function buildSyncMarkdown(envelope, kind = '主同步文件') {
     '',
     `- 更新时间：${new Date(envelope.updatedAt).toLocaleString('zh-CN')}`,
     `- 来源设备：${envelope.sourceDevice}`,
-    `- 内容：${summary.projects} 个项目、${summary.totalTasks} 个任务、${summary.timeEntries} 条工时、${summary.litigation} 条诉讼记录`,
+    `- 内容：${summary.projects} 个项目、${summary.totalTasks} 个任务、${summary.timeEntries} 条工时、${summary.litigation} 条诉讼记录、${summary.learningCards || 0} 个学习词汇`,
     '',
     MANUAL_SYNC_START,
     '```json',
@@ -26059,7 +26065,7 @@ function parseSyncMarkdown(text) {
   let block = text.slice(start + MANUAL_SYNC_START.length, end).trim();
   block = block.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
   const envelope = JSON.parse(block);
-  if (!envelope || envelope.schemaVersion !== MANUAL_SYNC_SCHEMA || !envelope.data || !envelope.data.boards) {
+  if (!envelope || !MANUAL_SYNC_COMPAT_SCHEMAS.includes(Number(envelope.schemaVersion)) || !envelope.data || !envelope.data.boards) {
     throw new Error('同步文件格式或版本不受支持');
   }
   return envelope;
@@ -26299,6 +26305,8 @@ function applyBusinessData(data) {
   store.timeEntries = cloneSyncValue(data.timeEntries, []);
   store.archive = cloneSyncValue(data.archive, {});
   store.litigationRecords = cloneSyncValue(data.litigationRecords, []);
+  // v5.243: 新版同步文件带 learningCards 时覆盖词库；旧 v1 文件未包含该字段时保留当前设备词库，避免误清空。
+  if (Array.isArray(data.learningCards)) store.learningCards = cloneSyncValue(data.learningCards, []);
   store.currentBoard = store.boards[preservedCurrentBoard] ? preservedCurrentBoard : (store.boardOrder.find(k => store.boards[k]) || Object.keys(store.boards)[0]);
   if (!store.currentBoard) {
     store.currentBoard = generateBoardId();
@@ -26312,6 +26320,7 @@ function applyBusinessData(data) {
   renderBoardMenu?.();
   updateTrashCount();
   render();
+  if (typeof renderLearning === 'function') renderLearning();
 }
 
 async function executeManualSync() {
@@ -26432,10 +26441,9 @@ async function exportManualSyncFile() {
     const { envelope, blob, hash } = buildManualSyncBlob();
     downloadBlobAsFile(blob, MANUAL_SYNC_FILE);
     if (!store.vaultConfig) store.vaultConfig = {};
-    store.vaultConfig.manualBaselineHash = hash;
-    store.vaultConfig.lastSyncAt = Date.now();
-    store.vaultConfig.localChangedAt = store.vaultConfig.lastSyncAt;
-    store.vaultConfig.lastExportAt = store.vaultConfig.lastSyncAt;
+    // v5.243: 导出只代表“生成了文件”，并不等于 Obsidian Sync 已完成；不要推进同步基线。
+    store.vaultConfig.lastExportAt = Date.now();
+    store.vaultConfig.lastExportHash = hash;
     store.vaultConfig.lastExportDevice = currentDeviceLabel();
     save({ skipVault: true, immediate: true });
     addVaultLog(`已导出同步文件（${currentDeviceLabel()}）`);
@@ -26462,10 +26470,9 @@ async function shareManualSyncFile() {
       text: '请保存到 Obsidian 的 Kanban同步 文件夹',
     });
     if (!store.vaultConfig) store.vaultConfig = {};
-    store.vaultConfig.manualBaselineHash = hash;
-    store.vaultConfig.lastSyncAt = Date.now();
-    store.vaultConfig.localChangedAt = store.vaultConfig.lastSyncAt;
-    store.vaultConfig.lastExportAt = store.vaultConfig.lastSyncAt;
+    // v5.243: 分享完成仍只是“把文件交给系统”，不假定 Obsidian 已经保存/同步。
+    store.vaultConfig.lastExportAt = Date.now();
+    store.vaultConfig.lastExportHash = hash;
     store.vaultConfig.lastExportDevice = currentDeviceLabel();
     save({ skipVault: true, immediate: true });
     addVaultLog(`已分享同步文件（${currentDeviceLabel()}）`);
@@ -26480,6 +26487,60 @@ async function shareManualSyncFile() {
   }
 }
 
+// v5.243: 文件模式（尤其手机端）导入前，在 IndexedDB 留一份可恢复快照。
+async function saveManualLocalRecovery() {
+  const recovery = {
+    key: MANUAL_LOCAL_RECOVERY_KEY,
+    savedAt: Date.now(),
+    device: currentDeviceLabel(),
+    data: buildBusinessData(),
+  };
+  if (typeof indexedDB === 'undefined') throw new Error('当前浏览器不支持本地恢复点');
+  const db = await openIdb();
+  await idbPut(db, 'kv', recovery);
+  return recovery;
+}
+
+async function readManualLocalRecovery() {
+  if (typeof indexedDB === 'undefined') return null;
+  try {
+    const db = await openIdb();
+    return await idbGet(db, 'kv', MANUAL_LOCAL_RECOVERY_KEY);
+  } catch { return null; }
+}
+
+async function refreshManualLocalRecoveryButton() {
+  const btn = document.getElementById('vaultRestoreLocal');
+  if (!btn) return;
+  const rec = await readManualLocalRecovery();
+  btn.style.display = rec && rec.data ? '' : 'none';
+  if (rec?.savedAt) btn.title = `恢复 ${new Date(rec.savedAt).toLocaleString('zh-CN')} 导入前的数据`;
+}
+
+async function restoreManualLocalRecovery() {
+  const rec = await readManualLocalRecovery();
+  if (!rec?.data) { showToast('没有可恢复的导入前数据'); return false; }
+  if (!confirm(`恢复 ${new Date(rec.savedAt).toLocaleString('zh-CN')} 导入前的数据？\n当前看板、工时、诉讼记录和学习词库将被替换。`)) return false;
+  try {
+    // 恢复前再给当前状态留一个恢复点，避免来回操作时无路可退。
+    const current = buildBusinessData();
+    applyBusinessData(rec.data);
+    const db = await openIdb();
+    await idbPut(db, 'kv', { key: MANUAL_LOCAL_RECOVERY_KEY, savedAt: Date.now(), device: currentDeviceLabel(), data: current });
+    if (!store.vaultConfig) store.vaultConfig = {};
+    store.vaultConfig.localChangedAt = Date.now();
+    save({ skipVault: true, immediate: true });
+    addVaultLog('已恢复上一次文件导入前的数据');
+    showToast('已恢复导入前数据');
+    await refreshManualLocalRecoveryButton();
+    refreshVaultModal();
+    return true;
+  } catch (err) {
+    setVaultError(err.message || '恢复导入前数据失败');
+    return false;
+  }
+}
+
 async function importManualSyncFromFile(file) {
   if (!file) return;
   try {
@@ -26489,17 +26550,20 @@ async function importManualSyncFromFile(file) {
     if (name.endsWith('.json') || (text.trim().startsWith('{') && !text.includes(MANUAL_SYNC_START))) {
       // 允许直接导入 envelope JSON 或旧版全量备份（尽量宽松）
       const parsed = JSON.parse(text);
-      if (parsed && parsed.schemaVersion === MANUAL_SYNC_SCHEMA && parsed.data && parsed.data.boards) {
+      if (parsed && MANUAL_SYNC_COMPAT_SCHEMAS.includes(Number(parsed.schemaVersion)) && parsed.data && parsed.data.boards) {
         envelope = parsed;
       } else if (parsed && parsed.boards) {
         // 兼容完整 store 备份 JSON
-        envelope = makeSyncEnvelope({
+        const legacyData = {
           boards: parsed.boards,
           boardOrder: parsed.boardOrder || Object.keys(parsed.boards || {}),
           timeEntries: parsed.timeEntries || [],
           archive: parsed.archive || {},
           litigationRecords: parsed.litigationRecords || [],
-        });
+        };
+        // 老 JSON 备份没有 learningCards 时不写该字段，导入时会保留当前设备词库。
+        if (Array.isArray(parsed.learningCards)) legacyData.learningCards = parsed.learningCards;
+        envelope = makeSyncEnvelope(legacyData);
         envelope.updatedAt = parsed.vaultConfig?.lastSyncAt || Date.now();
         envelope.sourceDevice = parsed.vaultConfig?.lastExportDevice || 'JSON备份';
       } else {
@@ -26537,10 +26601,10 @@ async function importManualSyncFromFile(file) {
     if (title) title.textContent = '准备从文件导入';
     if (textEl) {
       textEl.textContent =
-        `将用「${snapshot.fileName}」覆盖当前设备的业务数据。\n` +
+        `将用「${snapshot.fileName}」覆盖当前设备的同步数据（含学习词库/复习进度）。\n` +
         `${syncSummaryText(snapshot.summary)}\n` +
         `来源：${snapshot.envelope.sourceDevice || '未知'} · ${new Date(snapshot.envelope.updatedAt).toLocaleString('zh-CN')}\n` +
-        `确认后会先在本机写入一份恢复点（若支持文件夹备份则写入历史备份）。`;
+        `确认后会先在本机写入可恢复快照（若支持文件夹备份则同时写入历史备份）。`;
     }
     if (confirmBtn) confirmBtn.textContent = '确认导入';
     addVaultLog(`已读取同步文件：${snapshot.fileName}`);
@@ -26556,7 +26620,13 @@ async function executeManualFileImport() {
   try {
     const source = manualPendingAction.sourceSnapshot;
     if (!source?.envelope?.data) throw new Error('没有可导入的数据');
-    // 有文件夹权限时顺便写一份本机备份
+    // v5.243: 任何设备都先写 IndexedDB 本地恢复点；有文件夹权限时再额外写 Obsidian 历史备份。
+    try {
+      await saveManualLocalRecovery();
+      addVaultLog('已创建文件导入前的本地恢复点');
+    } catch (backupErr) {
+      addVaultLog('无法创建本地恢复点：' + (backupErr.message || backupErr), 'warn');
+    }
     try {
       if (vaultDirHandle && await ensureManualVaultPermission(false)) {
         const localEnvelope = makeSyncEnvelope();
@@ -26578,6 +26648,7 @@ async function executeManualFileImport() {
     if (vaultDirHandle) await refreshManualSyncState({ interactive: false });
     else updateVaultBtn('disconnected');
     refreshVaultModal();
+    await refreshManualLocalRecoveryButton();
   } catch (err) {
     setVaultError(err.message || '导入失败');
   } finally {
@@ -26620,6 +26691,7 @@ function refreshVaultModal() {
   const disconnectBtn = document.getElementById('vaultDisconnect');
   const mobileActions = document.getElementById('vaultMobileActions');
   const shareBtn = document.getElementById('vaultShareFile');
+  refreshManualLocalRecoveryButton();
   const dirName = document.getElementById('vaultDirName');
   const lastSync = document.getElementById('vaultLastSync');
   const fileCount = document.getElementById('vaultFileCount');
@@ -26687,12 +26759,13 @@ function refreshVaultModal() {
   if (help) {
     if (!folderOk || mobile) {
       help.innerHTML =
-        '<strong>手机推荐流程：</strong>① 点「导出同步文件」或「分享到…」→ ② 把 <code>Kanban数据同步.md</code> 保存到 Obsidian 的 <code>Kanban同步</code> 文件夹并等待 Sync → ③ 另一台设备 Sync 完成后，打开本页点「从文件导入」选中该文件。' +
+        '<strong>手机推荐流程：</strong>① 点「导出同步文件」或「分享到…」→ ② 把 <code>Kanban数据同步.md</code> 保存到 Obsidian 的 <code>Kanban同步</code> 文件夹并等待 Sync → ③ 另一台设备 Sync 完成后，打开本页点「从文件导入」选中该文件。<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录，以及学习词库和复习进度。导入前会自动保留本地恢复点。' +
         (folderOk ? '<br><strong>电脑：</strong>也可「连接 Obsidian 仓库」后直接上传/下载。' : '');
     } else {
       help.innerHTML =
         '<strong>电脑：</strong>连接共用的 Obsidian 仓库文件夹后，「上传到仓库 / 从仓库下载」。仅手动操作，不做实时同步。' +
-        '<br><strong>手机：</strong>用下方「导出同步文件 / 从文件导入」，经 Obsidian Sync 中转。';
+        '<br><strong>手机：</strong>用下方「导出同步文件 / 从文件导入」，经 Obsidian Sync 中转。' +
+        '<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录，以及学习词库和完整复习进度。';
     }
   }
 }
@@ -26726,6 +26799,7 @@ document.getElementById('vaultShareFile')?.addEventListener('click', () => share
 document.getElementById('vaultImportFileBtn')?.addEventListener('click', () => {
   document.getElementById('vaultImportFile')?.click();
 });
+document.getElementById('vaultRestoreLocal')?.addEventListener('click', () => restoreManualLocalRecovery());
 document.getElementById('vaultImportFile')?.addEventListener('change', async (e) => {
   const file = e.target.files && e.target.files[0];
   e.target.value = '';
@@ -29032,22 +29106,21 @@ self.addEventListener('fetch', e => {
       if (typeof openDeepSeekSettings === 'function') openDeepSeekSettings();
       else document.getElementById('tsDeepSeekSettings')?.click();
     });
-    // 转发到桌面按钮(复用现有逻辑)
-    function proxy(id) {
+    // v5.243: 手机按钮明确映射到桌面入口。旧版用 String.replace 会把 mobileVault 变成 vaultBtnVault。
+    const mobileProxyTargets = {
+      mobileNewProject: 'newProject',
+      mobileTrash: 'trashBtn',
+      mobileExport: 'export',
+      mobileImport: 'import',
+      mobileVault: 'vaultBtn',
+    };
+    Object.entries(mobileProxyTargets).forEach(([id, targetId]) => {
       document.getElementById(id)?.addEventListener('click', () => {
         modal.hidden = true;
         document.body.classList.remove('modal-open');
-        document.getElementById(id.replace(/^mobile/, c => {
-          if (id === 'mobileNewProject') return 'newProject';
-          if (id === 'mobileTrash') return 'trashBtn';
-          if (id === 'mobileExport') return 'export';
-          if (id === 'mobileImport') return 'import';
-          if (id === 'mobileVault') return 'vaultBtn';
-          return '';
-        }))?.click();
+        document.getElementById(targetId)?.click();
       });
-    }
-    ['mobileNewProject', 'mobileTrash', 'mobileExport', 'mobileImport', 'mobileVault'].forEach(proxy);
+    });
   }
 
   // v5.34: 同步手机端 AI 面板的语言高亮与 API 状态文案
