@@ -9899,6 +9899,9 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
   font-weight: 500;
   padding: 0 2px;
   outline: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .habit-bool-note::placeholder {
   color: var(--muted);
@@ -9910,6 +9913,30 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
 }
 .habit-bool-note[disabled] {
   display: none;
+}
+
+/* v5.245: 完成打卡备注过长时，桌面悬停显示完整内容 */
+.habit-note-hover-tooltip {
+  position: fixed;
+  z-index: 14000;
+  max-width: min(360px, calc(100vw - 24px));
+  padding: 8px 11px;
+  border-radius: 8px;
+  background: var(--text);
+  color: var(--card-bg-solid);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: normal;
+  word-break: break-word;
+  box-shadow: 0 7px 20px rgba(0,0,0,.22);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity .12s ease, transform .12s ease;
+}
+.habit-note-hover-tooltip.show {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .habits-add-col-btn {
@@ -11580,7 +11607,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
         <button class="btn" id="vaultImportFileBtn" type="button">从文件导入</button>
         <button class="btn btn-ghost" id="vaultRestoreLocal" type="button" style="display:none">恢复导入前数据</button>
         <button class="btn btn-ghost" id="vaultShareFile" type="button" style="display:none">分享到…</button>
-        <input type="file" id="vaultImportFile" accept=".md,text/markdown,application/json,.json" hidden>
+        <input type="file" id="vaultImportFile" hidden>
       </div>
       <div class="vault-compare hidden" id="vaultCompare">
         <div class="vault-side-card">
@@ -18839,6 +18866,50 @@ function renderHabitCell(item, dateStr) {
 }
 
 
+
+// v5.245: 仅当完成打卡备注确实被截断时，鼠标悬停显示完整内容。
+let habitNoteHoverTooltip = null;
+function getHabitNoteHoverTooltip() {
+  if (habitNoteHoverTooltip && habitNoteHoverTooltip.isConnected) return habitNoteHoverTooltip;
+  habitNoteHoverTooltip = document.createElement('div');
+  habitNoteHoverTooltip.className = 'habit-note-hover-tooltip';
+  document.body.appendChild(habitNoteHoverTooltip);
+  return habitNoteHoverTooltip;
+}
+function hideHabitNoteHoverTooltip() {
+  if (habitNoteHoverTooltip) habitNoteHoverTooltip.classList.remove('show');
+}
+function showHabitNoteHoverTooltip(input) {
+  if (!input || !window.matchMedia || !window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  const value = String(input.value || '').trim();
+  if (!value) return;
+  // scrollWidth/clientWidth 是实际是否溢出的判断，不按字数猜测。
+  if (input.scrollWidth <= input.clientWidth + 1) return;
+  const tip = getHabitNoteHoverTooltip();
+  tip.textContent = value;
+  tip.classList.add('show');
+  const r = input.getBoundingClientRect();
+  requestAnimationFrame(() => {
+    const tr = tip.getBoundingClientRect();
+    let left = r.left + (r.width - tr.width) / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tr.width - 8));
+    let top = r.bottom + 7;
+    if (top + tr.height > window.innerHeight - 8) top = r.top - tr.height - 7;
+    tip.style.left = Math.round(left) + 'px';
+    tip.style.top = Math.round(Math.max(8, top)) + 'px';
+  });
+}
+document.addEventListener('mouseover', (e) => {
+  const input = e.target && e.target.closest ? e.target.closest('.habit-bool-note') : null;
+  if (input) showHabitNoteHoverTooltip(input);
+});
+document.addEventListener('mouseout', (e) => {
+  const input = e.target && e.target.closest ? e.target.closest('.habit-bool-note') : null;
+  if (input) hideHabitNoteHoverTooltip();
+});
+document.addEventListener('scroll', hideHabitNoteHoverTooltip, true);
+window.addEventListener('resize', hideHabitNoteHoverTooltip);
+
 // --- v5.199 习惯统计图 ---
 let habitsShowStats = true;
 try {
@@ -19764,6 +19835,7 @@ function bindHabitsUI() {
     const id = noteInput.dataset.habitBoolNote;
     const dateStr = noteInput.dataset.date;
     const note = noteInput.value;
+    hideHabitNoteHoverTooltip();
     setHabitLog(id, dateStr, { v: true, note: note });
   });
 }
@@ -25938,8 +26010,8 @@ const MANUAL_SYNC_DIR = 'Kanban同步';
 const MANUAL_SYNC_FILE = 'Kanban数据同步.md';
 const MANUAL_BACKUP_DIR = '历史备份';
 const MANUAL_BACKUP_LIMIT = 10;
-const MANUAL_SYNC_SCHEMA = 2;
-const MANUAL_SYNC_COMPAT_SCHEMAS = [1, 2];
+const MANUAL_SYNC_SCHEMA = 3;
+const MANUAL_SYNC_COMPAT_SCHEMAS = [1, 2, 3];
 const MANUAL_LOCAL_RECOVERY_KEY = 'kanban_manual_sync_local_recovery_v2';
 const MANUAL_SYNC_START = '<!-- KANBAN_SYNC_DATA_START -->';
 const MANUAL_SYNC_END = '<!-- KANBAN_SYNC_DATA_END -->';
@@ -25960,6 +26032,8 @@ function buildBusinessData() {
     litigationRecords: cloneSyncValue(store.litigationRecords, []),
     // v5.243: 学习词库与完整复习状态一并同步（stage / nextReview / history / 队列顺序等均保留）
     learningCards: cloneSyncValue(store.learningCards, []),
+    // v5.245: 习惯配置 + 全部历史打卡/备注一并同步
+    habits: cloneSyncValue(store.habits, { items: [], logs: {} }),
   };
 }
 
@@ -25974,7 +26048,7 @@ function syncHash(value) {
 }
 
 function summarizeBusinessData(data) {
-  const summary = { boards: 0, projects: 0, activeTasks: 0, archivedTasks: 0, timeEntries: 0, litigation: 0, learningCards: 0 };
+  const summary = { boards: 0, projects: 0, activeTasks: 0, archivedTasks: 0, timeEntries: 0, litigation: 0, learningCards: 0, habits: 0, habitLogs: 0 };
   const boards = data && data.boards && typeof data.boards === 'object' ? data.boards : {};
   summary.boards = Object.keys(boards).length;
   for (const board of Object.values(boards)) {
@@ -25987,16 +26061,23 @@ function summarizeBusinessData(data) {
   summary.timeEntries = Array.isArray(data && data.timeEntries) ? data.timeEntries.length : 0;
   summary.litigation = Array.isArray(data && data.litigationRecords) ? data.litigationRecords.length : 0;
   summary.learningCards = Array.isArray(data && data.learningCards) ? data.learningCards.length : 0;
+  const habits = data && data.habits && typeof data.habits === 'object' ? data.habits : null;
+  summary.habits = Array.isArray(habits && habits.items) ? habits.items.length : 0;
+  if (habits && habits.logs && typeof habits.logs === 'object') {
+    for (const day of Object.values(habits.logs)) {
+      if (day && typeof day === 'object') summary.habitLogs += Object.keys(day).length;
+    }
+  }
   summary.totalTasks = summary.activeTasks + summary.archivedTasks;
   return summary;
 }
 
 function syncSummaryText(summary) {
-  return `${summary.projects} 个项目 · ${summary.totalTasks} 个任务\n${summary.timeEntries} 条工时 · ${summary.litigation} 条诉讼记录 · ${summary.learningCards || 0} 个学习词汇`;
+  return `${summary.projects} 个项目 · ${summary.totalTasks} 个任务\n${summary.timeEntries} 条工时 · ${summary.litigation} 条诉讼记录 · ${summary.learningCards || 0} 个学习词汇 · ${summary.habits || 0} 个习惯`;
 }
 
 function hasMeaningfulBusinessData(summary) {
-  return summary.projects > 0 || summary.totalTasks > 0 || summary.timeEntries > 0 || summary.litigation > 0 || summary.learningCards > 0;
+  return summary.projects > 0 || summary.totalTasks > 0 || summary.timeEntries > 0 || summary.litigation > 0 || summary.learningCards > 0 || summary.habits > 0 || summary.habitLogs > 0;
 }
 
 function currentDeviceLabel() {
@@ -26047,7 +26128,7 @@ function buildSyncMarkdown(envelope, kind = '主同步文件') {
     '',
     `- 更新时间：${new Date(envelope.updatedAt).toLocaleString('zh-CN')}`,
     `- 来源设备：${envelope.sourceDevice}`,
-    `- 内容：${summary.projects} 个项目、${summary.totalTasks} 个任务、${summary.timeEntries} 条工时、${summary.litigation} 条诉讼记录、${summary.learningCards || 0} 个学习词汇`,
+    `- 内容：${summary.projects} 个项目、${summary.totalTasks} 个任务、${summary.timeEntries} 条工时、${summary.litigation} 条诉讼记录、${summary.learningCards || 0} 个学习词汇、${summary.habits || 0} 个习惯（${summary.habitLogs || 0} 条打卡）`,
     '',
     MANUAL_SYNC_START,
     '```json',
@@ -26307,6 +26388,10 @@ function applyBusinessData(data) {
   store.litigationRecords = cloneSyncValue(data.litigationRecords, []);
   // v5.243: 新版同步文件带 learningCards 时覆盖词库；旧 v1 文件未包含该字段时保留当前设备词库，避免误清空。
   if (Array.isArray(data.learningCards)) store.learningCards = cloneSyncValue(data.learningCards, []);
+  // v5.245: Schema v3 开始同步习惯。读取 v1/v2 老文件时保留本机习惯，避免老快照把习惯清空。
+  if (data.habits && typeof data.habits === 'object') {
+    store.habits = cloneSyncValue(data.habits, { items: [], logs: {} });
+  }
   store.currentBoard = store.boards[preservedCurrentBoard] ? preservedCurrentBoard : (store.boardOrder.find(k => store.boards[k]) || Object.keys(store.boards)[0]);
   if (!store.currentBoard) {
     store.currentBoard = generateBoardId();
@@ -26321,6 +26406,7 @@ function applyBusinessData(data) {
   updateTrashCount();
   render();
   if (typeof renderLearning === 'function') renderLearning();
+  if (typeof renderHabits === 'function') renderHabits();
 }
 
 async function executeManualSync() {
@@ -26520,7 +26606,7 @@ async function refreshManualLocalRecoveryButton() {
 async function restoreManualLocalRecovery() {
   const rec = await readManualLocalRecovery();
   if (!rec?.data) { showToast('没有可恢复的导入前数据'); return false; }
-  if (!confirm(`恢复 ${new Date(rec.savedAt).toLocaleString('zh-CN')} 导入前的数据？\n当前看板、工时、诉讼记录和学习词库将被替换。`)) return false;
+  if (!confirm(`恢复 ${new Date(rec.savedAt).toLocaleString('zh-CN')} 导入前的数据？\n当前看板、工时、诉讼记录、学习词库和习惯打卡将被替换。`)) return false;
   try {
     // 恢复前再给当前状态留一个恢复点，避免来回操作时无路可退。
     const current = buildBusinessData();
@@ -26561,8 +26647,9 @@ async function importManualSyncFromFile(file) {
           archive: parsed.archive || {},
           litigationRecords: parsed.litigationRecords || [],
         };
-        // 老 JSON 备份没有 learningCards 时不写该字段，导入时会保留当前设备词库。
+        // 老 JSON 备份没有 learningCards / habits 时不写对应字段，导入时会保留当前设备数据。
         if (Array.isArray(parsed.learningCards)) legacyData.learningCards = parsed.learningCards;
+        if (parsed.habits && typeof parsed.habits === 'object') legacyData.habits = parsed.habits;
         envelope = makeSyncEnvelope(legacyData);
         envelope.updatedAt = parsed.vaultConfig?.lastSyncAt || Date.now();
         envelope.sourceDevice = parsed.vaultConfig?.lastExportDevice || 'JSON备份';
@@ -26601,7 +26688,7 @@ async function importManualSyncFromFile(file) {
     if (title) title.textContent = '准备从文件导入';
     if (textEl) {
       textEl.textContent =
-        `将用「${snapshot.fileName}」覆盖当前设备的同步数据（含学习词库/复习进度）。\n` +
+        `将用「${snapshot.fileName}」覆盖当前设备的同步数据（含学习词库/复习进度及习惯打卡）。\n` +
         `${syncSummaryText(snapshot.summary)}\n` +
         `来源：${snapshot.envelope.sourceDevice || '未知'} · ${new Date(snapshot.envelope.updatedAt).toLocaleString('zh-CN')}\n` +
         `确认后会先在本机写入可恢复快照（若支持文件夹备份则同时写入历史备份）。`;
@@ -26759,13 +26846,13 @@ function refreshVaultModal() {
   if (help) {
     if (!folderOk || mobile) {
       help.innerHTML =
-        '<strong>手机推荐流程：</strong>① 点「导出同步文件」或「分享到…」→ ② 把 <code>Kanban数据同步.md</code> 保存到 Obsidian 的 <code>Kanban同步</code> 文件夹并等待 Sync → ③ 另一台设备 Sync 完成后，打开本页点「从文件导入」选中该文件。<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录，以及学习词库和复习进度。导入前会自动保留本地恢复点。' +
+        '<strong>手机推荐流程：</strong>① 点「导出同步文件」或「分享到…」→ ② 把 <code>Kanban数据同步.md</code> 保存到 Obsidian 的 <code>Kanban同步</code> 文件夹并等待 Sync → ③ 另一台设备 Sync 完成后，打开本页点「从文件导入」选中该文件。<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录、学习词库和复习进度，以及习惯配置与历史打卡。导入前会自动保留本地恢复点。' +
         (folderOk ? '<br><strong>电脑：</strong>也可「连接 Obsidian 仓库」后直接上传/下载。' : '');
     } else {
       help.innerHTML =
         '<strong>电脑：</strong>连接共用的 Obsidian 仓库文件夹后，「上传到仓库 / 从仓库下载」。仅手动操作，不做实时同步。' +
         '<br><strong>手机：</strong>用下方「导出同步文件 / 从文件导入」，经 Obsidian Sync 中转。' +
-        '<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录，以及学习词库和完整复习进度。';
+        '<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录、学习词库和完整复习进度，以及习惯配置与历史打卡。';
     }
   }
 }
