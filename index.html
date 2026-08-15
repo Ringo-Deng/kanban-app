@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · 学习界面优化 v5.239</title>
+<title>Kanban · v5.251</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
@@ -3799,7 +3799,7 @@ body[data-view="board"][data-filter="all"] .card:not(.unified-card) .task-title:
 .vault-preview-title { font-weight:850; font-size:14px; }
 .vault-preview-text { margin-top:7px; color:var(--text); font-size:12px; line-height:1.65; white-space:pre-line; }
 .vault-preview-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
-/* v5.246: 主同步文件默认只覆盖；历史备份改为每次操作手动选择。 */
+/* v5.247: 主同步文件默认只覆盖；历史备份改为每次操作手动选择。 */
 .vault-preview-backup-option { margin-top:12px; display:flex; align-items:center; gap:8px; width:fit-content; color:var(--muted); font-size:12px; cursor:pointer; user-select:none; }
 .vault-preview-backup-option.hidden { display:none !important; }
 .vault-preview-backup-option input { position:absolute; opacity:0; pointer-events:none; }
@@ -9678,6 +9678,8 @@ input, select, textarea, button, [contenteditable] {
   margin: 0 auto;
   width: 100%;
 }
+/* v5.249: 手机专用习惯切换标签；桌面端不显示 */
+.habits-mobile-tabs { display: none; }
 body[data-view="habits"] .board-layout,
 body[data-view="habits"] #filterPills,
 body[data-view="habits"] #newProject,
@@ -9923,7 +9925,7 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
   display: none;
 }
 
-/* v5.246: 完成打卡备注过长时，桌面悬停显示完整内容 */
+/* v5.247: 完成打卡备注过长时，桌面悬停显示完整内容 */
 .habit-note-hover-tooltip {
   position: fixed;
   z-index: 14000;
@@ -10740,9 +10742,85 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
 }
 
 @media (max-width: 767px) {
+  /* v5.249: 手机端习惯页——最上方保持标题/月份/新建习惯同一行 */
+  body[data-view="habits"] header {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  body[data-view="habits"] .title-group {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    gap: 5px !important;
+  }
+  body[data-view="habits"] .title-group h1 {
+    font-size: 20px !important;
+    white-space: nowrap;
+  }
+  body[data-view="habits"] .toolbar {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    justify-content: flex-end !important;
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+  }
+  body[data-view="habits"] #viewAddRecord {
+    order: 1;
+  }
+  body[data-view="habits"] #calNav {
+    order: 0;
+  }
   .habits-wrap {
     padding: 4px 6px 88px;
     max-width: none;
+  }
+  .habits-mobile-tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 1px 4px;
+    margin: 0 0 2px;
+  }
+  .habits-mobile-tabs::-webkit-scrollbar { display: none; }
+  .habits-mobile-tabs.hidden { display: none !important; }
+  .habits-mobile-tab {
+    flex: 0 0 auto;
+    min-height: 34px;
+    max-width: 150px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--card-bg-solid) 88%, transparent);
+    color: var(--muted);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 650;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0,0,0,.03);
+  }
+  .habits-mobile-tab .habits-mobile-tab-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .habits-mobile-tab.active {
+    color: #fff;
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 24%, transparent);
   }
   .habits-table-card {
     /* v5.213: 手机端同样取消高度上限，整月一次看完 */
@@ -11056,6 +11134,66 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
   .habits-heatmap-corner-meta { padding-left: 16px; }
 }
 
+
+/* v5.250: 手机端通过 Obsidian URI 直接覆盖主同步文件 */
+.vault-mobile-direct {
+  display: none;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card-bg-solid) 82%, transparent);
+  box-sizing: border-box;
+  gap: 8px;
+  flex-direction: column;
+}
+.vault-mobile-direct.is-visible { display: flex; }
+.vault-mobile-direct-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+.vault-mobile-direct-hint {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.vault-mobile-direct-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.vault-mobile-direct-input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--card-bg-solid);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+.vault-mobile-direct-input:focus { border-color: var(--accent); }
+.vault-mobile-direct-row .btn { min-height: 38px; white-space: nowrap; }
+.vault-mobile-pull-row { margin-top: 8px; }
+.vault-mobile-pull-row .btn:first-child { flex: 1 1 auto; }
+.vault-mobile-pull-hint {
+  margin-top: 7px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+@media (max-width: 520px) {
+  .vault-mobile-direct-row { flex-direction: column; align-items: stretch; }
+  .vault-mobile-direct-row .btn { width: 100%; }
+}
+
 </style>
 </head>
 <body>
@@ -11364,6 +11502,8 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
   <div class="calendar hidden" id="calendar"></div>
   <!-- v5.198: 习惯表格视图 -->
   <div class="habits-wrap hidden" id="habits">
+    <!-- v5.249: 手机端一次只显示一个习惯；标签栏用于切换。桌面端隐藏此栏。 -->
+    <div class="habits-mobile-tabs hidden" id="habitsMobileTabs" aria-label="切换习惯"></div>
     <!-- v5.200: 第二行工具条已移除；月份在顶栏标题旁，新建习惯用顶栏 #viewAddRecord -->
     <div class="habits-stats" id="habitsStats">
       <!-- v5.203: 已移除四张汇总卡片（区间达标率等） -->
@@ -11617,6 +11757,21 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
         <button class="btn btn-ghost" id="vaultShareFile" type="button" style="display:none">分享到…</button>
         <input type="file" id="vaultImportFile" hidden>
       </div>
+      <div class="vault-mobile-direct" id="vaultMobileDirect">
+        <div class="vault-mobile-direct-label">
+          <span>手机直接更新 Obsidian</span>
+          <span class="vault-mobile-direct-hint">首次填写一次 Vault 名称或 ID</span>
+        </div>
+        <div class="vault-mobile-direct-row">
+          <input class="vault-mobile-direct-input" id="vaultMobileTarget" type="text" autocomplete="off" spellcheck="false" placeholder="例如：My Vault 或 Vault ID">
+          <button class="btn btn-primary" id="vaultMobilePush" type="button">直接覆盖仓库</button>
+        </div>
+        <div class="vault-mobile-direct-row vault-mobile-pull-row">
+          <button class="btn" id="vaultMobilePull" type="button">从仓库下载</button>
+          <button class="btn btn-ghost" id="vaultMobileRebind" type="button" style="display:none">重新绑定主文件</button>
+        </div>
+        <div class="vault-mobile-pull-hint" id="vaultMobilePullHint">首次需要选择一次 Kanban数据同步.md。</div>
+      </div>
       <div class="vault-compare hidden" id="vaultCompare">
         <div class="vault-side-card">
           <div class="vault-side-kicker">当前电脑</div>
@@ -11665,7 +11820,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
       </div>
       <div class="vault-help" id="vaultHelp">
         <strong>电脑：</strong>「上传到仓库」默认只覆盖 <code>Kanban同步/Kanban数据同步.md</code> 这一份主文件；如需保留旧版本，请在确认页主动勾选备份。
-        <br><strong>手机：</strong>点「导出同步文件」，把 <code>Kanban数据同步.md</code> 覆盖保存到 Obsidian 的 <code>Kanban同步</code> 文件夹并等待 Sync；另一台设备 Sync 完成后，用「从文件导入」选中该文件。
+        <br><strong>手机：</strong>填写一次 Vault 名称或 ID 后，可用「直接覆盖仓库」让 Obsidian 覆盖 <code>Kanban同步/Kanban数据同步.md</code>；导出/导入仍保留为兜底。
       </div>
       <!-- v5.104: 已移除实时同步与同步日志 -->
       <div class="vault-log" id="vaultLog" hidden aria-hidden="true"></div>
@@ -18666,6 +18821,47 @@ function habitsMonthKey() {
 function habitsSaveMonth() {
   try { localStorage.setItem('kanban_habits_month_v200', habitsMonthKey()); } catch (_) {}
 }
+
+// v5.249: 手机端当前选中的习惯。仅影响手机展示，不改变桌面端全列布局。
+let habitsMobileSelectedId = '';
+try { habitsMobileSelectedId = localStorage.getItem('kanban_habits_mobile_selected_v249') || ''; } catch (_) {}
+function habitsIsMobileLayout() {
+  return !!(window.matchMedia && window.matchMedia('(max-width: 767px)').matches);
+}
+function habitsResolveMobileSelected(items) {
+  const list = Array.isArray(items) ? items : [];
+  if (!list.length) { habitsMobileSelectedId = ''; return ''; }
+  if (!list.some(it => it.id === habitsMobileSelectedId)) habitsMobileSelectedId = list[0].id;
+  try { localStorage.setItem('kanban_habits_mobile_selected_v249', habitsMobileSelectedId); } catch (_) {}
+  return habitsMobileSelectedId;
+}
+function habitsSetMobileSelected(id) {
+  habitsMobileSelectedId = String(id || '');
+  try { localStorage.setItem('kanban_habits_mobile_selected_v249', habitsMobileSelectedId); } catch (_) {}
+}
+function renderHabitsMobileTabs(items) {
+  const host = document.getElementById('habitsMobileTabs');
+  if (!host) return;
+  if (!habitsIsMobileLayout() || !items || !items.length) {
+    host.innerHTML = '';
+    host.classList.add('hidden');
+    return;
+  }
+  const selected = habitsResolveMobileSelected(items);
+  host.classList.remove('hidden');
+  host.innerHTML = items.map(item =>
+    '<button type="button" class="habits-mobile-tab' + (item.id === selected ? ' active' : '') + '" data-habit-mobile-tab="' + escapeHtml(item.id) + '" aria-pressed="' + (item.id === selected ? 'true' : 'false') + '">' +
+      '<span aria-hidden="true">' + (item.icon || '🌱') + '</span>' +
+      '<span class="habits-mobile-tab-name">' + escapeHtml(item.name || '习惯') + '</span>' +
+    '</button>'
+  ).join('');
+  requestAnimationFrame(() => {
+    const active = host.querySelector('.habits-mobile-tab.active');
+    if (active && typeof active.scrollIntoView === 'function') {
+      try { active.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); } catch (_) {}
+    }
+  });
+}
 function habitsFormatMonthLabel() {
   return habitsMonth.year + '年' + (habitsMonth.month + 1) + '月';
 }
@@ -18791,6 +18987,7 @@ function addHabit(data) {
     createdAt: Date.now(),
   };
   h.items.push(item);
+  if (habitsIsMobileLayout()) habitsSetMobileSelected(item.id);
   if (typeof save === 'function') save({ immediate: true });
   renderHabits();
   return item;
@@ -18808,6 +19005,7 @@ function updateHabit(id, patch) {
 function deleteHabit(id) {
   const h = ensureHabits();
   h.items = h.items.filter(x => x.id !== id);
+  if (habitsMobileSelectedId === id) habitsMobileSelectedId = '';
   for (const day of Object.keys(h.logs)) {
     if (h.logs[day] && h.logs[day][id] !== undefined) {
       delete h.logs[day][id];
@@ -18880,7 +19078,7 @@ function renderHabitCell(item, dateStr) {
 
 
 
-// v5.246: 仅当完成打卡备注确实被截断时，鼠标悬停显示完整内容。
+// v5.247: 仅当完成打卡备注确实被截断时，鼠标悬停显示完整内容。
 let habitNoteHoverTooltip = null;
 function getHabitNoteHoverTooltip() {
   if (habitNoteHoverTooltip && habitNoteHoverTooltip.isConnected) return habitNoteHoverTooltip;
@@ -19400,7 +19598,10 @@ function renderHabitsStats() {
   if (!panel) return;
 
   const h = ensureHabits();
-  const items = [...h.items].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const allItems = [...h.items].sort((a, b) => (a.order || 0) - (b.order || 0));
+  renderHabitsMobileTabs(allItems);
+  const selectedMobileId = habitsIsMobileLayout() ? habitsResolveMobileSelected(allItems) : '';
+  const items = selectedMobileId ? allItems.filter(it => it.id === selectedMobileId) : allItems;
   // v5.203/v5.207: 无习惯或未展开任何统计图时隐藏面板
   if (!items.length) {
     panel.classList.add('hidden');
@@ -19499,9 +19700,12 @@ function renderHabits() {
   }
 
   const h = ensureHabits();
-  const items = [...h.items].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const allItems = [...h.items].sort((a, b) => (a.order || 0) - (b.order || 0));
+  renderHabitsMobileTabs(allItems);
+  const selectedMobileId = habitsIsMobileLayout() ? habitsResolveMobileSelected(allItems) : '';
+  const items = selectedMobileId ? allItems.filter(it => it.id === selectedMobileId) : allItems;
 
-  if (!items.length) {
+  if (!allItems.length) {
     if (head) head.innerHTML = '';
     if (body) body.innerHTML = '';
     if (table) table.style.display = 'none';
@@ -19644,6 +19848,13 @@ function bindHabitsUI() {
 
   document.addEventListener('click', e => {
     if (document.body.dataset.view !== 'habits') return;
+
+    const mobileTab = e.target.closest('[data-habit-mobile-tab]');
+    if (mobileTab) {
+      habitsSetMobileSelected(mobileTab.dataset.habitMobileTab);
+      renderHabits();
+      return;
+    }
 
     const toggleStats = e.target.closest('#habitsToggleStats');
     if (toggleStats) {
@@ -19858,6 +20069,16 @@ if (document.readyState === 'loading') {
 } else {
   bindHabitsUI();
 }
+
+// v5.249: 横竖屏/桌面宽度切换时，自动在“单习惯手机视图”和“全部习惯桌面视图”之间重绘。
+try {
+  const habitsMobileMq = window.matchMedia('(max-width: 767px)');
+  const onHabitsLayoutChange = () => {
+    if (document.body.dataset.view === 'habits' && typeof renderHabits === 'function') renderHabits();
+  };
+  if (habitsMobileMq.addEventListener) habitsMobileMq.addEventListener('change', onHabitsLayoutChange);
+  else if (habitsMobileMq.addListener) habitsMobileMq.addListener(onHabitsLayoutChange);
+} catch (_) {}
 
 
 // ============== v5.226 学习面板（日文生词 / 遗忘曲线） ==============
@@ -26026,6 +26247,8 @@ const MANUAL_BACKUP_LIMIT = 10;
 const MANUAL_SYNC_SCHEMA = 3;
 const MANUAL_SYNC_COMPAT_SCHEMAS = [1, 2, 3];
 const MANUAL_LOCAL_RECOVERY_KEY = 'kanban_manual_sync_local_recovery_v2';
+const MANUAL_SYNC_FILE_HANDLE_KEY = 'kanban_manual_sync_file_handle_v1';
+let manualSyncFileHandle = null;
 const MANUAL_SYNC_START = '<!-- KANBAN_SYNC_DATA_START -->';
 const MANUAL_SYNC_END = '<!-- KANBAN_SYNC_DATA_END -->';
 let manualRemoteSnapshot = null;
@@ -26045,7 +26268,7 @@ function buildBusinessData() {
     litigationRecords: cloneSyncValue(store.litigationRecords, []),
     // v5.243: 学习词库与完整复习状态一并同步（stage / nextReview / history / 队列顺序等均保留）
     learningCards: cloneSyncValue(store.learningCards, []),
-    // v5.246: 习惯配置 + 全部历史打卡/备注一并同步
+    // v5.247: 习惯配置 + 全部历史打卡/备注一并同步
     habits: cloneSyncValue(store.habits, { items: [], logs: {} }),
   };
 }
@@ -26176,19 +26399,78 @@ async function ensureManualVaultPermission(interactive = false) {
   catch { return false; }
 }
 
+// v5.247: 自动识别用户连接的是 Vault 根目录、Kanban同步 子目录，或旧版直接存放主文件的目录。
+// 同时兼容 v5.246 可能误生成的「Kanban同步/Kanban同步/Kanban数据同步.md」嵌套路径。
 async function getManualSyncDirectories(create = false, createBackup = false) {
   if (!vaultDirHandle) return null;
+
+  async function hasMainSyncFile(dir) {
+    try {
+      const handle = await dir.getFileHandle(MANUAL_SYNC_FILE);
+      return !!handle;
+    } catch (err) {
+      if (err && (err.name === 'NotFoundError' || err.name === 'TypeMismatchError')) return false;
+      throw err;
+    }
+  }
+
+  async function getChildSyncDir(dir) {
+    try {
+      return await dir.getDirectoryHandle(MANUAL_SYNC_DIR, { create: false });
+    } catch (err) {
+      if (err && (err.name === 'NotFoundError' || err.name === 'TypeMismatchError')) return null;
+      throw err;
+    }
+  }
+
+  // 若候选「Kanban同步」目录本身没有主文件，再检查是否存在旧版误套的一层同名目录。
+  async function preferLegacyNestedIfNeeded(candidate, baseMode) {
+    if (!candidate) return null;
+    if (await hasMainSyncFile(candidate)) return { dir: candidate, mode: baseMode };
+    const nested = await getChildSyncDir(candidate);
+    if (nested && await hasMainSyncFile(nested)) {
+      return { dir: nested, mode: baseMode + '-legacy-nested' };
+    }
+    return { dir: candidate, mode: baseMode };
+  }
+
   try {
-    const syncDir = await vaultDirHandle.getDirectoryHandle(MANUAL_SYNC_DIR, { create });
+    let resolved = null;
+
+    // 1) 主同步文件就在用户所选目录根部（也覆盖用户直接选择 Kanban同步 且文件正常位于其中的情况）。
+    if (await hasMainSyncFile(vaultDirHandle)) {
+      resolved = { dir: vaultDirHandle, mode: String(vaultDirHandle.name || '') === MANUAL_SYNC_DIR ? 'selected-sync-dir' : 'direct-file' };
+    }
+
+    // 2) 用户直接选择了「Kanban同步」文件夹，但 v5.246 曾错误地又套了一层同名文件夹。
+    if (!resolved && String(vaultDirHandle.name || '') === MANUAL_SYNC_DIR) {
+      resolved = await preferLegacyNestedIfNeeded(vaultDirHandle, 'selected-sync-dir');
+    }
+
+    // 3) 正常方式：用户选择整个 Obsidian Vault，在其下寻找 Kanban同步 子目录；也兼容该子目录里再套一层的旧错误结构。
+    if (!resolved) {
+      const child = await getChildSyncDir(vaultDirHandle);
+      if (child) resolved = await preferLegacyNestedIfNeeded(child, 'vault-root');
+    }
+
+    // 4) 上传首次创建：若完全不存在相关目录，则在所选 Vault 下新建 Kanban同步。
+    if (!resolved && create) {
+      const dir = await vaultDirHandle.getDirectoryHandle(MANUAL_SYNC_DIR, { create: true });
+      resolved = { dir, mode: 'vault-root-created' };
+    }
+
+    if (!resolved || !resolved.dir) return null;
+    const syncDir = resolved.dir;
+
     let backupDir = null;
     if (createBackup) {
       backupDir = await syncDir.getDirectoryHandle(MANUAL_BACKUP_DIR, { create: true });
     } else {
       try { backupDir = await syncDir.getDirectoryHandle(MANUAL_BACKUP_DIR); } catch {}
     }
-    return { syncDir, backupDir };
+    return { syncDir, backupDir, mode: resolved.mode };
   } catch (err) {
-    if (!create && (err.name === 'NotFoundError' || err.name === 'TypeMismatchError')) return null;
+    if (!create && err && (err.name === 'NotFoundError' || err.name === 'TypeMismatchError')) return null;
     throw err;
   }
 }
@@ -26355,7 +26637,7 @@ async function prepareManualSync(type, sourceSnapshot = null) {
   if (!refreshed && !sourceSnapshot) return;
   const remote = sourceSnapshot || manualRemoteSnapshot;
   if ((type === 'download' || type === 'restore') && !remote) {
-    showToast('仓库中还没有可下载的 Kanban 数据');
+    showToast('未找到 Kanban数据同步.md；请确认 Obsidian Sync 已完成，连接整个 Vault 或直接连接「Kanban同步」文件夹均可');
     return;
   }
   const relation = manualSyncRelation(manualRemoteSnapshot);
@@ -26415,7 +26697,7 @@ function applyBusinessData(data) {
   store.litigationRecords = cloneSyncValue(data.litigationRecords, []);
   // v5.243: 新版同步文件带 learningCards 时覆盖词库；旧 v1 文件未包含该字段时保留当前设备词库，避免误清空。
   if (Array.isArray(data.learningCards)) store.learningCards = cloneSyncValue(data.learningCards, []);
-  // v5.246: Schema v3 开始同步习惯。读取 v1/v2 老文件时保留本机习惯，避免老快照把习惯清空。
+  // v5.247: Schema v3 开始同步习惯。读取 v1/v2 老文件时保留本机习惯，避免老快照把习惯清空。
   if (data.habits && typeof data.habits === 'object') {
     store.habits = cloneSyncValue(data.habits, { items: [], logs: {} });
   }
@@ -26603,6 +26885,236 @@ async function shareManualSyncFile() {
   }
 }
 
+
+// v5.250: 手机端使用 Obsidian 官方 URI 直接覆盖固定主同步文件。
+// 为避免把完整 JSON 放进超长 URL，先复制 Markdown 到剪贴板，再由 Obsidian 的 clipboard + overwrite 读取并覆盖。
+async function copyTextForObsidian(text) {
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {}
+  }
+  // file:// / 部分 iOS 环境下 Clipboard API 可能不可用，退回传统复制。
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  ta.style.top = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0, ta.value.length);
+  let ok = false;
+  try { ok = !!document.execCommand('copy'); } catch {}
+  ta.remove();
+  return ok;
+}
+
+function saveObsidianMobileTarget(value) {
+  const target = String(value || '').trim();
+  if (!store.vaultConfig) store.vaultConfig = {};
+  store.vaultConfig.obsidianVaultTarget = target;
+  save({ skipVault: true, immediate: true });
+  return target;
+}
+
+async function pushManualSyncToObsidianMobile() {
+  const input = document.getElementById('vaultMobileTarget');
+  const target = saveObsidianMobileTarget(input?.value || store.vaultConfig?.obsidianVaultTarget || '');
+  if (!target) {
+    if (input) { input.focus(); input.select?.(); }
+    showToast('请先填写 Obsidian Vault 名称或 Vault ID');
+    return false;
+  }
+
+  try {
+    const { text, hash } = buildManualSyncBlob();
+    const copied = await copyTextForObsidian(text);
+    if (!copied) throw new Error('无法复制同步内容到剪贴板');
+
+    const filePath = `${MANUAL_SYNC_DIR}/${MANUAL_SYNC_FILE}`;
+    const uri = 'obsidian://new?' + [
+      'vault=' + encodeURIComponent(target),
+      'file=' + encodeURIComponent(filePath),
+      'clipboard',
+      'overwrite',
+      'silent'
+    ].join('&');
+
+    if (!store.vaultConfig) store.vaultConfig = {};
+    store.vaultConfig.lastDirectPushAt = Date.now();
+    store.vaultConfig.lastDirectPushHash = hash;
+    store.vaultConfig.lastDirectPushDevice = currentDeviceLabel();
+    save({ skipVault: true, immediate: true });
+    addVaultLog(`已交给 Obsidian 覆盖主同步文件（${currentDeviceLabel()}）`);
+    showToast('正在打开 Obsidian 并覆盖主同步文件…');
+
+    // 用显式链接触发自定义 URI，兼容性通常比 location.href 更稳。
+    const a = document.createElement('a');
+    a.href = uri;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 1000);
+    return true;
+  } catch (err) {
+    setVaultError(err.message || '无法直接更新 Obsidian');
+    return false;
+  }
+}
+
+// v5.251: 手机端“从仓库下载”——支持 File System Access API 的浏览器可首次绑定主同步文件，后续直接读取最新内容。
+// iOS/Safari 等不支持 showOpenFilePicker 的环境仍回退到系统文件选择器；网页本身无法通过 Obsidian URI 反向读取笔记正文。
+function supportsPersistentManualSyncFile() {
+  return typeof window !== 'undefined' && typeof window.showOpenFilePicker === 'function' && typeof indexedDB !== 'undefined';
+}
+
+async function persistManualSyncFileHandle(handle) {
+  if (!handle || typeof indexedDB === 'undefined') return false;
+  try {
+    const db = await openIdb();
+    await idbPut(db, 'kv', { key: MANUAL_SYNC_FILE_HANDLE_KEY, handle, savedAt: Date.now() });
+    manualSyncFileHandle = handle;
+    return true;
+  } catch (err) {
+    addVaultLog('无法保存主同步文件绑定：' + (err.message || err), 'warn');
+    return false;
+  }
+}
+
+async function restoreManualSyncFileHandle() {
+  if (manualSyncFileHandle) return manualSyncFileHandle;
+  if (typeof indexedDB === 'undefined') return null;
+  try {
+    const db = await openIdb();
+    const rec = await idbGet(db, 'kv', MANUAL_SYNC_FILE_HANDLE_KEY);
+    if (rec?.handle) {
+      manualSyncFileHandle = rec.handle;
+      return rec.handle;
+    }
+  } catch (err) {
+    addVaultLog('恢复主同步文件绑定失败：' + (err.message || err), 'warn');
+  }
+  return null;
+}
+
+async function clearManualSyncFileHandle() {
+  manualSyncFileHandle = null;
+  if (typeof indexedDB !== 'undefined') {
+    try {
+      const db = await openIdb();
+      await idbDelete(db, 'kv', MANUAL_SYNC_FILE_HANDLE_KEY);
+    } catch {}
+  }
+  if (store.vaultConfig) {
+    delete store.vaultConfig.boundMobileSyncFile;
+    delete store.vaultConfig.boundMobileSyncAt;
+    save({ skipVault: true, immediate: true });
+  }
+  refreshMobilePullBindingUI();
+}
+
+async function ensureManualSyncFileReadPermission(handle) {
+  if (!handle) return false;
+  try {
+    if (typeof handle.queryPermission === 'function') {
+      let p = await handle.queryPermission({ mode: 'read' });
+      if (p === 'granted') return true;
+      if (p === 'prompt' && typeof handle.requestPermission === 'function') {
+        p = await handle.requestPermission({ mode: 'read' });
+        if (p === 'granted') return true;
+      }
+      if (p === 'denied') return false;
+    }
+    // 某些实现没有 permission API，直接 getFile() 决定是否可读。
+    await handle.getFile();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function refreshMobilePullBindingUI() {
+  const btn = document.getElementById('vaultMobilePull');
+  const rebind = document.getElementById('vaultMobileRebind');
+  const hint = document.getElementById('vaultMobilePullHint');
+  if (!btn || !hint) return;
+
+  if (!supportsPersistentManualSyncFile()) {
+    btn.textContent = '从仓库下载';
+    if (rebind) rebind.style.display = 'none';
+    hint.textContent = '当前手机浏览器无法长期保存文件读取权限；点击后会直接打开系统文件选择器，选中 Kanban数据同步.md 即进入导入预览。';
+    return;
+  }
+
+  const handle = await restoreManualSyncFileHandle();
+  if (handle) {
+    btn.textContent = '从仓库下载';
+    if (rebind) rebind.style.display = '';
+    hint.textContent = `已绑定：${handle.name || MANUAL_SYNC_FILE}。Obsidian Sync 更新完成后，点一次即可读取最新版本。`;
+  } else {
+    btn.textContent = '绑定主文件并下载';
+    if (rebind) rebind.style.display = 'none';
+    hint.textContent = '首次选择一次 Obsidian 中的 Kanban数据同步.md；支持的浏览器之后可直接读取，不必每次重新找文件。';
+  }
+}
+
+async function selectAndBindManualSyncFile() {
+  if (!supportsPersistentManualSyncFile()) {
+    document.getElementById('vaultImportFile')?.click();
+    return false;
+  }
+  try {
+    const picked = await window.showOpenFilePicker({ multiple: false });
+    const handle = picked && picked[0];
+    if (!handle) return false;
+    const file = await handle.getFile();
+    const ok = await importManualSyncFromFile(file);
+    if (!ok) return false;
+    await persistManualSyncFileHandle(handle);
+    if (!store.vaultConfig) store.vaultConfig = {};
+    store.vaultConfig.boundMobileSyncFile = file.name || MANUAL_SYNC_FILE;
+    store.vaultConfig.boundMobileSyncAt = Date.now();
+    save({ skipVault: true, immediate: true });
+    addVaultLog(`已绑定手机主同步文件：${file.name || MANUAL_SYNC_FILE}`);
+    await refreshMobilePullBindingUI();
+    return true;
+  } catch (err) {
+    if (err && (err.name === 'AbortError' || /abort/i.test(err.message || ''))) return false;
+    setVaultError(err.message || '无法绑定主同步文件');
+    return false;
+  }
+}
+
+async function pullManualSyncFromObsidianMobile() {
+  // Chromium/部分 Android：有 FileSystemFileHandle 时真正做到“一次绑定，之后一键读取”。
+  if (supportsPersistentManualSyncFile()) {
+    let handle = await restoreManualSyncFileHandle();
+    if (!handle) return selectAndBindManualSyncFile();
+    const permitted = await ensureManualSyncFileReadPermission(handle);
+    if (!permitted) {
+      addVaultLog('主同步文件读取权限已失效，需要重新绑定', 'warn');
+      await clearManualSyncFileHandle();
+      return selectAndBindManualSyncFile();
+    }
+    try {
+      const file = await handle.getFile();
+      addVaultLog(`正在读取已绑定主同步文件：${file.name || MANUAL_SYNC_FILE}`);
+      return await importManualSyncFromFile(file);
+    } catch (err) {
+      addVaultLog('读取已绑定文件失败，将请求重新选择：' + (err.message || err), 'warn');
+      await clearManualSyncFileHandle();
+      return selectAndBindManualSyncFile();
+    }
+  }
+
+  // iOS/Safari：没有外部文件的持久读取句柄，只能由系统 picker 明确授权本次读取。
+  document.getElementById('vaultImportFile')?.click();
+  return false;
+}
+
 // v5.243: 文件模式（尤其手机端）导入前，在 IndexedDB 留一份可恢复快照。
 async function saveManualLocalRecovery() {
   const recovery = {
@@ -26725,8 +27237,10 @@ async function importManualSyncFromFile(file) {
     }
     if (confirmBtn) confirmBtn.textContent = '确认导入';
     addVaultLog(`已读取同步文件：${snapshot.fileName}`);
+    return true;
   } catch (err) {
     setVaultError(err.message || '读取同步文件失败');
+    return false;
   }
 }
 
@@ -26808,7 +27322,10 @@ function refreshVaultModal() {
   const disconnectBtn = document.getElementById('vaultDisconnect');
   const mobileActions = document.getElementById('vaultMobileActions');
   const shareBtn = document.getElementById('vaultShareFile');
+  const mobileDirect = document.getElementById('vaultMobileDirect');
+  const mobileTarget = document.getElementById('vaultMobileTarget');
   refreshManualLocalRecoveryButton();
+  refreshMobilePullBindingUI();
   const dirName = document.getElementById('vaultDirName');
   const lastSync = document.getElementById('vaultLastSync');
   const fileCount = document.getElementById('vaultFileCount');
@@ -26817,6 +27334,10 @@ function refreshVaultModal() {
 
   const folderOk = supportsVaultFolderAPI();
   const mobile = isMobileVaultUI();
+  if (mobileDirect) mobileDirect.classList.toggle('is-visible', mobile);
+  if (mobileTarget && document.activeElement !== mobileTarget) {
+    mobileTarget.value = store.vaultConfig?.obsidianVaultTarget || '';
+  }
   // 手机或无文件夹 API：始终露出文件导入/导出
   const useFilePath = !folderOk || mobile || !vaultDirHandle;
   if (mobileActions) mobileActions.classList.toggle('is-visible', useFilePath || true);
@@ -26876,12 +27397,12 @@ function refreshVaultModal() {
   if (help) {
     if (!folderOk || mobile) {
       help.innerHTML =
-        '<strong>手机推荐流程：</strong>① 点「导出同步文件」或「分享到…」→ ② 把 <code>Kanban数据同步.md</code> 保存到 Obsidian 的 <code>Kanban同步</code> 文件夹并等待 Sync → ③ 另一台设备 Sync 完成后，打开本页点「从文件导入」选中该文件。<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录、学习词库和复习进度，以及习惯配置与历史打卡。导入前会自动保留本地恢复点。' +
+        '<strong>手机上传：</strong>填写一次 Vault 名称或 ID 后，点「直接覆盖仓库」即可覆盖 <code>Kanban同步/Kanban数据同步.md</code>。<br><strong>手机下载：</strong>支持持久文件句柄的浏览器首次绑定主同步文件后可一键读取；iPhone/Safari 会直接打开系统文件选择器授权本次读取。<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录、学习词库和复习进度，以及习惯配置与历史打卡。导入前会自动保留本地恢复点。' +
         (folderOk ? '<br><strong>电脑：</strong>也可「连接 Obsidian 仓库」后直接上传/下载。' : '');
     } else {
       help.innerHTML =
-        '<strong>电脑：</strong>连接共用的 Obsidian 仓库文件夹后，「上传到仓库 / 从仓库下载」。仅手动操作，不做实时同步。' +
-        '<br><strong>手机：</strong>用下方「导出同步文件 / 从文件导入」，经 Obsidian Sync 中转。' +
+        '<strong>电脑：</strong>连接共用的 Obsidian Vault 根目录，或直接连接其中的「Kanban同步」文件夹后，即可「上传到仓库 / 从仓库下载」。程序会自动识别目录层级；仅手动操作，不做实时同步。' +
+        '<br><strong>手机：</strong>填写一次 Vault 名称或 ID 后可直接覆盖同一个 MD 主文件；支持持久文件句柄的浏览器还可首次绑定后直接从主文件下载，iPhone/Safari 则需通过系统文件选择器授权读取。' +
         '<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录、学习词库和完整复习进度，以及习惯配置与历史打卡。';
     }
   }
@@ -26913,6 +27434,11 @@ document.getElementById('vaultPreviewConfirm')?.addEventListener('click', execut
 // v5.140: 文件导出 / 导入 / 分享
 document.getElementById('vaultExportFile')?.addEventListener('click', () => exportManualSyncFile());
 document.getElementById('vaultShareFile')?.addEventListener('click', () => shareManualSyncFile());
+document.getElementById('vaultMobilePush')?.addEventListener('click', () => pushManualSyncToObsidianMobile());
+document.getElementById('vaultMobilePull')?.addEventListener('click', () => pullManualSyncFromObsidianMobile());
+document.getElementById('vaultMobileRebind')?.addEventListener('click', async () => { await clearManualSyncFileHandle(); await selectAndBindManualSyncFile(); });
+document.getElementById('vaultMobileTarget')?.addEventListener('change', e => saveObsidianMobileTarget(e.target.value));
+document.getElementById('vaultMobileTarget')?.addEventListener('blur', e => saveObsidianMobileTarget(e.target.value));
 document.getElementById('vaultImportFileBtn')?.addEventListener('click', () => {
   document.getElementById('vaultImportFile')?.click();
 });
@@ -26947,6 +27473,8 @@ document.addEventListener('keydown', e => {
 // ====== 启动时恢复连接 ======
 (async () => {
   addVaultLog('启动：尝试恢复 Obsidian 仓库连接…');
+  manualSyncFileHandle = await restoreManualSyncFileHandle();
+  refreshMobilePullBindingUI();
   const handle = await restoreVaultHandle();
   if (handle) {
     vaultDirHandle = handle;
@@ -28110,6 +28638,11 @@ html[data-assistant-mode="hidden"] #botFab,html[data-assistant-mode="hidden"] #b
 @media(max-width:700px){
   .learning-library-head { flex-wrap:nowrap !important; padding:13px 12px 10px; }
   .learning-library-sub { display:block !important; font-size:9.5px; }
+}
+/* v5.248: 手机端学习页先显示今日复习+统计，再显示生词库；桌面布局不变 */
+@media(max-width:767px){
+  body[data-view="learning"] .learning-right-column { order:1; }
+  body[data-view="learning"] .learning-library-panel { order:2; }
 }
 </style>
 
