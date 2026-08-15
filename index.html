@@ -1,16 +1,17 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · 标题贴左上角 v5.219</title>
+<title>Kanban · 学习界面优化 v5.239</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="5_219_260813">
+<meta name="build-hash" content="5_239_260815">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -960,6 +961,8 @@ body[data-view="timesheet"] #searchInput,
 body[data-view="timesheet"] #searchCount { display: none; }
 /* v5.12: 工时单专属导出项只在工时单视图显示 */
 body:not([data-view="timesheet"]) .data-menu-ts-only { display: none !important; }
+/* v5.238: 学习词表导入/导出仅在学习页面的设置菜单中显示 */
+body:not([data-view="learning"]) .data-menu-learning-only { display: none !important; }
 /* v1.6.5: 删了 viewPillsBar — viewPills 回到 header 内(.toolbar 末尾) */
 h1 {
   font-size: 30px;
@@ -1099,6 +1102,9 @@ h1 .page-title-text {
 #viewPills.view-pill-reordering {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent), 0 4px 14px rgba(0,0,0,.08);
 }
+/* v5.229: 顶部视图按钮可在设置中逐项启用/隐藏；仅影响顶部 #viewPills，左侧导航保持完整 */
+#viewPills .pill.top-panel-disabled { display: none !important; }
+#viewPills.top-panel-empty { display: none !important; }
 
 /* ====== 搜索框 ====== */
 .search-input {
@@ -9562,6 +9568,52 @@ input, select, textarea, button, [contenteditable] {
 }
 .assistant-mode-name { display:flex; align-items:center; gap:8px; }
 .assistant-mode-desc { color:var(--muted); font-size:10.5px; font-weight:500; }
+/* v5.229: 顶部面板逐项显示设置 */
+.settings-top-panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.settings-top-panel-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 36px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 12.5px;
+  cursor: pointer;
+  user-select: none;
+  transition: background .12s;
+}
+.settings-top-panel-option:hover { background: var(--task-bg); }
+.settings-top-panel-option span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.settings-top-panel-option input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.settings-top-panel-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+.settings-top-panel-actions .btn {
+  min-height: 30px;
+  padding: 5px 8px !important;
+  font-size: 11.5px !important;
+}
 @keyframes settings-fly-in {
   from { opacity: 0; transform: translateX(6px); }
   to { opacity: 1; transform: translateX(0); }
@@ -10379,6 +10431,7 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
   width: 100%;
 }
 .habits-chart-card {
+  position: relative; /* v5.225: 标题绝对定位到左上角的定位上下文 */
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 14px;
@@ -10394,6 +10447,9 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
 .habits-chart-card.is-heatmap {
   grid-column: auto;
   max-width: none;
+}
+.habits-chart-card.is-time {
+  padding-bottom: 8px;
 }
 .habits-chart-svg-wrap {
   width: 100%;
@@ -10425,11 +10481,11 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
   justify-content: center;
 }
 .habits-time-chart svg {
-  /* v5.215: 限制睡眠图显示尺寸，避免再次撑大 */
+  /* v5.241: 压缩睡眠统计图高度，使卡片更接近其它统计卡高度 */
   width: auto;
-  max-width: min(100%, 420px);
+  max-width: min(100%, 630px);
   height: auto;
-  max-height: 160px;
+  max-height: 180px;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -10442,12 +10498,17 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
 }
 
 .habits-chart-head {
-  /* v5.217: 标题在上，日均在标题正下方 */
+  /* v5.225: 贴卡片最左上角；绝对定位不占文档流，不改变卡片高度 */
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  margin-bottom: 8px;
+  margin: 0;
+  pointer-events: none;
 }
 .habits-chart-title {
   font-size: 13px;
@@ -10663,6 +10724,303 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
   }
 }
 
+
+
+/* ===== v5.227 学习面板：精简录入表单 ===== */
+body[data-view="learning"] .board-layout,
+body[data-view="learning"] #filterPills,
+body[data-view="learning"] #newProject,
+body[data-view="learning"] #trashBtn,
+body[data-view="learning"] #searchInput,
+body[data-view="learning"] #searchCount,
+body[data-view="learning"] #vaultBtn,
+body[data-view="learning"] #boardDropdown,
+body[data-view="learning"] #calNav { display:none !important; }
+.learning-wrap {
+  width:100%; max-width:1240px; margin:0 auto; padding:4px 2px 42px;
+  display:flex; flex-direction:column; gap:14px;
+}
+.learning-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.learning-summary-card {
+  background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px;
+  padding:14px 16px; box-shadow:var(--shadow-card); backdrop-filter:blur(16px) saturate(135%);
+  -webkit-backdrop-filter:blur(16px) saturate(135%);
+}
+.learning-summary-kicker { font-size:11px; color:var(--muted); font-weight:650; margin-bottom:5px; }
+.learning-summary-value { font-size:25px; line-height:1; font-weight:760; letter-spacing:-.4px; color:var(--text); font-variant-numeric:tabular-nums; }
+.learning-summary-card.is-due .learning-summary-value { color:var(--accent); }
+.learning-summary-meta { margin-top:5px; color:var(--muted); font-size:10.5px; }
+.learning-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.learning-tabs { display:inline-flex; gap:3px; padding:3px; border:1px solid var(--card-border); background:var(--card-bg); border-radius:10px; }
+.learning-tab { border:0; background:transparent; color:var(--muted); border-radius:7px; padding:6px 11px; font:600 12px/1.2 inherit; cursor:pointer; }
+.learning-tab.active { background:var(--card-bg-solid); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,.08); }
+.learning-search-wrap { width:min(320px,40vw); display:flex; align-items:center; gap:7px; height:34px; border:1px solid var(--border); background:var(--card-bg); border-radius:9px; padding:0 10px; }
+.learning-search-wrap:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 12%,transparent); }
+.learning-search-wrap svg { width:15px; height:15px; color:var(--muted); flex:0 0 auto; }
+.learning-search { flex:1; min-width:0; border:0; outline:0; background:transparent; color:var(--text); font:inherit; font-size:12.5px; }
+.learning-search::placeholder { color:var(--muted); }
+.learning-grid { display:grid; grid-template-columns:minmax(340px,.92fr) minmax(420px,1.35fr); gap:14px; align-items:start; }
+.learning-review-panel,
+.learning-library-panel { background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; box-shadow:var(--shadow-card); backdrop-filter:blur(18px) saturate(140%); -webkit-backdrop-filter:blur(18px) saturate(140%); }
+.learning-review-panel { min-height:470px; position:sticky; top:16px; overflow:hidden; }
+.learning-review-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:16px 18px 12px; border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent); }
+.learning-review-title { font-size:15px; font-weight:720; color:var(--text); }
+.learning-review-actions { display:flex; align-items:center; gap:2px; flex:0 0 auto; }
+.learning-review-edit,
+.learning-review-delete {
+  flex:0 0 auto; width:30px; height:30px; padding:0; border:0; border-radius:8px;
+  background:transparent; color:var(--muted); cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+  transition:background .15s,color .15s,transform .12s;
+}
+.learning-review-edit { font:700 18px/1 inherit; letter-spacing:1px; }
+.learning-review-delete svg { width:15px; height:15px; display:block; pointer-events:none; }
+.learning-review-edit:hover { background:var(--task-bg); color:var(--text); }
+.learning-review-delete:hover { background:color-mix(in srgb,var(--red) 10%,transparent); color:var(--red); }
+.learning-review-edit:active,
+.learning-review-delete:active { transform:scale(.94); }
+.learning-review-card { padding:22px 22px 18px; min-height:405px; display:flex; flex-direction:column; }
+/* v5.242: 未翻面时，整张今日复习卡都可点击显示答案 */
+.learning-review-card[data-learning-action="reveal-card"] { cursor:pointer; }
+.learning-review-card[data-learning-action="reveal-card"] .learning-rate-btn { cursor:pointer; }
+.learning-stage-line { display:flex; align-items:center; gap:4px; margin-bottom:20px; overflow:hidden; }
+.learning-stage-node { flex:1; min-width:0; height:4px; border-radius:99px; background:color-mix(in srgb,var(--muted) 18%,transparent); }
+.learning-stage-node.done { background:color-mix(in srgb,var(--accent) 68%,transparent); }
+.learning-stage-node.current { background:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 12%,transparent); }
+.learning-word-main { text-align:center; padding:24px 8px 18px; }
+.learning-word { font-size:36px; font-weight:720; letter-spacing:.01em; color:var(--text); word-break:break-word; line-height:1.25; }
+.learning-word-reading { margin-top:7px; font-size:15px; color:var(--muted); min-height:1.4em; }
+.learning-context-chip { display:inline-flex; margin-top:13px; max-width:100%; padding:4px 9px; border-radius:999px; font-size:10.5px; color:var(--accent); background:color-mix(in srgb,var(--accent) 9%,transparent); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.learning-answer { margin-top:7px; padding:16px; border-radius:12px; background:color-mix(in srgb,var(--task-bg) 74%,transparent); border:1px solid var(--border); display:grid; gap:12px; }
+.learning-answer[hidden] { display:none; }
+.learning-answer-label { font-size:10px; font-weight:750; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+.learning-meaning { font-size:16px; font-weight:700; color:var(--text); line-height:1.45; white-space:pre-wrap; }
+.learning-example { font-size:13px; line-height:1.7; color:var(--text); white-space:pre-wrap; word-break:break-word; }
+.learning-reveal { margin:auto 0 0; width:100%; min-height:44px; }
+.learning-rating { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:auto; padding-top:16px; }
+.learning-rate-btn { border:1px solid var(--border); border-radius:10px; min-height:46px; background:var(--card-bg-solid); color:var(--text); font:650 12px/1.25 inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+.learning-rate-btn small { font-size:9.5px; color:var(--muted); font-weight:500; }
+.learning-rate-btn[data-rating="again"] { color:var(--red); border-color:color-mix(in srgb,var(--red) 28%,var(--border)); }
+.learning-rate-btn[data-rating="good"] { color:var(--green); border-color:color-mix(in srgb,var(--green) 32%,var(--border)); }
+.learning-rate-btn:hover { transform:translateY(-1px); background:var(--task-bg); }
+.learning-empty-review { min-height:465px; display:grid; place-items:center; padding:30px; text-align:center; }
+.learning-empty-review-icon { font-size:42px; margin-bottom:10px; }
+.learning-empty-review h3 { font-size:17px; margin-bottom:7px; }
+.learning-empty-review p { font-size:12px; color:var(--muted); line-height:1.65; max-width:320px; }
+.learning-empty-review .btn { margin-top:14px; }
+.learning-library-panel { overflow:hidden; }
+.learning-library-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px 12px; border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent); }
+.learning-library-title { font-size:15px; font-weight:720; }
+.learning-library-sub { margin-top:3px; font-size:10.5px; color:var(--muted); }
+.learning-inline-add { height:32px; padding:0 11px; font-size:11.5px; }
+/* v5.233: 学习词库独立导入 / 导出，只处理 learningCards */
+.learning-library-actions { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex:0 0 auto; }
+.learning-io-btn { height:32px; padding:0 10px; font-size:11.5px; white-space:nowrap; }
+#learningImportFile { display:none !important; }
+.learning-list { max-height:620px; overflow:auto; padding:5px 8px 8px; scrollbar-width:thin; }
+.learning-row { display:grid; grid-template-columns:minmax(100px,1fr) minmax(120px,1.4fr) 96px 34px; gap:10px; align-items:center; padding:10px 8px; border-bottom:1px solid color-mix(in srgb,var(--border) 62%,transparent); border-radius:8px; }
+.learning-row:hover { background:var(--task-bg); }
+.learning-row:last-child { border-bottom:0; }
+.learning-row-word { min-width:0; }
+.learning-row-jp { font-size:13.5px; font-weight:720; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.learning-row-reading { margin-top:2px; font-size:10.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.learning-row-meaning { min-width:0; font-size:12px; color:var(--text); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.45; }
+.learning-row-due { text-align:right; font-size:10.5px; color:var(--muted); white-space:nowrap; }
+.learning-row-due.is-due { color:var(--accent); font-weight:700; }
+.learning-row-stage { display:block; margin-top:2px; font-size:9.5px; opacity:.8; }
+.learning-row-edit { width:30px; height:30px; border:0; border-radius:8px; background:transparent; color:var(--muted); cursor:pointer; font-size:16px; }
+.learning-row-edit:hover { color:var(--accent); background:var(--card-bg-solid); }
+.learning-list-empty { padding:54px 18px; text-align:center; color:var(--muted); font-size:12px; line-height:1.6; }
+.learning-edit-content { max-width:620px; }
+.learning-form { display:flex; flex-direction:column; gap:12px; }
+.learning-form-two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.learning-form-row { display:flex; flex-direction:column; gap:5px; }
+.learning-form-row label { font-size:11.5px; font-weight:650; color:var(--muted); }
+.learning-form-row label span { color:var(--red); }
+.learning-form-row input,.learning-form-row textarea { width:100%; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text); font:inherit; font-size:13px; padding:8px 10px; outline:0; resize:vertical; }
+.learning-form-row input:focus,.learning-form-row textarea:focus { border-color:var(--accent); box-shadow:none; }
+.learning-form-main input { font-size:16px; font-weight:650; }
+.learning-modal-footer { align-items:center; }
+.learning-delete-btn { color:var(--red); margin-right:auto; }
+.learning-form-hint { flex:1; font-size:10px; color:var(--muted); line-height:1.4; }
+@media(max-width:900px){
+  .learning-grid { grid-template-columns:1fr; }
+  .learning-review-panel { position:static; }
+  .learning-list { max-height:none; }
+}
+@media(max-width:700px){
+  body[data-view="learning"] header { flex-wrap:nowrap !important; }
+  body[data-view="learning"] .title-group { flex:0 1 auto !important; width:auto !important; }
+  body[data-view="learning"] .toolbar { flex:0 0 auto !important; width:auto !important; flex-wrap:nowrap !important; justify-content:flex-end !important; }
+  body[data-view="learning"] .title-group h1 { font-size:20px !important; white-space:nowrap; }
+  body[data-view="learning"] #viewAddRecord { display:inline-flex !important; align-items:center !important; min-height:36px; height:36px; padding:0 12px !important; font-size:13px !important; border-radius:10px; white-space:nowrap; flex-shrink:0; }
+  .learning-wrap { padding:2px 0 92px; gap:10px; }
+  .learning-summary { grid-template-columns:repeat(2,1fr); gap:7px; }
+  .learning-summary-card { padding:11px 12px; }
+  .learning-summary-value { font-size:21px; }
+  .learning-toolbar { flex-direction:column; align-items:stretch; gap:8px; }
+  .learning-tabs { width:100%; }
+  .learning-tab { flex:1; padding-inline:4px; }
+  .learning-search-wrap { width:100%; }
+  .learning-grid { gap:10px; }
+  .learning-review-panel,.learning-library-panel { border-radius:14px; }
+  .learning-review-card { min-height:390px; padding:18px 14px 15px; }
+  .learning-word { font-size:32px; }
+  .learning-library-head { padding:13px 12px 10px; flex-wrap:wrap; }
+  .learning-library-sub { display:none; }
+  .learning-library-actions { width:100%; justify-content:flex-end; gap:5px; }
+  .learning-io-btn,.learning-inline-add { height:31px; padding-inline:8px; font-size:10.5px; }
+  .learning-row { grid-template-columns:minmax(82px,.9fr) minmax(100px,1.2fr) 74px 28px; gap:6px; padding:9px 5px; }
+  .learning-row-jp { font-size:12.5px; }
+  .learning-row-meaning { font-size:11px; }
+  .learning-row-due { font-size:9.5px; }
+  .learning-form-two { grid-template-columns:1fr; }
+  .learning-modal-footer { flex-wrap:wrap; }
+  .learning-form-hint { order:5; flex-basis:100%; }
+  .mobile-nav-item { padding-left:2px; padding-right:2px; }
+  .mobile-nav-item .label { font-size:9.5px; }
+  .mobile-nav-item .icon { width:21px; height:21px; }
+  .mobile-nav-item .icon svg { width:19px; height:19px; }
+}
+
+
+/* ===== v5.237 学习面板布局：复习卡右上角快捷编辑 ===== */
+body[data-view="learning"] .title-group { gap:10px; }
+body[data-view="learning"] .title-group h1 { margin-right:0; }
+
+/* 搜索区域已移除；旧样式即使残留也不再占位 */
+.learning-toolbar,
+.learning-search-wrap { display:none !important; }
+
+.learning-wrap { max-width:1240px; gap:0; }
+.learning-grid {
+  grid-template-columns:minmax(0, 1.16fr) minmax(360px, .84fr);
+  gap:14px;
+  align-items:start;
+}
+.learning-library-panel { grid-column:1; min-width:0; }
+.learning-right-column {
+  grid-column:2;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  position:sticky;
+  top:16px;
+}
+.learning-review-panel {
+  position:static;
+  top:auto;
+  min-height:482px;
+}
+.learning-review-card { min-height:417px; }
+.learning-empty-review { min-height:477px; }
+.learning-list {
+  height:clamp(500px, calc(100vh - 180px), 650px);
+  max-height:none;
+}
+
+/* 右下四张统计卡：只保留核心数字，压缩到复习卡下方的小空间 */
+.learning-summary {
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:7px;
+}
+.learning-summary-card {
+  min-width:0;
+  border-radius:11px;
+  padding:9px 10px 8px;
+}
+.learning-summary-kicker {
+  margin-bottom:4px;
+  font-size:9.5px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.learning-summary-value { font-size:19px; letter-spacing:-.2px; }
+.learning-summary-meta { display:none; }
+
+@media(max-width:900px){
+  .learning-grid { grid-template-columns:1fr; }
+  .learning-library-panel,
+  .learning-right-column { grid-column:1; }
+  .learning-right-column { position:static; }
+  .learning-list { height:auto; max-height:none; }
+  .learning-review-panel { min-height:0; }
+  .learning-review-card { min-height:390px; }
+  .learning-empty-review { min-height:390px; }
+}
+@media(max-width:700px){
+  body[data-view="learning"] .title-group { gap:6px; min-width:0; }
+  body[data-view="learning"] .title-group h1 { flex:0 0 auto; }
+  .learning-summary { grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; }
+  .learning-summary-card { padding:8px 6px 7px; }
+  .learning-summary-kicker { font-size:8.5px; }
+  .learning-summary-value { font-size:17px; }
+}
+
+
+/* v5.240: 习惯热力图标题/日均固定到卡片左上角，不占热力图布局宽度 */
+.habits-heatmap-wrap {
+  position: relative;
+  width: 100%;
+}
+.habits-heatmap-corner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  pointer-events: none;
+}
+.habits-heatmap-corner-title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.2;
+  max-width: 72px;
+}
+.habits-heatmap-corner-icon {
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.habits-heatmap-corner-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.habits-heatmap-corner-meta {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  white-space: nowrap;
+  padding-left: 17px;
+}
+.habits-heatmap {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+.habits-heatmap-side {
+  display: none !important;
+}
+@media (max-width: 720px) {
+  .habits-heatmap-corner-title { max-width: 64px; }
+  .habits-heatmap-corner-meta { padding-left: 16px; }
+}
+
 </style>
 </head>
 <body>
@@ -10781,6 +11139,10 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
             <span>工时 AI</span>
             <span class="settings-panel-meta"><span class="settings-fly-chevron">›</span></span>
           </button>
+          <div class="ts-top-menu-divider data-menu-learning-only"></div>
+          <button class="btn ts-ai-menu-item data-menu-learning-only" id="learningImportBtn" type="button" title="从学习词库 JSON 导入，只合并生词数据">导入词表</button>
+          <button class="btn ts-ai-menu-item data-menu-learning-only" id="learningExportBtn" type="button" title="只导出学习词库，不包含看板、工时等其他数据">导出词表</button>
+          <input id="learningImportFile" type="file" accept=".json,application/json" hidden aria-hidden="true" tabindex="-1">
           <div class="ts-top-menu-divider"></div>
           <button class="btn ts-ai-menu-item" id="dataMenuGlobalSearch" type="button">全局搜索</button>
           <div class="ts-top-menu-divider"></div>
@@ -10792,6 +11154,11 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
           <button class="btn ts-ai-menu-item data-menu-ts-only" id="dataMenuExportMd" type="button">导出 Markdown</button>
           <div class="ts-top-menu-divider"></div>
           <button class="btn ts-ai-menu-item" id="dataMenuTrash" type="button">回收站</button>
+          <div class="ts-top-menu-divider"></div>
+          <button type="button" class="btn ts-ai-menu-item settings-fly-trigger" id="settingsTopPanelTrigger" aria-expanded="false" aria-controls="settingsTopPanelFlyout" title="选择顶部视图面板中显示哪些功能；左侧导航不受影响">
+            <span>顶部面板</span>
+            <span class="settings-panel-meta"><span id="settingsTopPanelStatus">6/6</span><span class="settings-fly-chevron">›</span></span>
+          </button>
           <div class="ts-top-menu-divider"></div>
           <button class="btn ts-ai-menu-item" id="dataMenuRolloverDue" type="button" title="未完成且已过截止日期的任务，自动把截止日期改为今天">截止日期自动滚到今天：开</button>
           <div class="ts-top-menu-divider"></div>
@@ -10832,6 +11199,21 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
             </button>
           </div>
         </div>
+        <div class="settings-flyout" id="settingsTopPanelFlyout" role="menu" hidden>
+          <div class="settings-flyout-title">顶部面板显示功能</div>
+          <div class="settings-top-panel-list" role="group" aria-label="选择顶部面板显示功能">
+            <label class="settings-top-panel-option"><span>看板</span><input type="checkbox" data-top-panel-view="board" checked></label>
+            <label class="settings-top-panel-option"><span>月历</span><input type="checkbox" data-top-panel-view="calendar" checked></label>
+            <label class="settings-top-panel-option"><span>工时</span><input type="checkbox" data-top-panel-view="timesheet" checked></label>
+            <label class="settings-top-panel-option"><span>诉讼</span><input type="checkbox" data-top-panel-view="litigation" checked></label>
+            <label class="settings-top-panel-option"><span>习惯</span><input type="checkbox" data-top-panel-view="habits" checked></label>
+            <label class="settings-top-panel-option"><span>学习</span><input type="checkbox" data-top-panel-view="learning" checked></label>
+          </div>
+          <div class="settings-top-panel-actions">
+            <button type="button" class="btn" id="topPanelShowAll">全部显示</button>
+            <button type="button" class="btn" id="topPanelHideAll">全部隐藏</button>
+          </div>
+        </div>
         <div class="settings-flyout data-menu-ts-only" id="settingsAiFlyout" role="menu" hidden>
           <div class="settings-flyout-title">工时 AI</div>
           <div id="settingsAiBlock">
@@ -10854,6 +11236,7 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
         <button class="pill" data-view="timesheet">工时</button>
         <button class="pill" data-view="litigation">诉讼</button>
         <button class="pill" data-view="habits">习惯</button>
+        <button class="pill" data-view="learning">学习</button>
       </div>
       <input type="file" id="importFile" accept=".json" style="display:none">
     </div>
@@ -10966,6 +11349,59 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
           <button type="button" class="habits-preset-chip" data-preset="exercise">🏃 运动</button>
           <button type="button" class="habits-preset-chip" data-preset="read">📖 阅读</button>
         </div>
+      </div>
+    </div>
+  </div>
+  <!-- v5.238: 学习页左侧生词库，右侧复习卡片；词表 I/O 移入设置 -->
+  <section class="learning-wrap hidden" id="learning" aria-label="日文生词学习">
+    <div class="learning-grid">
+      <div class="learning-library-panel">
+        <div class="learning-library-head">
+          <div class="learning-library-title">生词库</div>
+          <div class="learning-library-sub" id="learningLibrarySub">显示 0 / 0 个词</div>
+        </div>
+        <div class="learning-list" id="learningList"></div>
+      </div>
+      <div class="learning-right-column">
+        <div class="learning-review-panel" id="learningReviewPanel"></div>
+        <div class="learning-summary" id="learningSummary"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal hidden" id="learningEditModal" aria-hidden="true">
+    <div class="modal-backdrop" data-learning-action="close-modal"></div>
+    <div class="modal-content learning-edit-content" role="dialog" aria-modal="true" aria-labelledby="learningModalTitle">
+      <div class="modal-header">
+        <h3 id="learningModalTitle">录入日文生词</h3>
+        <button class="modal-close" type="button" data-learning-action="close-modal" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body learning-form">
+        <input type="hidden" id="learningEditId">
+        <div class="learning-form-row learning-form-main">
+          <label for="learningWord">日文生词 <span>*</span></label>
+          <input id="learningWord" type="text" placeholder="例：踏まえる" autocomplete="off">
+        </div>
+        <div class="learning-form-two">
+          <div class="learning-form-row">
+            <label for="learningReading">读音</label>
+            <input id="learningReading" type="text" placeholder="例：ふまえる">
+          </div>
+          <div class="learning-form-row">
+            <label for="learningMeaning">中文释义</label>
+            <input id="learningMeaning" type="text" placeholder="例：基于；考虑到">
+          </div>
+        </div>
+        <div class="learning-form-row">
+          <label for="learningExample">工作原句 / 例句</label>
+          <textarea id="learningExample" rows="3" placeholder="把邮件、报告或客户材料里的原句贴进来，更容易按语境记忆"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer learning-modal-footer">
+        <button class="btn btn-ghost learning-delete-btn hidden" id="learningDeleteBtn" type="button">删除</button>
+        <span class="learning-form-hint">复习节点：当天 → 1 → 2 → 4 → 7 → 15 → 30 → 60 天</span>
+        <button class="btn" type="button" data-learning-action="close-modal">取消</button>
+        <button class="btn btn-primary" id="learningSaveBtn" type="button">保存</button>
       </div>
     </div>
   </div>
@@ -12034,6 +12470,7 @@ function isStoreEffectivelyEmpty(s) {
     }
     if (Array.isArray(s.timeEntries) && s.timeEntries.length > 0) return false;
     if (Array.isArray(s.litigationRecords) && s.litigationRecords.length > 0) return false;
+    if (Array.isArray(s.learningCards) && s.learningCards.length > 0) return false;
     return true;
   } catch {
     return true;
@@ -12059,6 +12496,18 @@ if (!Array.isArray(store.litigationRecords)) {
 if (!store.prefs || typeof store.prefs !== 'object') store.prefs = {};
 if (typeof store.prefs.autoRolloverDue !== 'boolean') store.prefs.autoRolloverDue = true;
 if (typeof store.prefs.autoSortTasksByDue !== 'boolean') store.prefs.autoSortTasksByDue = false;
+// v5.229: 桌面顶部视图按钮逐项显隐；默认全部显示。兼容 v5.228 的总开关。
+const TOP_PANEL_VIEW_KEYS = ['board', 'calendar', 'timesheet', 'litigation', 'habits', 'learning'];
+if (!store.prefs.topPanelViews || typeof store.prefs.topPanelViews !== 'object' || Array.isArray(store.prefs.topPanelViews)) {
+  const inheritedVisible = store.prefs.showTopPanel !== false;
+  store.prefs.topPanelViews = Object.fromEntries(TOP_PANEL_VIEW_KEYS.map(k => [k, inheritedVisible]));
+} else {
+  for (const k of TOP_PANEL_VIEW_KEYS) {
+    if (typeof store.prefs.topPanelViews[k] !== 'boolean') store.prefs.topPanelViews[k] = true;
+  }
+}
+// v5.232: 学习词库只保存在当前用户的本地数据中；HTML 不再内置、预置或自动导入任何私人词汇。
+
 // v3.0: 诉讼时间线提醒 — 每个时间线条目可以挂多个提醒
 if (!Array.isArray(store.litigationReminders)) {
   store.litigationReminders = [];
@@ -12222,9 +12671,9 @@ let currentFilter = (store && store.lastFilter && ['all', 'today', 'tomorrow', '
   ? store.lastFilter
   : 'all';
 // v1.6.15: 启动时从 store.lastView 恢复视图 (用户切到月历/工时单后刷新不回到看板)
-let currentView = (store && store.lastView && ['board', 'calendar', 'timesheet', 'litigation', 'habits'].includes(store.lastView))
+let currentView = (store && store.lastView && ['board', 'calendar', 'timesheet', 'litigation', 'habits', 'learning'].includes(store.lastView))
   ? store.lastView
-  : (location.hash.startsWith('#view=') && ['board', 'calendar', 'timesheet', 'litigation', 'habits'].includes(location.hash.slice(6))
+  : (location.hash.startsWith('#view=') && ['board', 'calendar', 'timesheet', 'litigation', 'habits', 'learning'].includes(location.hash.slice(6))
     ? location.hash.slice(6)
     : 'board');
 // 全局搜索入口已移除；保留空值以兼容原有渲染筛选代码
@@ -14074,6 +14523,7 @@ function openSettingsFlyout(which, opts) {
   const map = {
     bg: { trigger: 'settingsBgTrigger', fly: 'settingsBgFlyout', preferRight: true },
     assistant: { trigger: 'settingsAssistantTrigger', fly: 'settingsAssistantFlyout', preferRight: true },
+    topPanel: { trigger: 'settingsTopPanelTrigger', fly: 'settingsTopPanelFlyout', preferRight: false },
     ai: { trigger: 'settingsAiTrigger', fly: 'settingsAiFlyout', preferRight: false },
   };
   const cfg = map[which];
@@ -14104,6 +14554,7 @@ function openSettingsFlyout(which, opts) {
   positionSettingsFlyout(fly, trigger, !!cfg.preferRight);
   if (which === 'bg' && typeof syncBoardBgUI === 'function') syncBoardBgUI();
   if (which === 'assistant' && typeof window.__syncAssistantModeUI === 'function') window.__syncAssistantModeUI();
+  if (which === 'topPanel' && typeof applyTopPanelPreference === 'function') applyTopPanelPreference();
   if (which === 'ai') {
     document.querySelectorAll('.ts-lang-opt').forEach(el => {
       if (typeof tsTranslationLang !== 'undefined') {
@@ -14179,8 +14630,27 @@ document.getElementById('settingsAiTrigger')?.addEventListener('click', e => {
   e.stopPropagation();
   openSettingsFlyout('ai');
 }, true);
+// v5.229: 顶部面板逐项设置，用点击打开，避免一掠过“设置”就误触
+ document.getElementById('settingsTopPanelTrigger')?.addEventListener('click', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  openSettingsFlyout('topPanel');
+}, true);
+document.getElementById('settingsTopPanelFlyout')?.addEventListener('change', e => {
+  const input = e.target.closest('input[data-top-panel-view]');
+  if (!input) return;
+  e.stopPropagation();
+  setTopPanelViewEnabled(input.dataset.topPanelView, input.checked);
+});
+document.getElementById('topPanelShowAll')?.addEventListener('click', e => {
+  e.preventDefault(); e.stopPropagation(); setAllTopPanelViews(true);
+});
+document.getElementById('topPanelHideAll')?.addEventListener('click', e => {
+  e.preventDefault(); e.stopPropagation(); setAllTopPanelViews(false);
+});
 document.getElementById('settingsBgFlyout')?.addEventListener('click', e => e.stopPropagation());
 document.getElementById('settingsAssistantFlyout')?.addEventListener('click', e => e.stopPropagation());
+document.getElementById('settingsTopPanelFlyout')?.addEventListener('click', e => e.stopPropagation());
 document.getElementById('settingsAiFlyout')?.addEventListener('click', e => e.stopPropagation());
 document.getElementById('headerDataMenu')?.addEventListener('toggle', () => {
   const d = document.getElementById('headerDataMenu');
@@ -14351,6 +14821,9 @@ function syncViewAddLabel(view) {
   } else if (v === 'habits') {
     btn.textContent = '+ 新建习惯';
     btn.title = '新建习惯';
+  } else if (v === 'learning') {
+    btn.textContent = '+ 录入生词';
+    btn.title = '录入日文生词';
   } else {
     // v5.80: 看板 / 月历 → 新建项目
     btn.textContent = '+ 新建项目';
@@ -14359,7 +14832,7 @@ function syncViewAddLabel(view) {
 }
 
 function setView(view) {
-  if (!['board', 'calendar', 'timesheet', 'litigation', 'habits'].includes(view)) return;
+  if (!['board', 'calendar', 'timesheet', 'litigation', 'habits', 'learning'].includes(view)) return;
   if (currentView === view) return;
   currentView = view;
   try { rolloverOverdueTaskDues(); } catch (_) {}
@@ -14404,7 +14877,7 @@ try {
 function restoreViewPillOrder() {
   const bar = document.getElementById('viewPills');
   if (!bar) return;
-  const valid = ['board', 'calendar', 'timesheet', 'litigation', 'habits'];
+  const valid = ['board', 'calendar', 'timesheet', 'litigation', 'habits', 'learning'];
   let saved = [];
   try { saved = JSON.parse(localStorage.getItem(VIEW_PILL_ORDER_KEY) || '[]'); } catch {}
   const order = [...new Set(Array.isArray(saved) ? saved.filter(v => valid.includes(v)) : [])];
@@ -15899,6 +16372,45 @@ function updateSortByDueMenuLabel() {
   const on = isAutoSortTasksByDue();
   btn.textContent = on ? '任务按截止日期排序：开' : '任务按截止日期排序：关';
 }
+// v5.229: 顶部视图面板逐项显示偏好（只控制顶部入口，不禁用对应功能）
+function isTopPanelViewEnabled(view) {
+  return !(store.prefs && store.prefs.topPanelViews && store.prefs.topPanelViews[view] === false);
+}
+function applyTopPanelPreference() {
+  const bar = document.getElementById('viewPills');
+  let enabledCount = 0;
+  if (bar) {
+    bar.querySelectorAll('.pill[data-view]').forEach(pill => {
+      const enabled = isTopPanelViewEnabled(pill.dataset.view);
+      pill.classList.toggle('top-panel-disabled', !enabled);
+      pill.setAttribute('aria-hidden', enabled ? 'false' : 'true');
+      if (enabled) enabledCount++;
+    });
+    bar.classList.toggle('top-panel-empty', enabledCount === 0);
+  } else {
+    enabledCount = TOP_PANEL_VIEW_KEYS.filter(isTopPanelViewEnabled).length;
+  }
+  const status = document.getElementById('settingsTopPanelStatus');
+  if (status) status.textContent = `${enabledCount}/${TOP_PANEL_VIEW_KEYS.length}`;
+  document.querySelectorAll('#settingsTopPanelFlyout input[data-top-panel-view]').forEach(input => {
+    input.checked = isTopPanelViewEnabled(input.dataset.topPanelView);
+  });
+}
+function setTopPanelViewEnabled(view, enabled, persist = true) {
+  if (!TOP_PANEL_VIEW_KEYS.includes(view)) return;
+  if (!store.prefs) store.prefs = {};
+  if (!store.prefs.topPanelViews || typeof store.prefs.topPanelViews !== 'object') store.prefs.topPanelViews = {};
+  store.prefs.topPanelViews[view] = !!enabled;
+  if (persist) save({ skipVault: true });
+  applyTopPanelPreference();
+}
+function setAllTopPanelViews(enabled) {
+  if (!store.prefs) store.prefs = {};
+  if (!store.prefs.topPanelViews || typeof store.prefs.topPanelViews !== 'object') store.prefs.topPanelViews = {};
+  TOP_PANEL_VIEW_KEYS.forEach(view => { store.prefs.topPanelViews[view] = !!enabled; });
+  save({ skipVault: true });
+  applyTopPanelPreference();
+}
 /** v5.97: 项目内任务按截止日期排序 — 未完成优先，有日期的越紧急越靠上，无日期靠后，已完成最后 */
 function compareTasksByDue(a, b) {
   const aDone = !!a.done;
@@ -15930,6 +16442,7 @@ function sortAllProjectsTasksByDue() {
 try {
   updateRolloverDueMenuLabel();
   updateSortByDueMenuLabel();
+  applyTopPanelPreference();
   rolloverOverdueTaskDues();
   if (isAutoSortTasksByDue()) sortAllProjectsTasksByDue();
 } catch (_) {}
@@ -17946,6 +18459,8 @@ function render() {
     if (litigation) litigation.classList.add('hidden');
     const habitsEl = document.getElementById('habits');
     if (habitsEl) habitsEl.classList.add('hidden');
+    const learningEl = document.getElementById('learning');
+    if (learningEl) learningEl.classList.add('hidden');
     renderCalendar();
     _clearSkip();
     return;
@@ -17963,6 +18478,8 @@ function render() {
     if (litigation) litigation.classList.add('hidden');
     const habitsEl = document.getElementById('habits');
     if (habitsEl) habitsEl.classList.add('hidden');
+    const learningEl = document.getElementById('learning');
+    if (learningEl) learningEl.classList.add('hidden');
     _clearSkip();
     return;
   }
@@ -17975,6 +18492,8 @@ function render() {
     if (litigation) litigation.classList.remove('hidden');
     const habitsEl = document.getElementById('habits');
     if (habitsEl) habitsEl.classList.add('hidden');
+    const learningEl = document.getElementById('learning');
+    if (learningEl) learningEl.classList.add('hidden');
     // v3.0: 进入诉讼页时,扫一下到期的提醒(toast 弹出来,列表加红点)
     fireDueLitigationReminders();
     renderLitigation();
@@ -17993,6 +18512,25 @@ function render() {
       habitsEl.classList.remove('hidden');
       if (typeof renderHabits === 'function') renderHabits();
     }
+    const learningEl = document.getElementById('learning');
+    if (learningEl) learningEl.classList.add('hidden');
+    _clearSkip();
+    return;
+  }
+  if (currentView === 'learning') {
+    grid.classList.add('hidden');
+    cal.classList.add('hidden');
+    empty.classList.add('hidden');
+    if (searchEmpty) searchEmpty.classList.add('hidden');
+    if (timesheet) timesheet.classList.add('hidden');
+    if (litigation) litigation.classList.add('hidden');
+    const habitsEl = document.getElementById('habits');
+    if (habitsEl) habitsEl.classList.add('hidden');
+    const learningEl = document.getElementById('learning');
+    if (learningEl) {
+      learningEl.classList.remove('hidden');
+      if (typeof renderLearning === 'function') renderLearning();
+    }
     _clearSkip();
     return;
   }
@@ -18001,6 +18539,8 @@ function render() {
   cal.classList.add('hidden');
   const habitsEl = document.getElementById('habits');
   if (habitsEl) habitsEl.classList.add('hidden');
+  const learningEl = document.getElementById('learning');
+  if (learningEl) learningEl.classList.add('hidden');
   if (!state.projects.length) {
     empty.classList.remove('hidden');
     grid.classList.remove('hidden');
@@ -18483,23 +19023,25 @@ function habitsBuildCountHeatmap(item, metaText) {
     }
   }
 
-  // v5.218: 左侧放标题+日均，右侧月份+格子
-  const sideMeta = metaText
-    ? ('<div class="habits-heatmap-side-meta">' + escapeHtml(String(metaText)) + '</div>')
+  // v5.240: 标题+日均固定到卡片左上角，不再占用热力图宽度；下方图表位置保持不变。
+  const cornerMeta = metaText
+    ? ('<div class="habits-heatmap-corner-meta">' + escapeHtml(String(metaText)) + '</div>')
     : '';
-  return '<div class="habits-heatmap">' +
-    '<div class="habits-heatmap-side">' +
-      '<div class="habits-heatmap-side-title">' +
-        '<span class="habits-heatmap-side-icon">' + (item.icon || '🌱') + '</span>' +
-        '<span class="habits-heatmap-side-name" title="' + escapeHtml(item.name || '') + '">' + escapeHtml(item.name || '') + '</span>' +
+  return '<div class="habits-heatmap-wrap">' +
+    '<div class="habits-heatmap-corner">' +
+      '<div class="habits-heatmap-corner-title">' +
+        '<span class="habits-heatmap-corner-icon">' + (item.icon || '🌱') + '</span>' +
+        '<span class="habits-heatmap-corner-name" title="' + escapeHtml(item.name || '') + '">' + escapeHtml(item.name || '') + '</span>' +
       '</div>' +
-      sideMeta +
+      cornerMeta +
     '</div>' +
-    '<div class="habits-heatmap-main">' +
-      monthsHtml +
-      '<div class="habits-heatmap-body">' +
-        ydayHtml +
-        '<div class="habits-heatmap-grid" style="--hm-cols:' + numWeeks + '">' + cells + '</div>' +
+    '<div class="habits-heatmap">' +
+      '<div class="habits-heatmap-main">' +
+        monthsHtml +
+        '<div class="habits-heatmap-body">' +
+          ydayHtml +
+          '<div class="habits-heatmap-grid" style="--hm-cols:' + numWeeks + '">' + cells + '</div>' +
+        '</div>' +
       '</div>' +
     '</div>' +
   '</div>';
@@ -18542,13 +19084,13 @@ function habitsBuildTimeMonthChart(item) {
     dayVals.push({ day: day, ds: ds, t: (t && timeIndex[t] !== undefined) ? t : null, future: false });
   }
 
-  // v5.215: 再缩小一档，避免统计区过高过宽
-  const padL = 28;
-  const padR = 8;
-  const padT = 8;
-  const padB = 18;
-  const cellW = 11; // 日间距
-  const cellH = 11; // 时段间距
+  // v5.241: 进一步压缩睡眠统计图高度，使卡片高度更接近其它统计卡
+  const padL = 52;
+  const padR = 12;
+  const padT = 10;
+  const padB = 22;
+  const cellW = 16; // 保持横向密度不变
+  const cellH = 12; // 压缩纵向间距
   // 交点网格：nD 列 × nT 行 → 宽 (nD-1)*cellW，高 (nT-1)*cellH；但每天/每时段都要有交点
   // 使用 nD 个竖线、nT 个横线，间距 cellW/cellH
   const plotW = cellW * Math.max(nD - 1, 1);
@@ -18569,8 +19111,9 @@ function habitsBuildTimeMonthChart(item) {
     grid += '<line x1="' + padL + '" y1="' + yy + '" x2="' + (padL + plotW) + '" y2="' + yy + '" stroke="currentColor" stroke-opacity="0.1" stroke-width="1"/>';
     // 纵轴只标整点（:00），半点不标
     if (times[i].endsWith(':00')) {
-      const label = String(parseInt(times[i].slice(0, 2), 10)); // "21" / "0" / "1" / "2"
-      grid += '<text x="' + (padL - 5) + '" y="' + (yy + 3) + '" text-anchor="end" font-size="9" font-weight="650" font-family="system-ui,sans-serif" fill="currentColor" opacity="0.65">' + label + '</text>';
+      // v5.223: 纵轴显示 21:00 / 00:00 / 01:00 / 02:00
+      const label = times[i];
+      grid += '<text x="' + (padL - 6) + '" y="' + (yy + 4) + '" text-anchor="end" font-size="11" font-weight="650" font-family="system-ui,sans-serif" fill="currentColor" opacity="0.65">' + label + '</text>';
     }
   }
   // 竖线：每一天
@@ -18595,7 +19138,7 @@ function habitsBuildTimeMonthChart(item) {
     const xx = xAt(d);
     const ds = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
     const isToday = ds === today;
-    xLabels += '<text x="' + xx + '" y="' + (padT + plotH + 12) + '" text-anchor="middle" font-size="8" font-weight="' +
+    xLabels += '<text x="' + xx + '" y="' + (padT + plotH + 18) + '" text-anchor="middle" font-size="11" font-weight="' +
       (isToday ? '700' : '500') + '" font-family="system-ui,sans-serif" fill="currentColor" opacity="' +
       (isToday ? '0.9' : '0.5') + '">' + d + '</text>';
   }
@@ -18618,19 +19161,19 @@ function habitsBuildTimeMonthChart(item) {
     const d = pts.map(function (p, i) {
       return (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1);
     }).join(' ');
-    line = '<path d="' + d + '" fill="none" stroke="' + stroke + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>';
+    line = '<path d="' + d + '" fill="none" stroke="' + stroke + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>';
   }
 
   let dots = '';
   for (const p of pts) {
-    dots += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="2.8" fill="' + stroke +
-      '" stroke="var(--card-bg-solid, #fff)" stroke-width="1.2"><title>' + p.ds + ' · ' + p.t + '</title></circle>';
+    dots += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="4" fill="' + stroke +
+      '" stroke="var(--card-bg-solid, #fff)" stroke-width="1.5"><title>' + p.ds + ' · ' + p.t + '</title></circle>';
   }
 
   let emptyHint = '';
   if (!pts.length) {
     emptyHint = '<text x="' + (padL + plotW / 2) + '" y="' + (padT + plotH / 2) +
-      '" text-anchor="middle" font-size="11" fill="currentColor" opacity="0.35">本月暂无记录</text>';
+      '" text-anchor="middle" font-size="14" fill="currentColor" opacity="0.35">本月暂无记录</text>';
   }
 
   return '<div class="habits-time-chart"><svg viewBox="0 0 ' + W + ' ' + H +
@@ -18831,7 +19374,7 @@ function renderHabitsStats() {
         return (p.y || 0) > 0 || (p.log && p.log.v);
       });
       const useHeatmap = (item.type === 'count' || item.type === 'bool');
-      const cardCls = 'habits-chart-card' + (useHeatmap ? ' is-heatmap' : '');
+      const cardCls = 'habits-chart-card' + (useHeatmap ? ' is-heatmap' : '') + (item.type === 'time' ? ' is-time' : '');
       html += '<div class="' + cardCls + '" data-habit-chart="' + item.id + '">';
       // v5.218: 热力图标题在左侧，不再单独占一整行；其它图仍用顶栏标题
       if (!useHeatmap) {
@@ -19230,6 +19773,394 @@ if (document.readyState === 'loading') {
   bindHabitsUI();
 }
 
+
+// ============== v5.226 学习面板（日文生词 / 遗忘曲线） ==============
+const LEARNING_INTERVALS = [0, 1, 2, 4, 7, 15, 30, 60];
+const LEARNING_STAGE_LABELS = ['当天', '1天', '2天', '4天', '7天', '15天', '30天', '60天'];
+let learningFilter = 'all';
+let learningRevealId = null;
+
+function learningEnsureStore() {
+  if (!Array.isArray(store.learningCards)) store.learningCards = [];
+  const today = localDateStr(new Date());
+  store.learningCards.forEach(c => {
+    if (!c || typeof c !== 'object') return;
+    if (!c.id) c.id = 'lrn_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    if (!Number.isFinite(c.stage)) c.stage = 0;
+    c.stage = Math.max(0, Math.min(LEARNING_INTERVALS.length - 1, Math.floor(c.stage)));
+    if (!c.nextReview) c.nextReview = today;
+    if (!Array.isArray(c.history)) c.history = [];
+  });
+  return store.learningCards;
+}
+function learningDateAdd(dateStr, days) {
+  const parts = String(dateStr || '').split('-').map(Number);
+  const d = parts.length === 3 && parts.every(Number.isFinite)
+    ? new Date(parts[0], parts[1]-1, parts[2], 12, 0, 0)
+    : new Date();
+  d.setDate(d.getDate() + Number(days || 0));
+  return localDateStr(d);
+}
+function learningIsDue(card, today = localDateStr(new Date())) {
+  return !card.nextReview || card.nextReview <= today;
+}
+function learningReviewedToday(card, today = localDateStr(new Date())) {
+  return Array.isArray(card.history) && card.history.some(h => String(h.at || '').slice(0,10) === today);
+}
+function learningMastered(card) { return Number(card.stage || 0) >= LEARNING_INTERVALS.length - 1; }
+function learningNextText(card) {
+  const today = localDateStr(new Date());
+  if (learningIsDue(card, today)) return card.nextReview < today ? '已到期' : '今天';
+  const p = String(card.nextReview || '').split('-').map(Number);
+  const t = today.split('-').map(Number);
+  if (p.length===3 && t.length===3) {
+    const diff = Math.round((Date.UTC(p[0],p[1]-1,p[2]) - Date.UTC(t[0],t[1]-1,t[2])) / 86400000);
+    if (diff === 1) return '明天';
+    if (diff > 1 && diff <= 30) return diff + '天后';
+  }
+  return String(card.nextReview || '');
+}
+function learningEscape(v) { return typeof escapeHtml === 'function' ? escapeHtml(String(v ?? '')) : String(v ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function learningTagsText(v) { return Array.isArray(v) ? v.join('、') : String(v || ''); }
+
+function renderLearning() {
+  const root = document.getElementById('learning');
+  if (!root) return;
+  const cards = learningEnsureStore();
+  const today = localDateStr(new Date());
+  // v5.237: 今日复习队列。点击“忘记”的词会被放到今天队列末尾；再次忘记则再次移到末尾。
+  const due = cards.filter(c => learningIsDue(c, today)).sort((a,b) => {
+    const aq = a.reviewQueueDate === today ? Number(a.reviewQueueOrder || 0) : 0;
+    const bq = b.reviewQueueDate === today ? Number(b.reviewQueueOrder || 0) : 0;
+    const aMoved = aq > 0 ? 1 : 0;
+    const bMoved = bq > 0 ? 1 : 0;
+    if (aMoved !== bMoved) return aMoved - bMoved; // 未重排的词优先，忘记过的词排后
+    if (aMoved && bMoved && aq !== bq) return aq - bq; // 越晚点“忘记”，越靠队尾
+    return String(a.nextReview||'').localeCompare(String(b.nextReview||'')) || Number(a.createdAt||0)-Number(b.createdAt||0);
+  });
+  const reviewedToday = cards.filter(c => learningReviewedToday(c, today)).length;
+  const mastered = cards.filter(learningMastered).length;
+  const summary = document.getElementById('learningSummary');
+  if (summary) summary.innerHTML = [
+    ['总词汇', cards.length, '工作中持续积累', ''],
+    ['已掌握', mastered, cards.length ? Math.round(mastered/cards.length*100) + '% 的词库' : '完成 60 天节点', ''],
+    ['待复习', due.length, due.length ? '今天优先清空' : '今日已清空', 'is-due'],
+    ['今日已复习', reviewedToday, '按词去重统计', '']
+  ].map(x => '<div class="learning-summary-card '+x[3]+'"><div class="learning-summary-kicker">'+x[0]+'</div><div class="learning-summary-value">'+x[1]+'</div><div class="learning-summary-meta">'+x[2]+'</div></div>').join('');
+
+  const review = document.getElementById('learningReviewPanel');
+  if (review) {
+    const card = due[0];
+    if (!card) {
+      review.innerHTML = '<div class="learning-empty-review"><div><div class="learning-empty-review-icon">✓</div><h3>今天的复习已经完成</h3><p>新录入的词会立刻进入当天复习；之后系统会按 1、2、4、7、15、30、60 天的间隔再次提醒。</p><button class="btn btn-primary" type="button" data-learning-action="add">＋ 录入一个新词</button></div></div>';
+    } else {
+      const revealed = learningRevealId === card.id;
+      const source = String(card.source || '').trim();
+      const stage = Math.max(0, Math.min(LEARNING_INTERVALS.length-1, Number(card.stage||0)));
+      const nodes = LEARNING_INTERVALS.map((_,i) => '<span class="learning-stage-node '+(i<stage?'done':(i===stage?'current':''))+'" title="'+LEARNING_STAGE_LABELS[i]+'"></span>').join('');
+      review.innerHTML = '<div class="learning-review-head"><div class="learning-review-title">今日复习</div><div class="learning-review-actions"><button class="learning-review-delete" type="button" data-learning-action="delete-current" data-learning-id="'+learningEscape(card.id)+'" aria-label="删除当前单词" title="删除当前单词"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/><path d="M10 11v5M14 11v5"/></svg></button><button class="learning-review-edit" type="button" data-learning-action="edit-current" data-learning-id="'+learningEscape(card.id)+'" aria-label="编辑当前单词" title="编辑当前单词">⋯</button></div></div>' +
+        '<div class="learning-review-card" data-card-id="'+learningEscape(card.id)+'"'+(revealed?'':' data-learning-action="reveal-card"')+'><div class="learning-stage-line">'+nodes+'</div>' +
+        '<div class="learning-word-main"><div class="learning-word">'+learningEscape(card.word || '（未命名）')+'</div><div class="learning-word-reading">'+learningEscape(card.reading || '　')+'</div>'+(source?'<div class="learning-context-chip" title="'+learningEscape(source)+'">'+learningEscape(source)+'</div>':'')+'</div>' +
+        '<div class="learning-answer" '+(revealed?'':'hidden')+'><div><div class="learning-answer-label">中文释义</div><div class="learning-meaning">'+learningEscape(card.meaning || '尚未填写释义')+'</div></div>'+(card.example?'<div><div class="learning-answer-label">工作原句 / 例句</div><div class="learning-example">'+learningEscape(card.example)+'</div></div>':'')+(card.tags?'<div><div class="learning-answer-label">标签</div><div class="learning-example">'+learningEscape(learningTagsText(card.tags))+'</div></div>':'')+'</div>' +
+        (revealed ? '<div class="learning-rating"><button class="learning-rate-btn" data-learning-rating="again" type="button">忘记<small>留在今日复习</small></button><button class="learning-rate-btn" data-learning-rating="good" type="button">记住<small>进入下一节点</small></button></div>' : '') + '</div>';
+    }
+  }
+
+  let list = cards.slice();
+  list.sort((a,b) => String(a.nextReview||'').localeCompare(String(b.nextReview||'')) || String(a.word||'').localeCompare(String(b.word||''),'ja'));
+  const listEl = document.getElementById('learningList');
+  const sub = document.getElementById('learningLibrarySub');
+  if (sub) sub.textContent = `显示 ${list.length} / ${cards.length} 个词`;
+  if (listEl) {
+    if (!list.length) listEl.innerHTML = '<div class="learning-list-empty">这里还没有符合条件的生词。<br>工作中遇到不熟悉的日文，就直接录入。</div>';
+    else listEl.innerHTML = list.map(c => {
+      const isDue = learningIsDue(c,today);
+      const st = Math.max(0,Math.min(LEARNING_STAGE_LABELS.length-1,Number(c.stage||0)));
+      return '<div class="learning-row" data-learning-id="'+learningEscape(c.id)+'"><div class="learning-row-word"><div class="learning-row-jp" title="'+learningEscape(c.word||'')+'">'+learningEscape(c.word||'（未命名）')+'</div><div class="learning-row-reading">'+learningEscape(c.reading||c.source||'')+'</div></div><div class="learning-row-meaning">'+learningEscape(c.meaning||c.example||'—')+'</div><div class="learning-row-due '+(isDue?'is-due':'')+'">'+learningEscape(learningNextText(c))+'<span class="learning-row-stage">'+(learningMastered(c)?'长期记忆':('第 '+(st+1)+' 节点'))+'</span></div><button class="learning-row-edit" data-learning-action="edit" type="button" aria-label="编辑">⋯</button></div>';
+    }).join('');
+  }
+}
+
+function openLearningEditor(cardOrId) {
+  learningEnsureStore();
+  let card = null;
+  if (typeof cardOrId === 'string') card = store.learningCards.find(c => c.id === cardOrId) || null;
+  else if (cardOrId && typeof cardOrId === 'object') card = cardOrId;
+  const modal = document.getElementById('learningEditModal');
+  if (!modal) return;
+  document.getElementById('learningModalTitle').textContent = card ? '编辑日文生词' : '录入日文生词';
+  document.getElementById('learningEditId').value = card?.id || '';
+  document.getElementById('learningWord').value = card?.word || '';
+  document.getElementById('learningReading').value = card?.reading || '';
+  document.getElementById('learningMeaning').value = card?.meaning || '';
+  document.getElementById('learningExample').value = card?.example || '';
+  document.getElementById('learningDeleteBtn').classList.toggle('hidden', !card);
+  modal.classList.remove('hidden'); modal.setAttribute('aria-hidden','false');
+  document.body.classList.add('modal-open');
+  setTimeout(() => document.getElementById('learningWord')?.focus(), 0);
+}
+function closeLearningEditor() {
+  const modal = document.getElementById('learningEditModal');
+  if (!modal) return;
+  modal.classList.add('hidden'); modal.setAttribute('aria-hidden','true');
+  document.body.classList.remove('modal-open');
+}
+function saveLearningEditor() {
+  const cards = learningEnsureStore();
+  const id = document.getElementById('learningEditId').value;
+  const word = document.getElementById('learningWord').value.trim();
+  if (!word) { document.getElementById('learningWord').focus(); if (typeof showToast==='function') showToast('请先填写日文生词'); return; }
+  const data = {
+    word,
+    reading: document.getElementById('learningReading').value.trim(),
+    meaning: document.getElementById('learningMeaning').value.trim(),
+    example: document.getElementById('learningExample').value.trim(),
+    updatedAt: Date.now()
+  };
+  if (id) {
+    const card = cards.find(c => c.id === id);
+    if (card) Object.assign(card, data);
+  } else {
+    cards.unshift(Object.assign({
+      id:'lrn_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+      stage:0, nextReview:localDateStr(new Date()), createdAt:Date.now(), history:[]
+    }, data));
+  }
+  save({immediate:true});
+  closeLearningEditor();
+  learningRevealId = null;
+  renderLearning();
+  if (typeof showToast==='function') showToast(id ? '生词已更新' : '已加入今天的复习');
+}
+function deleteLearningCard() {
+  const id = document.getElementById('learningEditId').value;
+  if (!id) return;
+  const card = learningEnsureStore().find(c => c.id === id);
+  if (!card) return;
+  if (!confirm(`删除生词“${card.word || ''}”？`)) return;
+  store.learningCards = store.learningCards.filter(c => c.id !== id);
+  save({immediate:true}); closeLearningEditor(); learningRevealId = null; renderLearning();
+}
+
+// v5.239: 今日复习卡右上角垃圾桶，直接删除当前词并切换到下一张，不二次确认。
+function deleteLearningCardDirect(id) {
+  if (!id) return;
+  const cards = learningEnsureStore();
+  const card = cards.find(c => c.id === id);
+  if (!card) return;
+  store.learningCards = cards.filter(c => c.id !== id);
+  learningRevealId = null;
+  save({immediate:true});
+  renderLearning();
+  if (typeof showToast === 'function') showToast(`已删除“${card.word || '当前生词'}”`);
+}
+
+/* v5.233: 学习词库独立导入 / 导出
+   - 导出文件只包含学习卡片，不包含项目、工时、诉讼等其他数据
+   - 导入默认“合并”，按「日文生词 + 读音」去重，不覆盖现有词
+   - 兼容本功能导出的 JSON、直接卡片数组，以及完整 Kanban 备份中的 learningCards */
+function learningCloneForExport(card) {
+  const src = card && typeof card === 'object' ? card : {};
+  return {
+    id: String(src.id || ''),
+    word: String(src.word || ''),
+    reading: String(src.reading || ''),
+    meaning: String(src.meaning || ''),
+    example: String(src.example || ''),
+    stage: Math.max(0, Math.min(LEARNING_INTERVALS.length - 1, Number(src.stage || 0))),
+    nextReview: String(src.nextReview || ''),
+    createdAt: Number(src.createdAt || 0) || Date.now(),
+    updatedAt: Number(src.updatedAt || 0) || undefined,
+    lastReviewedAt: src.lastReviewedAt ? String(src.lastReviewedAt) : undefined,
+    reviewCount: Math.max(0, Number(src.reviewCount || 0) || 0),
+    history: Array.isArray(src.history) ? JSON.parse(JSON.stringify(src.history)) : []
+  };
+}
+function exportLearningVocabulary() {
+  const cards = learningEnsureStore();
+  if (!cards.length) {
+    if (typeof showToast === 'function') showToast('当前没有可导出的生词');
+    return;
+  }
+  const payload = {
+    format: 'kanban-learning-vocabulary',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    count: cards.length,
+    cards: cards.map(learningCloneForExport)
+  };
+  const text = JSON.stringify(payload, null, 2);
+  const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `日文单词表-${localDateStr(new Date())}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+  if (typeof showToast === 'function') showToast(`已导出 ${cards.length} 个生词`);
+}
+function learningImportSourceCards(data) {
+  if (Array.isArray(data)) return data;
+  if (!data || typeof data !== 'object') return null;
+  if (Array.isArray(data.cards)) return data.cards;
+  if (Array.isArray(data.learningCards)) return data.learningCards;
+  if (data.store && Array.isArray(data.store.learningCards)) return data.store.learningCards;
+  return null;
+}
+function learningImportKey(word, reading) {
+  const norm = v => String(v || '').trim().normalize ? String(v || '').trim().normalize('NFKC').toLocaleLowerCase() : String(v || '').trim().toLocaleLowerCase();
+  return norm(word) + '\u0000' + norm(reading);
+}
+function learningNormalizeImportedCard(raw, todayStr, usedIds) {
+  if (!raw || typeof raw !== 'object') return null;
+  const word = String(raw.word ?? raw['日文生词'] ?? raw['单词'] ?? '').trim();
+  if (!word) return null;
+  const reading = String(raw.reading ?? raw['读音'] ?? raw['发音'] ?? '').trim();
+  const meaning = String(raw.meaning ?? raw['中文释义'] ?? raw['释义'] ?? '').trim();
+  const example = String(raw.example ?? raw['工作原句 / 例句'] ?? raw['例句'] ?? '').trim();
+  let stage = Number(raw.stage ?? raw['复习阶段'] ?? 0);
+  if (!Number.isFinite(stage)) stage = 0;
+  stage = Math.max(0, Math.min(LEARNING_INTERVALS.length - 1, Math.floor(stage)));
+  const nr = String(raw.nextReview ?? raw['下次复习'] ?? '').trim();
+  const nextReview = /^\d{4}-\d{2}-\d{2}$/.test(nr) ? nr : todayStr;
+  let id = String(raw.id || '').trim();
+  if (!id || usedIds.has(id)) id = 'lrn_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  usedIds.add(id);
+  const history = Array.isArray(raw.history) ? raw.history.filter(h => h && typeof h === 'object').slice(-120).map(h => ({...h})) : [];
+  return {
+    id,
+    word,
+    reading,
+    meaning,
+    example,
+    stage,
+    nextReview,
+    createdAt: Number(raw.createdAt || 0) || Date.now(),
+    updatedAt: Number(raw.updatedAt || 0) || Date.now(),
+    lastReviewedAt: raw.lastReviewedAt ? String(raw.lastReviewedAt) : undefined,
+    reviewCount: Math.max(0, Number(raw.reviewCount || 0) || history.length || 0),
+    history
+  };
+}
+async function importLearningVocabularyFile(file) {
+  if (!file) return;
+  let data;
+  try {
+    const text = (await file.text()).replace(/^\uFEFF/, '');
+    data = JSON.parse(text);
+  } catch (err) {
+    console.warn('Learning vocabulary import parse failed:', err);
+    if (typeof showToast === 'function') showToast('词表文件无法读取，请选择 JSON 文件');
+    return;
+  }
+  const sourceCards = learningImportSourceCards(data);
+  if (!Array.isArray(sourceCards)) {
+    if (typeof showToast === 'function') showToast('没有在文件中找到可导入的生词');
+    return;
+  }
+  const existing = learningEnsureStore();
+  const existingKeys = new Set(existing.map(c => learningImportKey(c.word, c.reading)));
+  const usedIds = new Set(existing.map(c => String(c.id || '')).filter(Boolean));
+  const todayStr = localDateStr(new Date());
+  const incoming = [];
+  const incomingKeys = new Set();
+  let invalid = 0, duplicates = 0;
+  for (const raw of sourceCards) {
+    const card = learningNormalizeImportedCard(raw, todayStr, usedIds);
+    if (!card) { invalid++; continue; }
+    const key = learningImportKey(card.word, card.reading);
+    if (existingKeys.has(key) || incomingKeys.has(key)) { duplicates++; continue; }
+    incomingKeys.add(key);
+    incoming.push(card);
+  }
+  if (!incoming.length) {
+    const detail = duplicates ? `（${duplicates} 个重复词已跳过）` : '';
+    if (typeof showToast === 'function') showToast('没有需要新增的生词' + detail);
+    return;
+  }
+  const msg = `准备导入 ${incoming.length} 个生词。\n\n重复词将自动跳过，不会覆盖你现有的学习记录。` + (duplicates ? `\n已检测到 ${duplicates} 个重复词。` : '') + (invalid ? `\n另有 ${invalid} 条无有效单词内容，已忽略。` : '');
+  if (!confirm(msg)) return;
+  store.learningCards = incoming.concat(existing);
+  save({immediate:true});
+  learningRevealId = null;
+  renderLearning();
+  if (typeof showToast === 'function') showToast(`已导入 ${incoming.length} 个生词` + (duplicates ? `，跳过 ${duplicates} 个重复词` : ''));
+}
+
+function rateLearningCard(id, rating) {
+  const card = learningEnsureStore().find(c => c.id === id);
+  if (!card) return;
+  const today = localDateStr(new Date());
+  const oldStage = Math.max(0,Math.min(LEARNING_INTERVALS.length-1,Number(card.stage||0)));
+  let nextStage = oldStage;
+  let nextReview = today;
+  if (rating === 'again') {
+    // v5.237 忘记：节点不变、仍在今天复习，但移到“今日待复习”队列最后。
+    nextStage = oldStage;
+    nextReview = today;
+    card.reviewQueueDate = today;
+    card.reviewQueueOrder = Date.now();
+  } else if (rating === 'good') {
+    // 只有记住后才进入下一节点，并清除今天的临时排队位置。
+    nextStage = Math.min(oldStage + 1, LEARNING_INTERVALS.length - 1);
+    delete card.reviewQueueDate;
+    delete card.reviewQueueOrder;
+    const days = LEARNING_INTERVALS[nextStage] || 1;
+    nextReview = learningDateAdd(today, days);
+    if (oldStage === LEARNING_INTERVALS.length - 1) {
+      nextReview = learningDateAdd(today, LEARNING_INTERVALS[LEARNING_INTERVALS.length - 1]);
+    }
+  } else {
+    return;
+  }
+  card.stage = nextStage;
+  card.nextReview = nextReview;
+  card.lastReviewedAt = new Date().toISOString();
+  card.reviewCount = Number(card.reviewCount || 0) + 1;
+  card.history = Array.isArray(card.history) ? card.history : [];
+  card.history.push({at:new Date().toISOString(), rating, fromStage:oldStage, toStage:nextStage, nextReview:card.nextReview});
+  if (card.history.length > 120) card.history = card.history.slice(-120);
+  save({immediate:true});
+  learningRevealId = null;
+  renderLearning();
+}
+function bindLearningUI() {
+  const root = document.getElementById('learning');
+  if (!root || root.dataset.bound === '1') return;
+  root.dataset.bound = '1';
+  root.addEventListener('click', e => {
+    const rating = e.target.closest('[data-learning-rating]');
+    if (rating) {
+      const cardEl = rating.closest('[data-card-id]');
+      if (cardEl) rateLearningCard(cardEl.dataset.cardId, rating.dataset.learningRating);
+      return;
+    }
+    const action = e.target.closest('[data-learning-action]');
+    if (!action) return;
+    const a = action.dataset.learningAction;
+    if (a === 'reveal-card') { const cardEl=action.closest('[data-card-id]'); if(cardEl && learningRevealId !== cardEl.dataset.cardId){learningRevealId=cardEl.dataset.cardId; renderLearning();} }
+    else if (a === 'add') openLearningEditor(null);
+    else if (a === 'delete-current') { const id=action.dataset.learningId; if(id) deleteLearningCardDirect(id); }
+    else if (a === 'edit-current') { const id=action.dataset.learningId; if(id) openLearningEditor(id); }
+    else if (a === 'edit') { const row=action.closest('[data-learning-id]'); if(row) openLearningEditor(row.dataset.learningId); }
+  });
+  document.getElementById('learningInlineAdd')?.addEventListener('click', () => openLearningEditor(null));
+  document.getElementById('learningExportBtn')?.addEventListener('click', exportLearningVocabulary);
+  document.getElementById('learningImportBtn')?.addEventListener('click', () => document.getElementById('learningImportFile')?.click());
+  document.getElementById('learningImportFile')?.addEventListener('change', async e => {
+    const input = e.currentTarget;
+    const file = input && input.files ? input.files[0] : null;
+    try { if (file) await importLearningVocabularyFile(file); }
+    finally { if (input) input.value = ''; }
+  });
+  document.getElementById('learningSaveBtn')?.addEventListener('click', saveLearningEditor);
+  document.getElementById('learningDeleteBtn')?.addEventListener('click', deleteLearningCard);
+  document.getElementById('learningEditModal')?.addEventListener('click', e => { if (e.target.closest('[data-learning-action="close-modal"]')) closeLearningEditor(); });
+  document.getElementById('learningEditModal')?.addEventListener('keydown', e => { if (e.key === 'Escape') closeLearningEditor(); if ((e.metaKey||e.ctrlKey)&&e.key==='Enter') saveLearningEditor(); });
+}
+bindLearningUI();
+
 // ============== 页面标题（看板 / 月历年月 / v1.6 工时单） ==============
 function updatePageTitle() {
   const title = document.getElementById('pageTitle');
@@ -19242,6 +20173,7 @@ function updatePageTitle() {
     timesheet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
     litigation: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M7 7l-2.5 6a2.5 2.5 0 1 0 5 0L7 7"/><path d="M17 7l-2.5 6a2.5 2.5 0 1 0 5 0L17 7"/><path d="M9 21h6"/></svg>',
     habits: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.2 2.2 4.8-4.8"/></svg>',
+    learning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5v14"/><path d="M12 7c-1.8-2-4.2-3-7.2-3A1.8 1.8 0 0 0 3 5.8v11.7c0 1 .8 1.8 1.8 1.8 3 0 5.4.7 7.2 2.2"/><path d="M12 7c1.8-2 4.2-3 7.2-3A1.8 1.8 0 0 1 21 5.8v11.7c0 1-.8 1.8-1.8 1.8-3 0-5.4.7-7.2 2.2"/><path d="M6.5 8.2h2.4M6.5 11.2h2.8M15.1 8.2h2.4M14.7 11.2h2.8"/></svg>',
   };
   const setTitle = (viewKey, label) => {
     const html = `<span class="page-title-icon" aria-hidden="true">${ICONS[viewKey] || ''}</span><span class="page-title-text">${label}</span>`;
@@ -19250,6 +20182,11 @@ function updatePageTitle() {
     const tsTitle = document.getElementById('tsHeaderTitle');
     if (tsTitle && viewKey === 'timesheet') tsTitle.innerHTML = html;
   };
+  if (currentView === 'learning') {
+    setTitle('learning', '学习');
+    if (calNav) calNav.classList.add('hidden');
+    return;
+  }
   if (currentView === 'habits') {
     setTitle('habits', '习惯');
     if (calNav) {
@@ -26697,6 +27634,10 @@ document.getElementById('viewAddRecord')?.addEventListener('click', () => {
     if (typeof openHabitEditor === 'function') openHabitEditor(null);
     return;
   }
+  if (currentView === 'learning') {
+    if (typeof openLearningEditor === 'function') openLearningEditor(null);
+    return;
+  }
   document.getElementById('newProject')?.click();
 });
 
@@ -26956,6 +27897,29 @@ html[data-assistant-mode="hidden"] #botFab,html[data-assistant-mode="hidden"] #b
 .pwa-notice{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));z-index:10050;transform:translateX(-50%);width:min(520px,calc(100vw - 28px));display:flex;align-items:center;gap:12px;padding:12px 13px 12px 15px;border:1px solid var(--card-border);border-radius:14px;background:color-mix(in srgb,var(--card-bg-solid) 92%,transparent);color:var(--text);box-shadow:0 14px 42px rgba(0,0,0,.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .pwa-notice[hidden]{display:none}.pwa-notice-copy{min-width:0;flex:1;display:grid;gap:2px}.pwa-notice-copy strong{font-size:13px}.pwa-notice-copy span{font-size:11px;line-height:1.4;color:var(--muted)}.pwa-notice-action{border:0;border-radius:9px;padding:8px 12px;background:var(--accent);color:#fff;font:700 12px/1 inherit;cursor:pointer;white-space:nowrap}.pwa-notice-close{border:0;background:transparent;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:4px}.pwa-offline{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));z-index:10060;transform:translateX(-50%);padding:6px 10px;border-radius:999px;background:#282b32;color:#fff;font:700 11px/1.2 system-ui,-apple-system,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.22)}.pwa-offline[hidden]{display:none}
 @media(max-width:600px){.pwa-notice{align-items:flex-start}.pwa-notice-action{align-self:center}.pwa-offline{top:max(6px,env(safe-area-inset-top))}}
+
+/* ===== v5.238 学习页：词表 I/O 移入设置；生词库标题同行显示数量 ===== */
+.learning-library-head {
+  flex-wrap:nowrap !important;
+  align-items:center;
+}
+.learning-library-sub {
+  display:block !important;
+  margin:0 0 0 auto !important;
+  flex:0 0 auto;
+  text-align:right;
+  white-space:nowrap;
+  font-size:10.5px;
+  color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+.learning-library-actions,
+.learning-inline-add,
+.learning-io-btn { display:none !important; }
+@media(max-width:700px){
+  .learning-library-head { flex-wrap:nowrap !important; padding:13px 12px 10px; }
+  .learning-library-sub { display:block !important; font-size:9.5px; }
+}
 </style>
 
 <!-- ===== 3.1 iOS PWA: 移动端底部导航 + FAB + PWA 提示元素 ===== -->
@@ -26990,6 +27954,12 @@ html[data-assistant-mode="hidden"] #botFab,html[data-assistant-mode="hidden"] #b
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.2 2.2 4.8-4.8"/></svg>
     </span>
     <span class="label">习惯</span>
+  </button>
+  <button class="mobile-nav-item" data-view="learning" type="button" aria-label="学习">
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5v14"/><path d="M12 7c-1.8-2-4.2-3-7.2-3A1.8 1.8 0 0 0 3 5.8v11.7c0 1 .8 1.8 1.8 1.8 3 0 5.4.7 7.2 2.2"/><path d="M12 7c1.8-2 4.2-3 7.2-3A1.8 1.8 0 0 1 21 5.8v11.7c0 1-.8 1.8-1.8 1.8-3 0-5.4.7-7.2 2.2"/><path d="M6.5 8.2h2.4M15.1 8.2h2.4"/></svg>
+    </span>
+    <span class="label">学习</span>
   </button>
 </nav>
 
