@@ -4,14 +4,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · v5.251</title>
+<title>Kanban · Obsidian 手机上传修复 v5.252</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="5_239_260815">
+<meta name="build-hash" content="5_252_260815">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -11135,7 +11135,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
 }
 
 
-/* v5.250: 手机端通过 Obsidian URI 直接覆盖主同步文件 */
+/* v5.252: 手机端通过系统剪贴板 + Obsidian URI 上传并覆盖主同步文件 */
 .vault-mobile-direct {
   display: none;
   width: 100%;
@@ -11188,6 +11188,18 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
   font-size: 11px;
   line-height: 1.5;
   color: var(--muted);
+}
+.vault-mobile-push-hint {
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.vault-mobile-push-hint code {
+  font-size: 10px;
+  word-break: break-all;
 }
 @media (max-width: 520px) {
   .vault-mobile-direct-row { flex-direction: column; align-items: stretch; }
@@ -11759,18 +11771,19 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
       </div>
       <div class="vault-mobile-direct" id="vaultMobileDirect">
         <div class="vault-mobile-direct-label">
-          <span>手机直接更新 Obsidian</span>
+          <span>手机 Obsidian 同步</span>
           <span class="vault-mobile-direct-hint">首次填写一次 Vault 名称或 ID</span>
         </div>
         <div class="vault-mobile-direct-row">
           <input class="vault-mobile-direct-input" id="vaultMobileTarget" type="text" autocomplete="off" spellcheck="false" placeholder="例如：My Vault 或 Vault ID">
-          <button class="btn btn-primary" id="vaultMobilePush" type="button">直接覆盖仓库</button>
+          <button class="btn btn-primary" id="vaultMobilePush" type="button">上传到仓库</button>
         </div>
         <div class="vault-mobile-direct-row vault-mobile-pull-row">
           <button class="btn" id="vaultMobilePull" type="button">从仓库下载</button>
           <button class="btn btn-ghost" id="vaultMobileRebind" type="button" style="display:none">重新绑定主文件</button>
         </div>
         <div class="vault-mobile-pull-hint" id="vaultMobilePullHint">首次需要选择一次 Kanban数据同步.md。</div>
+        <div class="vault-mobile-push-hint" id="vaultMobilePushHint">上传会把最新数据写入并覆盖 <code>Kanban同步/Kanban数据同步.md</code>。iPhone 若只打开文件但内容没有更新，请在系统设置中允许 Obsidian“从其他 App 粘贴”。</div>
       </div>
       <div class="vault-compare hidden" id="vaultCompare">
         <div class="vault-side-card">
@@ -11820,7 +11833,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
       </div>
       <div class="vault-help" id="vaultHelp">
         <strong>电脑：</strong>「上传到仓库」默认只覆盖 <code>Kanban同步/Kanban数据同步.md</code> 这一份主文件；如需保留旧版本，请在确认页主动勾选备份。
-        <br><strong>手机：</strong>填写一次 Vault 名称或 ID 后，可用「直接覆盖仓库」让 Obsidian 覆盖 <code>Kanban同步/Kanban数据同步.md</code>；导出/导入仍保留为兜底。
+        <br><strong>手机：</strong>填写一次 Vault 名称或 ID 后，可用「上传到仓库」把最新数据交给 Obsidian，并覆盖 <code>Kanban同步/Kanban数据同步.md</code>；导出/导入仍保留为兜底。
       </div>
       <!-- v5.104: 已移除实时同步与同步日志 -->
       <div class="vault-log" id="vaultLog" hidden aria-hidden="true"></div>
@@ -26886,9 +26899,21 @@ async function shareManualSyncFile() {
 }
 
 
-// v5.250: 手机端使用 Obsidian 官方 URI 直接覆盖固定主同步文件。
-// 为避免把完整 JSON 放进超长 URL，先复制 Markdown 到剪贴板，再由 Obsidian 的 clipboard + overwrite 读取并覆盖。
+// v5.252: 手机端使用系统剪贴板 + Obsidian 官方 URI 上传固定主同步文件。
+// 同步正文可能很长，不能可靠地直接塞进 URI；先把完整 Markdown 写入系统剪贴板，再由 Obsidian 的 clipboard + overwrite 读取并覆盖。
+function vaultMobileDelay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function copyTextForObsidian(text) {
+  // 优先 ClipboardItem，部分移动端对较长纯文本比 writeText 更稳定。
+  if (navigator.clipboard && typeof navigator.clipboard.write === 'function' && typeof ClipboardItem !== 'undefined') {
+    try {
+      const item = new ClipboardItem({ 'text/plain': new Blob([text], { type: 'text/plain' }) });
+      await navigator.clipboard.write([item]);
+      return true;
+    } catch {}
+  }
   if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
     try {
       await navigator.clipboard.writeText(text);
@@ -26898,18 +26923,34 @@ async function copyTextForObsidian(text) {
   // file:// / 部分 iOS 环境下 Clipboard API 可能不可用，退回传统复制。
   const ta = document.createElement('textarea');
   ta.value = text;
-  ta.setAttribute('readonly', '');
+  ta.setAttribute('aria-hidden', 'true');
   ta.style.position = 'fixed';
-  ta.style.left = '-9999px';
+  ta.style.left = '0';
   ta.style.top = '0';
+  ta.style.width = '1px';
+  ta.style.height = '1px';
+  ta.style.opacity = '0.01';
+  ta.style.fontSize = '16px';
+  ta.style.zIndex = '-1';
   document.body.appendChild(ta);
-  ta.focus();
+  ta.focus({ preventScroll: true });
   ta.select();
   ta.setSelectionRange(0, ta.value.length);
   let ok = false;
   try { ok = !!document.execCommand('copy'); } catch {}
   ta.remove();
   return ok;
+}
+
+// 能读回剪贴板时做一次完整校验；浏览器不允许 readText 时返回 null，不阻塞上传。
+async function verifyTextForObsidianClipboard(expected) {
+  if (!(navigator.clipboard && typeof navigator.clipboard.readText === 'function')) return null;
+  try {
+    const actual = await navigator.clipboard.readText();
+    return actual === expected;
+  } catch {
+    return null;
+  }
 }
 
 function saveObsidianMobileTarget(value) {
@@ -26922,6 +26963,7 @@ function saveObsidianMobileTarget(value) {
 
 async function pushManualSyncToObsidianMobile() {
   const input = document.getElementById('vaultMobileTarget');
+  const btn = document.getElementById('vaultMobilePush');
   const target = saveObsidianMobileTarget(input?.value || store.vaultConfig?.obsidianVaultTarget || '');
   if (!target) {
     if (input) { input.focus(); input.select?.(); }
@@ -26929,43 +26971,55 @@ async function pushManualSyncToObsidianMobile() {
     return false;
   }
 
+  const oldLabel = btn?.textContent || '上传到仓库';
+  if (btn) { btn.disabled = true; btn.textContent = '准备上传…'; }
   try {
     const { text, hash } = buildManualSyncBlob();
     const copied = await copyTextForObsidian(text);
-    if (!copied) throw new Error('无法复制同步内容到剪贴板');
+    if (!copied) throw new Error('系统没有允许网页写入剪贴板，无法把同步内容交给 Obsidian');
+
+    const verified = await verifyTextForObsidianClipboard(text);
+    if (verified === false) throw new Error('同步内容写入剪贴板后校验失败，请重新点击上传');
+
+    // 给移动系统一点时间提交剪贴板内容，再切换 App，减少“只打开文件但正文未写入”的情况。
+    if (btn) btn.textContent = '正在打开 Obsidian…';
+    showToast('最新同步内容已复制，正在交给 Obsidian 写入仓库…');
+    await vaultMobileDelay(220);
 
     const filePath = `${MANUAL_SYNC_DIR}/${MANUAL_SYNC_FILE}`;
+    // 参数显式写成 =true；不再使用 silent，确保移动端真正执行 new/overwrite 写入动作后显示目标文件。
     const uri = 'obsidian://new?' + [
       'vault=' + encodeURIComponent(target),
       'file=' + encodeURIComponent(filePath),
-      'clipboard',
-      'overwrite',
-      'silent'
+      'clipboard=true',
+      'overwrite=true'
     ].join('&');
 
     if (!store.vaultConfig) store.vaultConfig = {};
     store.vaultConfig.lastDirectPushAt = Date.now();
     store.vaultConfig.lastDirectPushHash = hash;
     store.vaultConfig.lastDirectPushDevice = currentDeviceLabel();
+    store.vaultConfig.lastDirectPushPath = filePath;
     save({ skipVault: true, immediate: true });
-    addVaultLog(`已交给 Obsidian 覆盖主同步文件（${currentDeviceLabel()}）`);
-    showToast('正在打开 Obsidian 并覆盖主同步文件…');
+    addVaultLog(`已发起上传到 Obsidian 仓库（${currentDeviceLabel()}）`);
 
-    // 用显式链接触发自定义 URI，兼容性通常比 location.href 更稳。
+    // 用同一次用户点击触发自定义 URI。Obsidian 会从系统剪贴板读取完整 Markdown，并覆盖固定主文件。
     const a = document.createElement('a');
     a.href = uri;
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => a.remove(), 1000);
+    setTimeout(() => a.remove(), 1200);
     return true;
   } catch (err) {
-    setVaultError(err.message || '无法直接更新 Obsidian');
+    setVaultError(err.message || '上传到 Obsidian 仓库失败');
     return false;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = oldLabel; }
   }
 }
 
-// v5.251: 手机端“从仓库下载”——支持 File System Access API 的浏览器可首次绑定主同步文件，后续直接读取最新内容。
+// v5.252: 手机端“从仓库下载”——支持 File System Access API 的浏览器可首次绑定主同步文件，后续直接读取最新内容。
 // iOS/Safari 等不支持 showOpenFilePicker 的环境仍回退到系统文件选择器；网页本身无法通过 Obsidian URI 反向读取笔记正文。
 function supportsPersistentManualSyncFile() {
   return typeof window !== 'undefined' && typeof window.showOpenFilePicker === 'function' && typeof indexedDB !== 'undefined';
@@ -27397,12 +27451,12 @@ function refreshVaultModal() {
   if (help) {
     if (!folderOk || mobile) {
       help.innerHTML =
-        '<strong>手机上传：</strong>填写一次 Vault 名称或 ID 后，点「直接覆盖仓库」即可覆盖 <code>Kanban同步/Kanban数据同步.md</code>。<br><strong>手机下载：</strong>支持持久文件句柄的浏览器首次绑定主同步文件后可一键读取；iPhone/Safari 会直接打开系统文件选择器授权本次读取。<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录、学习词库和复习进度，以及习惯配置与历史打卡。导入前会自动保留本地恢复点。' +
+        '<strong>手机上传：</strong>填写一次 Vault 名称或 ID 后，点「上传到仓库」即可把最新数据写入并覆盖 <code>Kanban同步/Kanban数据同步.md</code>。<br><strong>手机下载：</strong>支持持久文件句柄的浏览器首次绑定主同步文件后可一键读取；iPhone/Safari 会直接打开系统文件选择器授权本次读取。<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录、学习词库和复习进度，以及习惯配置与历史打卡。导入前会自动保留本地恢复点。' +
         (folderOk ? '<br><strong>电脑：</strong>也可「连接 Obsidian 仓库」后直接上传/下载。' : '');
     } else {
       help.innerHTML =
         '<strong>电脑：</strong>连接共用的 Obsidian Vault 根目录，或直接连接其中的「Kanban同步」文件夹后，即可「上传到仓库 / 从仓库下载」。程序会自动识别目录层级；仅手动操作，不做实时同步。' +
-        '<br><strong>手机：</strong>填写一次 Vault 名称或 ID 后可直接覆盖同一个 MD 主文件；支持持久文件句柄的浏览器还可首次绑定后直接从主文件下载，iPhone/Safari 则需通过系统文件选择器授权读取。' +
+        '<br><strong>手机：</strong>填写一次 Vault 名称或 ID 后可用「上传到仓库」更新同一个 MD 主文件；支持持久文件句柄的浏览器还可首次绑定后直接从主文件下载，iPhone/Safari 则需通过系统文件选择器授权读取。' +
         '<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录、学习词库和完整复习进度，以及习惯配置与历史打卡。';
     }
   }
