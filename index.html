@@ -3799,6 +3799,14 @@ body[data-view="board"][data-filter="all"] .card:not(.unified-card) .task-title:
 .vault-preview-title { font-weight:850; font-size:14px; }
 .vault-preview-text { margin-top:7px; color:var(--text); font-size:12px; line-height:1.65; white-space:pre-line; }
 .vault-preview-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+/* v5.246: 主同步文件默认只覆盖；历史备份改为每次操作手动选择。 */
+.vault-preview-backup-option { margin-top:12px; display:flex; align-items:center; gap:8px; width:fit-content; color:var(--muted); font-size:12px; cursor:pointer; user-select:none; }
+.vault-preview-backup-option.hidden { display:none !important; }
+.vault-preview-backup-option input { position:absolute; opacity:0; pointer-events:none; }
+.vault-preview-backup-box { width:16px; height:16px; border-radius:5px; border:1px solid var(--border); background:var(--card-bg-solid); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.vault-preview-backup-option input:checked + .vault-preview-backup-box { background:var(--accent); border-color:var(--accent); }
+.vault-preview-backup-option input:checked + .vault-preview-backup-box::after { content:'✓'; color:#fff; font-size:11px; font-weight:800; line-height:1; }
+.vault-preview-backup-option:hover { color:var(--text); }
 .vault-history-panel { margin:0 0 14px; padding:12px; border:1px solid var(--border); border-radius:13px; background:var(--task-bg); }
 .vault-history-head { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:8px; }
 .vault-history-head span { color:var(--muted); font-size:10px; }
@@ -9915,7 +9923,7 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
   display: none;
 }
 
-/* v5.245: 完成打卡备注过长时，桌面悬停显示完整内容 */
+/* v5.246: 完成打卡备注过长时，桌面悬停显示完整内容 */
 .habit-note-hover-tooltip {
   position: fixed;
   z-index: 14000;
@@ -11627,6 +11635,11 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
       <div class="vault-preview hidden" id="vaultPreview">
         <div class="vault-preview-title" id="vaultPreviewTitle">准备执行</div>
         <div class="vault-preview-text" id="vaultPreviewText"></div>
+        <label class="vault-preview-backup-option hidden" id="vaultPreviewBackupOption">
+          <input type="checkbox" id="vaultPreviewBackupCheck">
+          <span class="vault-preview-backup-box" aria-hidden="true"></span>
+          <span id="vaultPreviewBackupLabel">操作前创建备份</span>
+        </label>
         <div class="vault-preview-actions">
           <button class="btn btn-ghost" id="vaultPreviewCancel">取消</button>
           <button class="btn btn-primary" id="vaultPreviewConfirm">确认执行</button>
@@ -11651,8 +11664,8 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
         </div>
       </div>
       <div class="vault-help" id="vaultHelp">
-        <strong>电脑：</strong>连接共用的 Obsidian 仓库文件夹后，「上传到仓库 / 从仓库下载」。仅手动操作，不做实时同步。
-        <br><strong>手机：</strong>点「导出同步文件」，把 <code>Kanban数据同步.md</code> 放进 Obsidian 的 <code>Kanban同步</code> 文件夹并等待 Sync；另一台设备 Sync 完成后，用「从文件导入」选中该文件。
+        <strong>电脑：</strong>「上传到仓库」默认只覆盖 <code>Kanban同步/Kanban数据同步.md</code> 这一份主文件；如需保留旧版本，请在确认页主动勾选备份。
+        <br><strong>手机：</strong>点「导出同步文件」，把 <code>Kanban数据同步.md</code> 覆盖保存到 Obsidian 的 <code>Kanban同步</code> 文件夹并等待 Sync；另一台设备 Sync 完成后，用「从文件导入」选中该文件。
       </div>
       <!-- v5.104: 已移除实时同步与同步日志 -->
       <div class="vault-log" id="vaultLog" hidden aria-hidden="true"></div>
@@ -18867,7 +18880,7 @@ function renderHabitCell(item, dateStr) {
 
 
 
-// v5.245: 仅当完成打卡备注确实被截断时，鼠标悬停显示完整内容。
+// v5.246: 仅当完成打卡备注确实被截断时，鼠标悬停显示完整内容。
 let habitNoteHoverTooltip = null;
 function getHabitNoteHoverTooltip() {
   if (habitNoteHoverTooltip && habitNoteHoverTooltip.isConnected) return habitNoteHoverTooltip;
@@ -26032,7 +26045,7 @@ function buildBusinessData() {
     litigationRecords: cloneSyncValue(store.litigationRecords, []),
     // v5.243: 学习词库与完整复习状态一并同步（stage / nextReview / history / 队列顺序等均保留）
     learningCards: cloneSyncValue(store.learningCards, []),
-    // v5.245: 习惯配置 + 全部历史打卡/备注一并同步
+    // v5.246: 习惯配置 + 全部历史打卡/备注一并同步
     habits: cloneSyncValue(store.habits, { items: [], logs: {} }),
   };
 }
@@ -26163,13 +26176,14 @@ async function ensureManualVaultPermission(interactive = false) {
   catch { return false; }
 }
 
-async function getManualSyncDirectories(create = false) {
+async function getManualSyncDirectories(create = false, createBackup = false) {
   if (!vaultDirHandle) return null;
   try {
     const syncDir = await vaultDirHandle.getDirectoryHandle(MANUAL_SYNC_DIR, { create });
     let backupDir = null;
-    if (create) backupDir = await syncDir.getDirectoryHandle(MANUAL_BACKUP_DIR, { create: true });
-    else {
+    if (createBackup) {
+      backupDir = await syncDir.getDirectoryHandle(MANUAL_BACKUP_DIR, { create: true });
+    } else {
       try { backupDir = await syncDir.getDirectoryHandle(MANUAL_BACKUP_DIR); } catch {}
     }
     return { syncDir, backupDir };
@@ -26230,7 +26244,7 @@ async function pruneManualBackups(backupDir) {
 }
 
 async function writeManualBackup(prefix, content) {
-  const dirs = await getManualSyncDirectories(true);
+  const dirs = await getManualSyncDirectories(true, true);
   const filename = `${safeFileBase(prefix)}-${backupTimestamp()}.md`;
   await writeManualTextFile(dirs.backupDir, filename, content);
   await pruneManualBackups(dirs.backupDir);
@@ -26354,18 +26368,29 @@ async function prepareManualSync(type, sourceSnapshot = null) {
   const title = document.getElementById('vaultPreviewTitle');
   const text = document.getElementById('vaultPreviewText');
   const confirmBtn = document.getElementById('vaultPreviewConfirm');
+  const backupOption = document.getElementById('vaultPreviewBackupOption');
+  const backupCheck = document.getElementById('vaultPreviewBackupCheck');
+  const backupLabel = document.getElementById('vaultPreviewBackupLabel');
+  if (backupCheck) backupCheck.checked = false;
+  if (backupOption) backupOption.classList.toggle('hidden', type === 'restore');
   preview.classList.remove('hidden');
   document.getElementById('vaultHistoryPanel')?.classList.add('hidden');
   if (type === 'upload') {
     document.getElementById('vaultFlow').textContent = '→';
     title.textContent = '准备上传到 Obsidian 仓库';
-    text.textContent = `将以当前电脑数据覆盖仓库主同步文件。\n${syncSummaryText(relation.localSummary)}\n${manualRemoteSnapshot ? '仓库原版本会先自动备份。' : '仓库尚无数据，将创建首个版本。'}`;
+    text.textContent = `将以当前电脑数据覆盖同一个主同步文件：${MANUAL_SYNC_DIR}/${MANUAL_SYNC_FILE}。
+${syncSummaryText(relation.localSummary)}
+${manualRemoteSnapshot ? '默认不会创建历史版本。' : '仓库尚无数据，将创建首个主同步文件。'}`;
+    if (backupLabel) backupLabel.textContent = '覆盖前备份仓库当前版本';
     confirmBtn.textContent = '确认上传';
   } else {
     document.getElementById('vaultFlow').textContent = '←';
     const verb = type === 'restore' ? '恢复该备份' : '从仓库下载';
     title.textContent = `准备${verb}`;
-    text.textContent = `将以所选数据覆盖当前电脑的业务数据。\n${syncSummaryText(remote.summary)}\n当前电脑数据会先自动写入历史备份。`;
+    text.textContent = `将以所选数据覆盖当前电脑的业务数据。
+${syncSummaryText(remote.summary)}
+${type === 'restore' ? '将直接恢复所选历史版本。' : '默认不会额外生成 Obsidian 历史备份。'}`;
+    if (backupLabel) backupLabel.textContent = '下载前把当前电脑数据备份到 Obsidian';
     confirmBtn.textContent = type === 'restore' ? '确认恢复' : '确认下载';
   }
 }
@@ -26373,6 +26398,8 @@ async function prepareManualSync(type, sourceSnapshot = null) {
 function cancelManualPreview() {
   manualPendingAction = null;
   document.getElementById('vaultPreview')?.classList.add('hidden');
+  const backupCheck = document.getElementById('vaultPreviewBackupCheck');
+  if (backupCheck) backupCheck.checked = false;
   const flow = document.getElementById('vaultFlow');
   if (flow) flow.textContent = '⇄';
 }
@@ -26388,7 +26415,7 @@ function applyBusinessData(data) {
   store.litigationRecords = cloneSyncValue(data.litigationRecords, []);
   // v5.243: 新版同步文件带 learningCards 时覆盖词库；旧 v1 文件未包含该字段时保留当前设备词库，避免误清空。
   if (Array.isArray(data.learningCards)) store.learningCards = cloneSyncValue(data.learningCards, []);
-  // v5.245: Schema v3 开始同步习惯。读取 v1/v2 老文件时保留本机习惯，避免老快照把习惯清空。
+  // v5.246: Schema v3 开始同步习惯。读取 v1/v2 老文件时保留本机习惯，避免老快照把习惯清空。
   if (data.habits && typeof data.habits === 'object') {
     store.habits = cloneSyncValue(data.habits, { items: [], logs: {} });
   }
@@ -26424,10 +26451,11 @@ async function executeManualSync() {
     if (action.type !== 'restore' && latestHash !== action.preparedRemoteHash) {
       throw new Error('仓库数据在预览后又发生了变化，请重新预览后再确认');
     }
+    const wantsBackup = !!document.getElementById('vaultPreviewBackupCheck')?.checked;
     if (action.type === 'upload') {
-      if (latestRemote) await writeManualBackup('仓库备份', latestRemote.text);
+      if (wantsBackup && latestRemote) await writeManualBackup('仓库备份', latestRemote.text);
       const envelope = makeSyncEnvelope();
-      const dirs = await getManualSyncDirectories(true);
+      const dirs = await getManualSyncDirectories(true, false);
       await writeManualTextFile(dirs.syncDir, MANUAL_SYNC_FILE, buildSyncMarkdown(envelope));
       const hash = syncHash(envelope.data);
       if (!store.vaultConfig) store.vaultConfig = {};
@@ -26440,7 +26468,9 @@ async function executeManualSync() {
     } else {
       const source = action.sourceSnapshot;
       const localEnvelope = makeSyncEnvelope();
-      await writeManualBackup(`本机备份-${currentDeviceLabel()}`, buildSyncMarkdown(localEnvelope, '下载前的本机备份'));
+      if (action.type !== 'restore' && wantsBackup) {
+        await writeManualBackup(`本机备份-${currentDeviceLabel()}`, buildSyncMarkdown(localEnvelope, '下载前的本机备份'));
+      }
       applyBusinessData(source.envelope.data);
       const hash = syncHash(source.envelope.data);
       if (!store.vaultConfig) store.vaultConfig = {};
