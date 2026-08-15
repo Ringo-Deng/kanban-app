@@ -11783,7 +11783,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
           <button class="btn btn-ghost" id="vaultMobileRebind" type="button" style="display:none">重新绑定主文件</button>
         </div>
         <div class="vault-mobile-pull-hint" id="vaultMobilePullHint">首次需要选择一次 Kanban数据同步.md。</div>
-        <div class="vault-mobile-push-hint" id="vaultMobilePushHint">上传会把最新数据写入并覆盖 <code>Kanban同步/Kanban数据同步.md</code>。iPhone 若只打开文件但内容没有更新，请在系统设置中允许 Obsidian“从其他 App 粘贴”。</div>
+        <div class="vault-mobile-push-hint" id="vaultMobilePushHint">上传会把最新数据写入并覆盖 <code>Kanban同步/Kanban数据同步.md</code>。iPhone 若只打开文件但内容没有更新，请先在系统设置中允许 Obsidian“从其他 App 粘贴”；如必须手动粘贴，请先全选旧文件全部正文再替换，不要在末尾追加。</div>
       </div>
       <div class="vault-compare hidden" id="vaultCompare">
         <div class="vault-side-card">
@@ -26258,6 +26258,7 @@ const MANUAL_SYNC_FILE = 'Kanban数据同步.md';
 const MANUAL_BACKUP_DIR = '历史备份';
 const MANUAL_BACKUP_LIMIT = 10;
 const MANUAL_SYNC_SCHEMA = 3;
+// v5.253: 兼容同一 MD 中误粘贴出的多份同步数据块，读取最后一份有效快照。
 const MANUAL_SYNC_COMPAT_SCHEMAS = [1, 2, 3];
 const MANUAL_LOCAL_RECOVERY_KEY = 'kanban_manual_sync_local_recovery_v2';
 const MANUAL_SYNC_FILE_HANDLE_KEY = 'kanban_manual_sync_file_handle_v1';
@@ -26388,17 +26389,43 @@ function buildSyncMarkdown(envelope, kind = '主同步文件') {
   ].join('\n');
 }
 
+// v5.253: 容错读取同步 MD。手机端若曾把新版整段 Markdown 粘贴到旧文件后面，
+// 同一个文件中可能出现多组 START/END 数据块。旧逻辑会从第一个 START 一直截到最后一个 END，
+// 导致两个 JSON 被拼在一起并触发 Unexpected non-whitespace character after JSON。
+// 现在从后往前尝试每一组完整数据块，优先使用最后一份有效快照。
 function parseSyncMarkdown(text) {
-  const start = text.indexOf(MANUAL_SYNC_START);
-  const end = text.lastIndexOf(MANUAL_SYNC_END);
-  if (start < 0 || end <= start) throw new Error('未找到 Kanban 同步数据块');
-  let block = text.slice(start + MANUAL_SYNC_START.length, end).trim();
-  block = block.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
-  const envelope = JSON.parse(block);
-  if (!envelope || !MANUAL_SYNC_COMPAT_SCHEMAS.includes(Number(envelope.schemaVersion)) || !envelope.data || !envelope.data.boards) {
-    throw new Error('同步文件格式或版本不受支持');
+  const source = String(text || '');
+  const pairs = [];
+  let cursor = 0;
+
+  while (cursor < source.length) {
+    const start = source.indexOf(MANUAL_SYNC_START, cursor);
+    if (start < 0) break;
+    const end = source.indexOf(MANUAL_SYNC_END, start + MANUAL_SYNC_START.length);
+    if (end < 0) break;
+    pairs.push({ start, end });
+    cursor = end + MANUAL_SYNC_END.length;
   }
-  return envelope;
+
+  if (!pairs.length) throw new Error('未找到 Kanban 同步数据块');
+
+  let lastError = null;
+  for (let i = pairs.length - 1; i >= 0; i--) {
+    const { start, end } = pairs[i];
+    let block = source.slice(start + MANUAL_SYNC_START.length, end).trim();
+    block = block.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
+    try {
+      const envelope = JSON.parse(block);
+      if (!envelope || !MANUAL_SYNC_COMPAT_SCHEMAS.includes(Number(envelope.schemaVersion)) || !envelope.data || !envelope.data.boards) {
+        throw new Error('同步文件格式或版本不受支持');
+      }
+      return envelope;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw new Error('同步数据块损坏：' + (lastError?.message || '无法解析 JSON'));
 }
 
 async function ensureManualVaultPermission(interactive = false) {
