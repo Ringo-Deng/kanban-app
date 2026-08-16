@@ -9880,25 +9880,25 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
 .habits-th-inner {
   max-width: 220px;
 }
-/* 运动等打卡：勾选后备注线 */
-.habit-bool-wrap {
+/* v5.254: 习惯备注横线随列宽自适应；睡眠时间选择后也可填写心得 */
+.habit-bool-wrap,
+.habit-time-wrap {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  min-width: 120px;
+  width: 100%;
+  min-width: 0;
 }
 .habit-bool-row {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-}
-.habit-bool-note {
-  flex: 1;
   min-width: 0;
-  width: 100%;
-  max-width: 160px;
+}
+.habit-note-input {
+  min-width: 0;
   height: 26px;
   border: none;
   border-bottom: 1px solid var(--border);
@@ -9912,16 +9912,29 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  box-sizing: border-box;
 }
-.habit-bool-note::placeholder {
+/* 完成打卡：扣除左侧勾选框后占满剩余列宽；不再固定 160px */
+.habit-bool-note {
+  flex: 1 1 auto;
+  width: auto;
+  max-width: none;
+}
+/* 睡眠心得：略窄于当前习惯列，列宽变化时自动伸缩 */
+.habit-time-note {
+  width: calc(100% - 8px);
+  max-width: none;
+  align-self: flex-start;
+}
+.habit-note-input::placeholder {
   color: var(--muted);
   opacity: 0.65;
   font-weight: 400;
 }
-.habit-bool-note:focus {
+.habit-note-input:focus {
   border-bottom-color: var(--accent);
 }
-.habit-bool-note[disabled] {
+.habit-note-input[disabled] {
   display: none;
 }
 
@@ -10125,6 +10138,9 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
 .habit-time-picker {
   display: inline-flex;
   max-width: 100%;
+}
+.habit-time-wrap .habit-time-picker {
+  width: auto;
 }
 .habit-time-trigger {
   height: 28px;
@@ -19066,19 +19082,26 @@ function renderHabitCell(item, dateStr) {
   }
   if (item.type === 'time') {
     const val = (log && log.v) ? String(log.v) : '';
+    const note = (log && log.note) ? String(log.note) : '';
     const display = val ? val : '选择时间';
     const emptyCls = val ? '' : ' is-empty';
-    // v5.209: 仅触发按钮，下拉用全局 #habitTimePopover
-    return '<div class="habit-time-picker" data-habit-time-picker="' + item.id + '" data-date="' + dateStr + '">' +
+    // v5.254: 选定睡眠时间后，在下方显示随列宽自适应的“睡眠心得”横线。
+    const noteHtml = val
+      ? ('<input type="text" class="habit-note-input habit-time-note" data-habit-time-note="' + item.id + '" data-date="' + dateStr +
+         '" value="' + escapeHtml(note) + '" placeholder="睡眠心得…" maxlength="120" />')
+      : '';
+    return '<div class="habit-time-wrap">' +
+      '<div class="habit-time-picker" data-habit-time-picker="' + item.id + '" data-date="' + dateStr + '">' +
       '<button type="button" class="habit-time-trigger" data-habit-time-trigger="' + item.id + '" data-date="' + dateStr +
       '" aria-haspopup="listbox" aria-expanded="false">' +
-      '<span class="habit-time-val' + emptyCls + '">' + display + '</span></button></div>';
+      '<span class="habit-time-val' + emptyCls + '">' + display + '</span></button></div>' +
+      noteHtml + '</div>';
   }
   // bool — 勾选后可填备注（运动内容等）
   const done = !!(log && log.v);
   const note = (log && log.note) ? String(log.note) : '';
   const noteHtml = done
-    ? ('<input type="text" class="habit-bool-note" data-habit-bool-note="' + item.id + '" data-date="' + dateStr +
+    ? ('<input type="text" class="habit-note-input habit-bool-note" data-habit-bool-note="' + item.id + '" data-date="' + dateStr +
        '" value="' + escapeHtml(note) + '" placeholder="记录内容…" maxlength="80" />')
     : '';
   return '<div class="habit-bool-wrap">' +
@@ -19091,7 +19114,7 @@ function renderHabitCell(item, dateStr) {
 
 
 
-// v5.247: 仅当完成打卡备注确实被截断时，鼠标悬停显示完整内容。
+// v5.254: 完成打卡备注和睡眠心得仅在确实被截断时，桌面悬停显示完整内容。
 let habitNoteHoverTooltip = null;
 function getHabitNoteHoverTooltip() {
   if (habitNoteHoverTooltip && habitNoteHoverTooltip.isConnected) return habitNoteHoverTooltip;
@@ -19124,11 +19147,11 @@ function showHabitNoteHoverTooltip(input) {
   });
 }
 document.addEventListener('mouseover', (e) => {
-  const input = e.target && e.target.closest ? e.target.closest('.habit-bool-note') : null;
+  const input = e.target && e.target.closest ? e.target.closest('.habit-note-input') : null;
   if (input) showHabitNoteHoverTooltip(input);
 });
 document.addEventListener('mouseout', (e) => {
-  const input = e.target && e.target.closest ? e.target.closest('.habit-bool-note') : null;
+  const input = e.target && e.target.closest ? e.target.closest('.habit-note-input') : null;
   if (input) hideHabitNoteHoverTooltip();
 });
 document.addEventListener('scroll', hideHabitNoteHoverTooltip, true);
@@ -20064,16 +20087,26 @@ function bindHabitsUI() {
     }
   });
 
-  // 运动备注：输入时保存，不整表重绘
+  // v5.254: 完成打卡备注 / 睡眠心得输入时保存，不整表重绘。
   document.addEventListener('input', e => {
     if (document.body.dataset.view !== 'habits') return;
-    const noteInput = e.target.closest('[data-habit-bool-note]');
-    if (!noteInput) return;
-    const id = noteInput.dataset.habitBoolNote;
-    const dateStr = noteInput.dataset.date;
-    const note = noteInput.value;
-    hideHabitNoteHoverTooltip();
-    setHabitLog(id, dateStr, { v: true, note: note });
+    const boolNoteInput = e.target.closest('[data-habit-bool-note]');
+    if (boolNoteInput) {
+      const id = boolNoteInput.dataset.habitBoolNote;
+      const dateStr = boolNoteInput.dataset.date;
+      hideHabitNoteHoverTooltip();
+      setHabitLog(id, dateStr, { v: true, note: boolNoteInput.value });
+      return;
+    }
+    const timeNoteInput = e.target.closest('[data-habit-time-note]');
+    if (timeNoteInput) {
+      const id = timeNoteInput.dataset.habitTimeNote;
+      const dateStr = timeNoteInput.dataset.date;
+      const current = getHabitLog(id, dateStr);
+      if (!current || !current.v) return;
+      hideHabitNoteHoverTooltip();
+      setHabitLog(id, dateStr, { v: current.v, note: timeNoteInput.value });
+    }
   });
 }
 
