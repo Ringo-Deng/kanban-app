@@ -9880,9 +9880,8 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
 .habits-th-inner {
   max-width: 220px;
 }
-/* v5.254: 习惯备注横线随列宽自适应；睡眠时间选择后也可填写心得 */
-.habit-bool-wrap,
-.habit-time-wrap {
+/* v5.255: 习惯备注横线随列宽自适应；睡眠心得与时间保持在同一行 */
+.habit-bool-wrap {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -9890,8 +9889,10 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
   width: 100%;
   min-width: 0;
 }
-.habit-bool-row {
+.habit-bool-row,
+.habit-time-wrap {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
   width: 100%;
@@ -9920,11 +9921,13 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
   width: auto;
   max-width: none;
 }
-/* 睡眠心得：略窄于当前习惯列，列宽变化时自动伸缩 */
+/* 睡眠心得：紧跟时间选择器，占满该习惯列的剩余宽度 */
 .habit-time-note {
-  width: calc(100% - 8px);
+  flex: 1 1 0;
+  width: auto;
   max-width: none;
-  align-self: flex-start;
+  min-width: 0;
+  align-self: center;
 }
 .habit-note-input::placeholder {
   color: var(--muted);
@@ -10141,6 +10144,7 @@ body[data-view="habits"] #calNav { display: inline-flex !important; }
 }
 .habit-time-wrap .habit-time-picker {
   width: auto;
+  flex: 0 0 auto;
 }
 .habit-time-trigger {
   height: 28px;
@@ -19085,7 +19089,7 @@ function renderHabitCell(item, dateStr) {
     const note = (log && log.note) ? String(log.note) : '';
     const display = val ? val : '选择时间';
     const emptyCls = val ? '' : ' is-empty';
-    // v5.254: 选定睡眠时间后，在下方显示随列宽自适应的“睡眠心得”横线。
+    // v5.255: 选定睡眠时间后，在时间右侧显示随列宽自适应的“睡眠心得”横线。
     const noteHtml = val
       ? ('<input type="text" class="habit-note-input habit-time-note" data-habit-time-note="' + item.id + '" data-date="' + dateStr +
          '" value="' + escapeHtml(note) + '" placeholder="睡眠心得…" maxlength="120" />')
@@ -19114,7 +19118,7 @@ function renderHabitCell(item, dateStr) {
 
 
 
-// v5.254: 完成打卡备注和睡眠心得仅在确实被截断时，桌面悬停显示完整内容。
+// v5.255: 完成打卡备注和睡眠心得仅在确实被截断时，桌面悬停显示完整内容。
 let habitNoteHoverTooltip = null;
 function getHabitNoteHoverTooltip() {
   if (habitNoteHoverTooltip && habitNoteHoverTooltip.isConnected) return habitNoteHoverTooltip;
@@ -20087,7 +20091,7 @@ function bindHabitsUI() {
     }
   });
 
-  // v5.254: 完成打卡备注 / 睡眠心得输入时保存，不整表重绘。
+  // v5.255: 完成打卡备注 / 睡眠心得输入时保存，不整表重绘。
   document.addEventListener('input', e => {
     if (document.body.dataset.view !== 'habits') return;
     const boolNoteInput = e.target.closest('[data-habit-bool-note]');
