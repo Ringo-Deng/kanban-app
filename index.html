@@ -4,14 +4,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · Obsidian 手机上传修复 v5.252</title>
+<title>Kanban · 学习页高度优化 v5.259</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="5_252_260815">
+<meta name="build-hash" content="5_257_260817">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -10919,7 +10919,25 @@ body[data-view="learning"] #calNav { display:none !important; }
 .learning-stage-node { flex:1; min-width:0; height:4px; border-radius:99px; background:color-mix(in srgb,var(--muted) 18%,transparent); }
 .learning-stage-node.done { background:color-mix(in srgb,var(--accent) 68%,transparent); }
 .learning-stage-node.current { background:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 12%,transparent); }
-.learning-word-main { text-align:center; padding:24px 8px 18px; }
+/* v5.259: 翻面前后保持生词位置完全一致；答案只占用下方区域 */
+.learning-review-content {
+  flex:1 1 auto;
+  min-height:0;
+  display:grid;
+  grid-template-rows:minmax(150px, 42%) minmax(0, 1fr);
+}
+.learning-review-content .learning-word-main {
+  grid-row:1;
+  align-self:center;
+  justify-self:stretch;
+}
+.learning-review-content .learning-answer {
+  grid-row:2;
+  align-self:end;
+  width:100%;
+  box-sizing:border-box;
+}
+.learning-word-main { text-align:center; padding:12px 8px 10px; }
 .learning-word { font-size:36px; font-weight:720; letter-spacing:.01em; color:var(--text); word-break:break-word; line-height:1.25; }
 .learning-word-reading { margin-top:7px; font-size:15px; color:var(--muted); min-height:1.4em; }
 .learning-context-chip { display:inline-flex; margin-top:13px; max-width:100%; padding:4px 9px; border-radius:999px; font-size:10.5px; color:var(--accent); background:color-mix(in srgb,var(--accent) 9%,transparent); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -11226,6 +11244,107 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
   .vault-mobile-direct-row .btn { width: 100%; }
 }
 
+
+
+/* ===== v5.256: 所有主页面统一使用同一内容宽度 =====
+   页面宽度统一由 .container 的 1400px 上限控制；
+   各视图不再额外设置自己的 max-width / 左右内边距。 */
+.board-layout,
+.calendar,
+.timesheet,
+.litigation,
+.habits-wrap,
+.learning-wrap {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  box-sizing: border-box;
+}
+
+/* 习惯、学习原本还有额外横向 padding，会让卡片边界比工时页再缩进去一层。 */
+.habits-wrap,
+.learning-wrap {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (max-width: 767px) {
+  /* 手机端统一只使用 body 的 10px 页面边距，不让单独页面重复加横向 gutter。 */
+  .board-layout,
+  .calendar,
+  .timesheet,
+  .litigation,
+  .habits-wrap,
+  .learning-wrap {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .habits-wrap,
+  .learning-wrap {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+</style>
+<style>
+
+/* ===== v5.257: 学习页桌面端充分利用可视高度 =====
+   左侧生词库与右侧“复习卡 + 统计卡”整体等高，减少屏幕底部留白。 */
+@media (min-width: 901px) {
+  body[data-view="learning"] .learning-wrap {
+    padding-bottom: 16px;
+  }
+  body[data-view="learning"] .learning-grid {
+    height: calc(100dvh - 112px);
+    min-height: 650px;
+    align-items: stretch;
+  }
+  @supports not (height: 100dvh) {
+    body[data-view="learning"] .learning-grid {
+      height: calc(100vh - 112px);
+    }
+  }
+
+  body[data-view="learning"] .learning-library-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  body[data-view="learning"] .learning-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    overflow: auto;
+  }
+
+  body[data-view="learning"] .learning-right-column {
+    height: 100%;
+    min-height: 0;
+  }
+  body[data-view="learning"] .learning-review-panel {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  body[data-view="learning"] .learning-review-card {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  body[data-view="learning"] .learning-empty-review {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+  }
+  body[data-view="learning"] .learning-summary {
+    flex: 0 0 auto;
+  }
+}
 </style>
 </head>
 <body>
@@ -20217,8 +20336,10 @@ function renderLearning() {
       const nodes = LEARNING_INTERVALS.map((_,i) => '<span class="learning-stage-node '+(i<stage?'done':(i===stage?'current':''))+'" title="'+LEARNING_STAGE_LABELS[i]+'"></span>').join('');
       review.innerHTML = '<div class="learning-review-head"><div class="learning-review-title">今日复习</div><div class="learning-review-actions"><button class="learning-review-delete" type="button" data-learning-action="delete-current" data-learning-id="'+learningEscape(card.id)+'" aria-label="删除当前单词" title="删除当前单词"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/><path d="M10 11v5M14 11v5"/></svg></button><button class="learning-review-edit" type="button" data-learning-action="edit-current" data-learning-id="'+learningEscape(card.id)+'" aria-label="编辑当前单词" title="编辑当前单词">⋯</button></div></div>' +
         '<div class="learning-review-card" data-card-id="'+learningEscape(card.id)+'"'+(revealed?'':' data-learning-action="reveal-card"')+'><div class="learning-stage-line">'+nodes+'</div>' +
-        '<div class="learning-word-main"><div class="learning-word">'+learningEscape(card.word || '（未命名）')+'</div><div class="learning-word-reading">'+learningEscape(card.reading || '　')+'</div>'+(source?'<div class="learning-context-chip" title="'+learningEscape(source)+'">'+learningEscape(source)+'</div>':'')+'</div>' +
-        '<div class="learning-answer" '+(revealed?'':'hidden')+'><div><div class="learning-answer-label">中文释义</div><div class="learning-meaning">'+learningEscape(card.meaning || '尚未填写释义')+'</div></div>'+(card.example?'<div><div class="learning-answer-label">工作原句 / 例句</div><div class="learning-example">'+learningEscape(card.example)+'</div></div>':'')+(card.tags?'<div><div class="learning-answer-label">标签</div><div class="learning-example">'+learningEscape(learningTagsText(card.tags))+'</div></div>':'')+'</div>' +
+        '<div class="learning-review-content '+(revealed?'is-revealed':'is-unrevealed')+'">' +
+          '<div class="learning-word-main"><div class="learning-word">'+learningEscape(card.word || '（未命名）')+'</div><div class="learning-word-reading">'+learningEscape(card.reading || '　')+'</div>'+(source?'<div class="learning-context-chip" title="'+learningEscape(source)+'">'+learningEscape(source)+'</div>':'')+'</div>' +
+          '<div class="learning-answer" '+(revealed?'':'hidden')+'><div><div class="learning-answer-label">中文释义</div><div class="learning-meaning">'+learningEscape(card.meaning || '尚未填写释义')+'</div></div>'+(card.example?'<div><div class="learning-answer-label">工作原句 / 例句</div><div class="learning-example">'+learningEscape(card.example)+'</div></div>':'')+(card.tags?'<div><div class="learning-answer-label">标签</div><div class="learning-example">'+learningEscape(learningTagsText(card.tags))+'</div></div>':'')+'</div>' +
+        '</div>' +
         (revealed ? '<div class="learning-rating"><button class="learning-rate-btn" data-learning-rating="again" type="button">忘记<small>留在今日复习</small></button><button class="learning-rate-btn" data-learning-rating="good" type="button">记住<small>进入下一节点</small></button></div>' : '') + '</div>';
     }
   }
