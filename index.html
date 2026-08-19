@@ -1,18 +1,17 @@
 
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · 学习页高度优化 v5.259</title>
+<title>Kanban · 习惯统计按实际记录天数 v5.261</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="5_257_260817">
+<meta name="build-hash" content="5_261_260818">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -2622,7 +2621,7 @@ body[data-view="board"][data-filter="today"] .task-timer-trigger.compact {
   cursor: text;
 }
 
-/* v47: 项目描述块(只在有内容时渲染,显示全部文字,无截行无滚动条) */
+/* v5.260: 项目简介在项目卡片中最多显示 3 行，避免长简介把卡片撑高；完整内容仍可在项目编辑中查看。 */
 .card-desc {
   font-size: 12px;
   line-height: 1.5;
@@ -2636,6 +2635,12 @@ body[data-view="board"][data-filter="today"] .task-timer-trigger.compact {
   background: var(--task-bg);
   border: 1px solid transparent;
   transition: background 0.12s, border-color 0.12s;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .card-desc:hover {
   background: var(--task-bg-hover);
@@ -5945,10 +5950,15 @@ body[data-view="timesheet"] .ts-title-month-nav { display: inline-flex; }
 }
 .ts-day-group + .ts-day-group { border-top: 1px solid color-mix(in srgb, var(--border) 88%, var(--accent) 12%); }
 .ts-day-header {
-  display: flex; align-items: center; gap: 12px; padding: 10px 13px;
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 13px;
   background: color-mix(in srgb, var(--task-bg) 72%, var(--card-bg-solid));
   border-bottom: 1px solid var(--border);
   box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.ts-day-top {
+  width: 100%;
+  min-width: 0;
+  display: flex; align-items: center; gap: 12px;
 }
 .ts-day-datebox {
   display: flex; align-items: baseline; gap: 6px;
@@ -5958,7 +5968,7 @@ body[data-view="timesheet"] .ts-title-month-nav { display: inline-flex; }
 }
 .ts-day-date { font-size: 15px; font-weight: 750; font-variant-numeric: tabular-nums; color: var(--text); }
 .ts-day-week { color: var(--muted); font-size: 10.5px; }
-.ts-day-heading { min-width: 0; flex: 1; display: flex; align-items: baseline; gap: 8px; }
+.ts-day-heading { min-width: 0; flex: 1; display: flex; align-items: center; }
 .ts-day-title { display: none; }
 /* v5.82: 去掉「N 项任务 · M 个项目 / 案件」 */
 .ts-day-meta { display: none; }
@@ -5991,6 +6001,29 @@ body[data-view="timesheet"] .ts-title-month-nav { display: inline-flex; }
   line-height: 1;
   display: inline-flex;
   align-items: center;
+}
+.ts-day-note-row {
+  display: none;
+}
+.ts-day-note {
+  flex: 1;
+  min-width: 90px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 28px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ts-day-note:focus {
+  border: none;
+  box-shadow: none;
 }
 /* v5.90: 右侧多留空，避免工时+按钮溢出色框 */
 .ts-day-rows { padding: 4px 18px 8px 12px; display: flex; flex-direction: column; gap: 0; }
@@ -7189,21 +7222,18 @@ input, select, textarea, button, [contenteditable] {
   }
   .card-header { margin-bottom: 8px !important; }
   .card-title { font-size: 16px !important; }
-  /* 项目描述:长文折叠(超过 2 行显示"...展开") */
+  /* v5.260: 手机端与桌面一致，项目简介固定最多显示 3 行。 */
   .card-desc {
     font-size: 12.5px !important;
     line-height: 1.5 !important;
     padding: 4px 8px !important;
     margin-bottom: 6px !important;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    cursor: text;
-  }
-  .card-desc.is-expanded {
-    -webkit-line-clamp: unset;
-    overflow: visible;
+    cursor: pointer;
   }
   /* v5.37: 任务行单行布局 — 手柄 | 勾选 | 标题 | 日期，不再错行 */
   .task {
@@ -7323,7 +7353,7 @@ input, select, textarea, button, [contenteditable] {
   .ts-mob-day-head {
     display: grid;
     grid-template-columns: auto 1fr auto;
-    align-items: baseline;
+    align-items: center;
     gap: 8px;
     padding: 0 2px;
   }
@@ -7343,6 +7373,29 @@ input, select, textarea, button, [contenteditable] {
     font-variant-numeric: tabular-nums;
     background: color-mix(in srgb, var(--accent) 10%, transparent);
     padding: 3px 10px; border-radius: 999px;
+  }
+  .ts-mob-day-note-row {
+    display: none;
+  }
+  .ts-mob-day-note {
+    width: 100%;
+    min-width: 72px;
+    height: 24px;
+    min-height: 24px;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 12.5px;
+    line-height: 24px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ts-mob-day-note:focus {
+    border: none;
+    box-shadow: none;
   }
   .ts-mob-entries { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
   /* v5.59: 半屏卡片 — 操作置顶、AI 区紧凑 */
@@ -12934,6 +12987,8 @@ if (litigationTodosMigrated) try { localStorage.setItem(STORAGE_KEY, JSON.string
   // v1.6: 归档系统 — store.archive 按月存已完成任务快照
   //   结构: { 'YYYY-MM': [ {taskId, title, projectId, projectName, projectColor, due, completedAt, archivedAt, totalTimeMs, notes, timeEntriesCount, boardKey, boardName} ] }
   if (!store.archive || typeof store.archive !== 'object') { store.archive = {}; changed = true; }
+  // v5.262: 工时单按日期备注/批注
+  if (!store.timesheetDayNotes || typeof store.timesheetDayNotes !== 'object') { store.timesheetDayNotes = {}; changed = true; }
   // 迁移结果立即写回 localStorage(不依赖后续 save)
   if (changed) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch {}
@@ -16510,6 +16565,30 @@ function toggleMonthlyOverview() {
   renderMonthlyOverview();
 }
 
+function getTsDayNotesStore() {
+  if (!store.timesheetDayNotes || typeof store.timesheetDayNotes !== 'object') store.timesheetDayNotes = {};
+  return store.timesheetDayNotes;
+}
+function getTsDayNote(date) {
+  return String(getTsDayNotesStore()[date] || '');
+}
+function setTsDayNote(date, value) {
+  const key = String(date || '').trim();
+  if (!key) return '';
+  const clean = String(value || '')
+    .replace(/\r/g, '')
+    .split('\n')
+    .map(s => s.trim())
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const notes = getTsDayNotesStore();
+  if (clean) notes[key] = clean;
+  else delete notes[key];
+  return clean;
+}
+
 function renderTsTable(entries) {
   // 3.1.1 移动端: 走卡片版
   if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
@@ -16553,11 +16632,14 @@ function renderTsTable(entries) {
   let html = '<div class="ts-daily-list">';
   for (const [date, list] of groups) {
     const dayMs = list.reduce((s, e) => s + (e.totalTimeMs || 0), 0);
+    const dayNote = getTsDayNote(date);
     html += `<section class="ts-day-group">
       <div class="ts-day-header">
-        <div class="ts-day-datebox"><div class="ts-day-date">${escapeHtml(tsFmtDateShort(date))}</div><div class="ts-day-week">${escapeHtml(tsFmtWeekday(date))}</div></div>
-        <div class="ts-day-heading"><div class="ts-day-title">工作日报</div></div>
-        <div class="ts-day-total"><div class="ts-day-total-label">当日合计</div><div class="ts-day-total-value">${tsFmtHours(dayMs)}</div></div>
+        <div class="ts-day-top">
+          <div class="ts-day-datebox"><div class="ts-day-date">${escapeHtml(tsFmtDateShort(date))}</div><div class="ts-day-week">${escapeHtml(tsFmtWeekday(date))}</div></div>
+          <div class="ts-day-heading"><div class="ts-day-note" contenteditable="true" spellcheck="false" data-ts-day-note="${escapeHtml(date || '')}">${escapeHtml(dayNote)}</div></div>
+          <div class="ts-day-total"><div class="ts-day-total-label">当日合计</div><div class="ts-day-total-value">${tsFmtHours(dayMs)}</div></div>
+        </div>
       </div><div class="ts-day-rows">`;
     for (const e of list) {
       const translation = getTsTranslation(e);
@@ -16630,12 +16712,14 @@ function renderTsMobileList(entries) {
     const isToday = date === today();
     const dateLabel = isToday ? '今天' : (tsFmtDateShort(date) || date);
     const weekday = tsFmtWeekday(date);
+    const dayNote = getTsDayNote(date);
     html += `<section class="ts-mob-day">
       <header class="ts-mob-day-head ${isToday ? 'today' : ''}">
         <div class="ts-mob-day-date">
           <div class="ts-mob-day-main">${escapeHtml(dateLabel)}</div>
           <div class="ts-mob-day-sub">${escapeHtml(weekday || '')}</div>
         </div>
+        <div class="ts-mob-day-note" contenteditable="true" spellcheck="false" data-ts-day-note="${escapeHtml(date || '')}">${escapeHtml(dayNote)}</div>
         <div class="ts-mob-day-total">${tsFmtHours(dayMs)}</div>
       </header>
       <ul class="ts-mob-entries">`;
@@ -16795,6 +16879,35 @@ try {
   rolloverOverdueTaskDues();
   if (isAutoSortTasksByDue()) sortAllProjectsTasksByDue();
 } catch (_) {}
+
+function bindTsDayNoteDelegates() {
+  if (document.__tsDayNoteDelegated) return;
+  document.__tsDayNoteDelegated = true;
+  document.addEventListener('focusout', e => {
+    const editable = e.target.closest('[data-ts-day-note]');
+    if (!editable) return;
+    const date = editable.dataset.tsDayNote || '';
+    const saved = setTsDayNote(date, editable.innerText || '');
+    editable.textContent = saved;
+    save({ immediate: true });
+    if (typeof showToast === 'function') showToast(saved ? '当天备注已保存' : '当天备注已清空');
+  });
+  document.addEventListener('keydown', e => {
+    const editable = e.target.closest('[data-ts-day-note]');
+    if (!editable) return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      editable.blur();
+      return;
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      const date = editable.dataset.tsDayNote || '';
+      editable.textContent = getTsDayNote(date);
+      editable.blur();
+    }
+  });
+}
 
 function bindTsMobileDelegates() {
   const body = document.getElementById('tsMobileList');
@@ -19329,6 +19442,23 @@ function habitsFormatHours(h) {
   return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
 }
 
+// v5.261: 睡眠时间跨午夜平均时，把 00:00–02:00 视作次日 24:00–26:00，
+// 避免 23:30 与 00:30 被错误平均成 12:00。
+function habitsNormalizeSleepHourForAverage(h) {
+  if (h == null || isNaN(h)) return null;
+  return h < 6 ? h + 24 : h;
+}
+function habitsFormatSleepAverageHour(h) {
+  if (h == null || isNaN(h)) return '—';
+  let wrapped = h % 24;
+  if (wrapped < 0) wrapped += 24;
+  let totalMinutes = Math.round(wrapped * 60);
+  totalMinutes %= (24 * 60);
+  const hh = Math.floor(totalMinutes / 60);
+  const mm = totalMinutes % 60;
+  return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+}
+
 function habitsIsDoneForStats(item, log) {
   if (!log) return false;
   if (item.type === 'bool') return !!log.v;
@@ -19778,36 +19908,49 @@ function renderHabitsStats() {
 
   const datesDesc = habitsDateList();
   const datesChrono = [...datesDesc].reverse();
-  const dayCount = datesChrono.length;
   const perHabitMeta = [];
 
   for (const item of items) {
     const points = habitsCollectSeries(item, datesChrono);
     let doneDays = 0;
+    let recordedDays = 0;
     let sum = 0, sumN = 0;
     let timeSum = 0, timeN = 0;
+
     for (const p of points) {
+      const hasRecord = !!(p.log && p.log.v !== null && p.log.v !== undefined && p.log.v !== '');
+      if (hasRecord) recordedDays++;
       if (habitsIsDoneForStats(item, p.log)) doneDays++;
+
       if (item.type === 'count') {
-        sum += (p.y || 0);
-        sumN++;
+        // v5.261: 只有真正记录过的日期才进入平均值分母；空白日期不再按 0 计算。
+        if (hasRecord) {
+          sum += Number(p.y || 0);
+          sumN++;
+        }
       } else if (item.type === 'time' && p.y != null) {
-        timeSum += p.y;
-        timeN++;
+        // v5.261: 时间类仅统计有记录的天数，并对跨午夜睡眠时间做连续化处理。
+        const normalized = habitsNormalizeSleepHourForAverage(p.y);
+        if (normalized != null) {
+          timeSum += normalized;
+          timeN++;
+        }
       }
     }
-    const rate = dayCount ? Math.round((doneDays / dayCount) * 100) : 0;
-    // v5.217: 标题下只保留日均（不再带达标率%）
+
+    // v5.261: 达标率的基数也只使用实际有记录的日期，不把未填写日期算进去。
+    const rate = recordedDays ? Math.round((doneDays / recordedDays) * 100) : 0;
     let metaText = '';
     if (item.type === 'count' && sumN) {
       const avg = (sum / sumN);
       metaText = '日均 ' + (Number.isInteger(avg) ? avg : avg.toFixed(1)) + (item.unit || '');
     } else if (item.type === 'time' && timeN) {
-      metaText = '日均 ' + habitsFormatHours(timeSum / timeN);
+      metaText = '日均 ' + habitsFormatSleepAverageHour(timeSum / timeN);
     } else if (item.type === 'bool') {
-      metaText = doneDays + '/' + dayCount + ' 天';
+      // bool 没有“未完成但已记录”的独立状态，因此这里直接显示实际完成/记录天数。
+      metaText = recordedDays ? (doneDays + ' 天') : '';
     }
-    perHabitMeta.push({ item, points, metaText, rate, doneDays });
+    perHabitMeta.push({ item, points, metaText, rate, doneDays, recordedDays });
   }
 
   if (chartsEl) {
@@ -21288,17 +21431,7 @@ function renderCard(p) {
   // 之前用来隐藏空项目的条件是 dead code,直接删 — 现在的行为:项目没任务也显示,符合"全部"视图的预期
   // 搜索/过滤视图走 renderUnifiedCard 单独处理
   card.draggable = true;
-  // 3.1.1 移动端: 描述折叠按钮(只在 mobile 才显示,desktop 不需要 — desktop 可以拖大卡片)
-  const descEl = card.querySelector('.card-desc');
-  if (descEl && window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
-    descEl.addEventListener('click', e => {
-      // 3.1.1: 长描述才展开,避免误点
-      if (descEl.scrollHeight > descEl.clientHeight + 4) {
-        descEl.classList.toggle('is-expanded');
-        e.stopPropagation();
-      }
-    });
-  }
+  // v5.260: 项目简介固定最多显示 3 行；点击简介继续沿用 data-action="open-project" 打开项目编辑。
   return card;
 }
 
@@ -25240,6 +25373,8 @@ document.getElementById('litigationAdd')?.addEventListener('click', () => {
 bindLitigationMobileEvents();
 // 3.1.1 移动端: 一次性绑定工时单卡片列表的事件委托(转发到桌面版同 taskId 按钮)
 bindTsMobileDelegates();
+// v5.262: 一次性绑定工时单日期备注输入
+bindTsDayNoteDelegates();
 
 function exportJSON() {
   // 导出整个 store(所有月份),不再是单月
