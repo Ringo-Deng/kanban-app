@@ -11733,7 +11733,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
     </div>
   </div>
   <!-- v5.238: 学习页左侧生词库，右侧复习卡片；词表 I/O 移入设置 -->
-  <section class="learning-wrap hidden" id="learning" aria-label="日文生词学习">
+  <section class="learning-wrap hidden" id="learning" aria-label="生词学习">
     <div class="learning-grid">
       <div class="learning-library-panel">
         <div class="learning-library-head">
@@ -11753,28 +11753,28 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
     <div class="modal-backdrop" data-learning-action="close-modal"></div>
     <div class="modal-content learning-edit-content" role="dialog" aria-modal="true" aria-labelledby="learningModalTitle">
       <div class="modal-header">
-        <h3 id="learningModalTitle">录入日文生词</h3>
+        <h3 id="learningModalTitle">录入生词</h3>
         <button class="modal-close" type="button" data-learning-action="close-modal" aria-label="关闭">×</button>
       </div>
       <div class="modal-body learning-form">
         <input type="hidden" id="learningEditId">
         <div class="learning-form-row learning-form-main">
-          <label for="learningWord">日文生词 <span>*</span></label>
-          <input id="learningWord" type="text" placeholder="例：踏まえる" autocomplete="off">
+          <label for="learningWord">生词 <span>*</span></label>
+          <input id="learningWord" type="text" placeholder="输入单词…" autocomplete="off">
         </div>
         <div class="learning-form-two">
           <div class="learning-form-row">
             <label for="learningReading">读音</label>
-            <input id="learningReading" type="text" placeholder="例：ふまえる">
+            <input id="learningReading" type="text" placeholder="输入读音…">
           </div>
           <div class="learning-form-row">
-            <label for="learningMeaning">中文释义</label>
+            <label for="learningMeaning">释义</label>
             <input id="learningMeaning" type="text" placeholder="例：基于；考虑到">
           </div>
         </div>
         <div class="learning-form-row">
-          <label for="learningExample">工作原句 / 例句</label>
-          <textarea id="learningExample" rows="3" placeholder="把邮件、报告或客户材料里的原句贴进来，更容易按语境记忆"></textarea>
+          <label for="learningExample">例句</label>
+          <textarea id="learningExample" rows="3" placeholder="把邮件、报告或材料里的原句贴进来，更容易按语境记忆"></textarea>
         </div>
       </div>
       <div class="modal-footer learning-modal-footer">
@@ -15227,7 +15227,7 @@ function syncViewAddLabel(view) {
     btn.title = '新建习惯';
   } else if (v === 'learning') {
     btn.textContent = '+ 录入生词';
-    btn.title = '录入日文生词';
+    btn.title = '录入生词';
   } else {
     // v5.80: 看板 / 月历 → 新建项目
     btn.textContent = '+ 新建项目';
@@ -16182,9 +16182,33 @@ async function requestDeepSeek(entries, targetLang, override = {}) {
   let data = null;
   try { data = await response.json(); } catch {}
   if (!response.ok) throw new Error(data?.error?.message || `DeepSeek 请求失败（HTTP ${response.status}）`);
-  const content = data?.choices?.[0]?.message?.content;
-  let parsed;
-  try { parsed = JSON.parse(content); } catch { throw new Error('DeepSeek 未返回有效 JSON'); }
+  let rawContent = data?.choices?.[0]?.message?.content || '';
+  // 常见情况：DeepSeek 将 JSON 包在 ```json ... ``` 中，或前后有多余文字
+  let cleaned = rawContent.trim();
+  // 1) 剥离 markdown 代码块
+  const fenceMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+  if (fenceMatch && fenceMatch[1]) cleaned = fenceMatch[1].trim();
+  // 2) 尝试解析
+  let parsed = null;
+  const tryParse = (s) => { try { return JSON.parse(s); } catch { return null; } };
+  parsed = tryParse(cleaned);
+  // 3) 仍未成功：从大段文字中捞出第一个完整 JSON（{…} 或 […]）
+  if (!parsed) {
+    const firstBrace = Math.min(
+      cleaned.indexOf('{') === -1 ? Infinity : cleaned.indexOf('{'),
+      cleaned.indexOf('[') === -1 ? Infinity : cleaned.indexOf('[')
+    );
+    if (firstBrace !== Infinity) {
+      const lastBrace = Math.max(cleaned.lastIndexOf('}'), cleaned.lastIndexOf(']'));
+      if (lastBrace > firstBrace) {
+        parsed = tryParse(cleaned.slice(firstBrace, lastBrace + 1));
+      }
+    }
+  }
+  if (!parsed) {
+    // 调试：把原始返回的前 500 字附到错误信息中
+    throw new Error('DeepSeek 未返回有效 JSON — 原始返回：' + rawContent.slice(0, 500));
+  }
   if (!Array.isArray(parsed?.items) || !parsed.items.length) throw new Error('DeepSeek 未返回有效结果');
   // v5.135: 数量不完全一致时仍按索引取用，避免整批失败导致「有的优化不出」
   return entries.map((_, i) => ({
@@ -20394,7 +20418,7 @@ try {
 } catch (_) {}
 
 
-// ============== v5.226 学习面板（日文生词 / 遗忘曲线） ==============
+// ============== v5.226 学习面板（生词 / 遗忘曲线） ==============
 const LEARNING_INTERVALS = [0, 1, 2, 4, 7, 15, 30, 60];
 const LEARNING_STAGE_LABELS = ['当天', '1天', '2天', '4天', '7天', '15天', '30天', '60天'];
 let learningFilter = 'all';
@@ -20482,7 +20506,7 @@ function renderLearning() {
         '<div class="learning-review-card" data-card-id="'+learningEscape(card.id)+'"'+(revealed?'':' data-learning-action="reveal-card"')+'><div class="learning-stage-line">'+nodes+'</div>' +
         '<div class="learning-review-content '+(revealed?'is-revealed':'is-unrevealed')+'">' +
           '<div class="learning-word-main"><div class="learning-word">'+learningEscape(card.word || '（未命名）')+'</div><div class="learning-word-reading">'+learningEscape(card.reading || '　')+'</div>'+(source?'<div class="learning-context-chip" title="'+learningEscape(source)+'">'+learningEscape(source)+'</div>':'')+'</div>' +
-          '<div class="learning-answer" '+(revealed?'':'hidden')+'><div><div class="learning-answer-label">中文释义</div><div class="learning-meaning">'+learningEscape(card.meaning || '尚未填写释义')+'</div></div>'+(card.example?'<div><div class="learning-answer-label">工作原句 / 例句</div><div class="learning-example">'+learningEscape(card.example)+'</div></div>':'')+(card.tags?'<div><div class="learning-answer-label">标签</div><div class="learning-example">'+learningEscape(learningTagsText(card.tags))+'</div></div>':'')+'</div>' +
+          '<div class="learning-answer" '+(revealed?'':'hidden')+'><div><div class="learning-answer-label">释义</div><div class="learning-meaning">'+learningEscape(card.meaning || '尚未填写释义')+'</div></div>'+(card.example?'<div><div class="learning-answer-label">例句</div><div class="learning-example">'+learningEscape(card.example)+'</div></div>':'')+(card.tags?'<div><div class="learning-answer-label">标签</div><div class="learning-example">'+learningEscape(learningTagsText(card.tags))+'</div></div>':'')+'</div>' +
         '</div>' +
         (revealed ? '<div class="learning-rating"><button class="learning-rate-btn" data-learning-rating="again" type="button">忘记<small>留在今日复习</small></button><button class="learning-rate-btn" data-learning-rating="good" type="button">记住<small>进入下一节点</small></button></div>' : '') + '</div>';
     }
@@ -20494,7 +20518,7 @@ function renderLearning() {
   const sub = document.getElementById('learningLibrarySub');
   if (sub) sub.textContent = `显示 ${list.length} / ${cards.length} 个词`;
   if (listEl) {
-    if (!list.length) listEl.innerHTML = '<div class="learning-list-empty">这里还没有符合条件的生词。<br>工作中遇到不熟悉的日文，就直接录入。</div>';
+    if (!list.length) listEl.innerHTML = '<div class="learning-list-empty">这里还没有符合条件的生词。<br>工作中遇到不熟悉的词，就直接录入。</div>';
     else listEl.innerHTML = list.map(c => {
       const isDue = learningIsDue(c,today);
       const st = Math.max(0,Math.min(LEARNING_STAGE_LABELS.length-1,Number(c.stage||0)));
@@ -20510,7 +20534,7 @@ function openLearningEditor(cardOrId) {
   else if (cardOrId && typeof cardOrId === 'object') card = cardOrId;
   const modal = document.getElementById('learningEditModal');
   if (!modal) return;
-  document.getElementById('learningModalTitle').textContent = card ? '编辑日文生词' : '录入日文生词';
+  document.getElementById('learningModalTitle').textContent = card ? '编辑生词' : '录入生词';
   document.getElementById('learningEditId').value = card?.id || '';
   document.getElementById('learningWord').value = card?.word || '';
   document.getElementById('learningReading').value = card?.reading || '';
@@ -20531,7 +20555,7 @@ function saveLearningEditor() {
   const cards = learningEnsureStore();
   const id = document.getElementById('learningEditId').value;
   const word = document.getElementById('learningWord').value.trim();
-  if (!word) { document.getElementById('learningWord').focus(); if (typeof showToast==='function') showToast('请先填写日文生词'); return; }
+  if (!word) { document.getElementById('learningWord').focus(); if (typeof showToast==='function') showToast('请先填写生词'); return; }
   const data = {
     word,
     reading: document.getElementById('learningReading').value.trim(),
@@ -20579,7 +20603,7 @@ function deleteLearningCardDirect(id) {
 
 /* v5.233: 学习词库独立导入 / 导出
    - 导出文件只包含学习卡片，不包含项目、工时、诉讼等其他数据
-   - 导入默认“合并”，按「日文生词 + 读音」去重，不覆盖现有词
+   - 导入默认“合并”，按「生词 + 读音」去重，不覆盖现有词
    - 兼容本功能导出的 JSON、直接卡片数组，以及完整 Kanban 备份中的 learningCards */
 function learningCloneForExport(card) {
   const src = card && typeof card === 'object' ? card : {};
@@ -20616,7 +20640,7 @@ function exportLearningVocabulary() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `日文单词表-${localDateStr(new Date())}.json`;
+  a.download = `单词表-${localDateStr(new Date())}.json`;
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
@@ -20636,11 +20660,11 @@ function learningImportKey(word, reading) {
 }
 function learningNormalizeImportedCard(raw, todayStr, usedIds) {
   if (!raw || typeof raw !== 'object') return null;
-  const word = String(raw.word ?? raw['日文生词'] ?? raw['单词'] ?? '').trim();
+  const word = String(raw.word ?? raw['生词'] ?? raw['日文生词'] ?? raw['单词'] ?? '').trim();
   if (!word) return null;
   const reading = String(raw.reading ?? raw['读音'] ?? raw['发音'] ?? '').trim();
-  const meaning = String(raw.meaning ?? raw['中文释义'] ?? raw['释义'] ?? '').trim();
-  const example = String(raw.example ?? raw['工作原句 / 例句'] ?? raw['例句'] ?? '').trim();
+  const meaning = String(raw.meaning ?? raw['释义'] ?? raw['中文释义'] ?? '').trim();
+  const example = String(raw.example ?? raw['例句'] ?? raw['工作原句 / 例句'] ?? '').trim();
   let stage = Number(raw.stage ?? raw['复习阶段'] ?? 0);
   if (!Number.isFinite(stage)) stage = 0;
   stage = Math.max(0, Math.min(LEARNING_INTERVALS.length - 1, Math.floor(stage)));
