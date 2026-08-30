@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>KanbanV5.0/title>
+<title>Kanban · 习惯统计按实际记录天数 v5.261</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6151,7 +6151,7 @@ body[data-view="timesheet"] .ts-title-month-nav { display: inline-flex; }
 }
 /* 旧规则 overflow:visible 会导致项目名顶进任务名，已取消 */
 .ts-entry-sep { display: none; }
-/* v5.92: 中文任务名与日文描述之间细分隔线 */
+/* v5.92: 中文任务名与英文描述之间细分隔线 */
 .ts-entry-task {
   grid-area: task;
   min-width: 0;
@@ -9664,18 +9664,6 @@ input, select, textarea, button, [contenteditable] {
   accent-color: var(--accent);
   cursor: pointer;
 }
-.settings-top-panel-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding-top: 4px;
-  border-top: 1px solid var(--border);
-}
-.settings-top-panel-actions .btn {
-  min-height: 30px;
-  padding: 5px 8px !important;
-  font-size: 11.5px !important;
-}
 @keyframes settings-fly-in {
   from { opacity: 0; transform: translateX(6px); }
   to { opacity: 1; transform: translateX(0); }
@@ -11505,6 +11493,10 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
             </div>
           </div>
           <div class="ts-top-menu-divider"></div>
+          <button type="button" class="btn ts-ai-menu-item settings-fly-trigger" id="settingsTopPanelTrigger" aria-expanded="false" aria-controls="settingsTopPanelFlyout" title="选择顶部视图面板中显示哪些功能；左侧导航不受影响">
+            <span>顶部面板</span>
+            <span class="settings-panel-meta"><span id="settingsTopPanelStatus">6/6</span><span class="settings-fly-chevron">›</span></span>
+          </button>
           <button type="button" class="btn ts-ai-menu-item settings-fly-trigger" id="settingsBgTrigger" aria-expanded="false" aria-controls="settingsBgFlyout">
             <span>看板背景图</span>
             <span class="settings-panel-meta"><span id="settingsBgStatus">未设置</span><span class="settings-fly-chevron">›</span></span>
@@ -11532,11 +11524,6 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
           <button class="btn ts-ai-menu-item data-menu-ts-only" id="dataMenuExportMd" type="button">导出 Markdown</button>
           <div class="ts-top-menu-divider"></div>
           <button class="btn ts-ai-menu-item" id="dataMenuTrash" type="button">回收站</button>
-          <div class="ts-top-menu-divider"></div>
-          <button type="button" class="btn ts-ai-menu-item settings-fly-trigger" id="settingsTopPanelTrigger" aria-expanded="false" aria-controls="settingsTopPanelFlyout" title="选择顶部视图面板中显示哪些功能；左侧导航不受影响">
-            <span>顶部面板</span>
-            <span class="settings-panel-meta"><span id="settingsTopPanelStatus">6/6</span><span class="settings-fly-chevron">›</span></span>
-          </button>
           <div class="ts-top-menu-divider"></div>
           <button class="btn ts-ai-menu-item" id="dataMenuRolloverDue" type="button" title="未完成且已过截止日期的任务，自动把截止日期改为今天">截止日期自动滚到今天：开</button>
           <div class="ts-top-menu-divider"></div>
@@ -11587,18 +11574,13 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
             <label class="settings-top-panel-option"><span>习惯</span><input type="checkbox" data-top-panel-view="habits" checked></label>
             <label class="settings-top-panel-option"><span>学习</span><input type="checkbox" data-top-panel-view="learning" checked></label>
           </div>
-          <div class="settings-top-panel-actions">
-            <button type="button" class="btn" id="topPanelShowAll">全部显示</button>
-            <button type="button" class="btn" id="topPanelHideAll">全部隐藏</button>
-          </div>
         </div>
         <div class="settings-flyout data-menu-ts-only" id="settingsAiFlyout" role="menu" hidden>
           <div class="settings-flyout-title">工时 AI</div>
           <div id="settingsAiBlock">
             <div class="settings-ai-langs" role="group" aria-label="描述语言">
               <button class="btn ts-ai-menu-item ts-lang-opt" data-lang="ZH" type="button">中文描述</button>
-              <button class="btn ts-ai-menu-item ts-lang-opt active" data-lang="JA" type="button">日文描述</button>
-              <button class="btn ts-ai-menu-item ts-lang-opt" data-lang="EN" type="button">英文描述</button>
+              <button class="btn ts-ai-menu-item ts-lang-opt active" data-lang="EN" type="button">英文描述</button>
             </div>
             <button class="btn ts-ai-menu-item" id="tsTranslateAll" type="button" title="一键优化当前看板范围">AI 一键优化全部</button>
             <button class="btn ts-ai-menu-item" id="tsTermLibrary" type="button">术语库</button>
@@ -11921,7 +11903,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
       <div class="modal-header"><h3>常用工时表达</h3><button class="modal-close" data-action="term-close" title="关闭">×</button></div>
       <div class="modal-body"><div class="ai-form">
         <div class="ai-hint" id="termLibraryProjectLabel">全局常用工时表达。DeepSeek 优化工时描述时会自动参考。</div>
-        <div class="ai-field"><label for="termExpressions">常用工时表达</label><textarea id="termExpressions" rows="12" placeholder="每行一条，例如：&#10;看合同 = 契約書の主要条項の確認及び修正案の検討&#10;开会 = クライアントとの打ち合わせ&#10;写邮件 = メールの作成・送付"></textarea></div>
+        <div class="ai-field"><label for="termExpressions">常用工时表达</label><textarea id="termExpressions" rows="12" placeholder="每行一条，例如：&#10;看合同 = Review of key contractual provisions and proposed revisions&#10;开会 = Conference with the client&#10;写邮件 = Preparation and dispatch of email correspondence"></textarea></div>
       </div></div>
       <div class="modal-footer"><button class="btn" data-action="term-close">取消</button><button class="btn btn-primary" id="termLibrarySave" type="button">保存术语库</button></div>
     </div>
@@ -12536,7 +12518,7 @@ const DEMO_SEED_DATA = {
             },
             {
               "id": "t_061",
-              "title": "日语 N2 听力 20 分钟",
+              "title": "英语法律播客 20 分钟",
               "done": false,
               "due": "2026-08-06",
               "startDate": null,
@@ -14927,7 +14909,7 @@ function openSettingsFlyout(which, opts) {
   const map = {
     bg: { trigger: 'settingsBgTrigger', fly: 'settingsBgFlyout', preferRight: true },
     assistant: { trigger: 'settingsAssistantTrigger', fly: 'settingsAssistantFlyout', preferRight: true },
-    topPanel: { trigger: 'settingsTopPanelTrigger', fly: 'settingsTopPanelFlyout', preferRight: false },
+    topPanel: { trigger: 'settingsTopPanelTrigger', fly: 'settingsTopPanelFlyout', preferRight: true },
     ai: { trigger: 'settingsAiTrigger', fly: 'settingsAiFlyout', preferRight: false },
   };
   const cfg = map[which];
@@ -14969,9 +14951,10 @@ function openSettingsFlyout(which, opts) {
   }
 }
 
-// ---- v5.117/v5.118: 看板背景图、AI助手 — 桌面悬停右侧自动出现，触摸端保留点击 ----
+// ---- v5.117/v5.229: 顶部面板、看板背景图、AI助手 — 桌面悬停右侧自动出现，触摸端保留点击 ----
 function bindSettingsFlyoutHover(which) {
   const map = {
+    topPanel: { trigger: 'settingsTopPanelTrigger', fly: 'settingsTopPanelFlyout' },
     bg: { trigger: 'settingsBgTrigger', fly: 'settingsBgFlyout' },
     assistant: { trigger: 'settingsAssistantTrigger', fly: 'settingsAssistantFlyout' },
   };
@@ -15025,6 +15008,7 @@ function bindSettingsFlyoutHover(which) {
     openSettingsFlyout(which);
   }, true);
 }
+bindSettingsFlyoutHover('topPanel');
 bindSettingsFlyoutHover('bg');
 bindSettingsFlyoutHover('assistant');
 
@@ -15034,23 +15018,11 @@ document.getElementById('settingsAiTrigger')?.addEventListener('click', e => {
   e.stopPropagation();
   openSettingsFlyout('ai');
 }, true);
-// v5.229: 顶部面板逐项设置，用点击打开，避免一掠过“设置”就误触
- document.getElementById('settingsTopPanelTrigger')?.addEventListener('click', e => {
-  e.preventDefault();
-  e.stopPropagation();
-  openSettingsFlyout('topPanel');
-}, true);
 document.getElementById('settingsTopPanelFlyout')?.addEventListener('change', e => {
   const input = e.target.closest('input[data-top-panel-view]');
   if (!input) return;
   e.stopPropagation();
   setTopPanelViewEnabled(input.dataset.topPanelView, input.checked);
-});
-document.getElementById('topPanelShowAll')?.addEventListener('click', e => {
-  e.preventDefault(); e.stopPropagation(); setAllTopPanelViews(true);
-});
-document.getElementById('topPanelHideAll')?.addEventListener('click', e => {
-  e.preventDefault(); e.stopPropagation(); setAllTopPanelViews(false);
 });
 document.getElementById('settingsBgFlyout')?.addEventListener('click', e => e.stopPropagation());
 document.getElementById('settingsAssistantFlyout')?.addEventListener('click', e => e.stopPropagation());
@@ -16019,9 +15991,9 @@ function toggleTsBoardFilterMenu(force) {
 }
 
 const DEEPSEEK_SETTINGS_KEY = 'kanban_deepseek_settings_v3';
-const TS_LANGUAGES = ['ZH', 'JA', 'EN'];
+const TS_LANGUAGES = ['ZH', 'EN'];
 const TERM_FIELDS = ['company', 'caseNames', 'legal', 'people', 'noTranslate', 'expressions'];
-let tsTranslationLang = 'JA';
+let tsTranslationLang = 'EN';
 let deepseekSessionKey = '';
 let tsTranslationBusy = false;
 let activeTermLibraryKey = '';
@@ -16033,24 +16005,24 @@ function loadDeepSeekSettings() {
     if (!raw) {
       const legacy = JSON.parse(localStorage.getItem(legacyKey) || '{}');
       if (legacy.deepseekApiKey) {
-        raw = JSON.stringify({ apiKey: legacy.deepseekApiKey, model: legacy.deepseekModel || 'deepseek-chat', targetLang: legacy.targetLang || 'JA' });
+        raw = JSON.stringify({ apiKey: legacy.deepseekApiKey, model: legacy.deepseekModel || 'deepseek-chat', targetLang: legacy.targetLang === 'ZH' ? 'ZH' : 'EN' });
         localStorage.setItem(DEEPSEEK_SETTINGS_KEY, raw);
       }
     }
     localStorage.removeItem(legacyKey);
     const s = JSON.parse(raw || '{}');
     deepseekSessionKey = String(s.apiKey || '');
-    tsTranslationLang = TS_LANGUAGES.includes(s.targetLang) ? s.targetLang : 'JA';
+    tsTranslationLang = TS_LANGUAGES.includes(s.targetLang) ? s.targetLang : 'EN';
     return { apiKey: deepseekSessionKey, model: String(s.model || 'deepseek-chat'), targetLang: tsTranslationLang };
   } catch {
-    return { apiKey: '', model: 'deepseek-chat', targetLang: 'JA' };
+    return { apiKey: '', model: 'deepseek-chat', targetLang: 'EN' };
   }
 }
 function saveDeepSeekSettings(settings) {
   const clean = {
     apiKey: String(settings.apiKey || '').trim(),
     model: String(settings.model || 'deepseek-chat').trim() || 'deepseek-chat',
-    targetLang: TS_LANGUAGES.includes(settings.targetLang) ? settings.targetLang : 'JA',
+    targetLang: TS_LANGUAGES.includes(settings.targetLang) ? settings.targetLang : 'EN',
   };
   deepseekSessionKey = clean.apiKey;
   tsTranslationLang = clean.targetLang;
@@ -16144,7 +16116,6 @@ async function requestDeepSeek(entries, targetLang, override = {}) {
   const forceFromTitle = !!override.forceFromTitle;
   const languageRules = {
     ZH: '专业工时描述使用正式、简洁、自然的中文法律服务表达。',
-    JA: '専門業務記述は、法律事務のタイムシートに適した簡潔で自然な日本語とし、名詞止め又は簡潔な普通体を用い、です・ます調を避ける。',
     EN: 'Write the professional work description in concise, natural English suitable for a legal timesheet, preferably as noun phrases.',
   };
   // v5.134: 精简 system，限制 max_tokens，减少生成耗时
@@ -16343,7 +16314,7 @@ async function translateTsEntries(entries, lang, force = false) {
     save({ skipVault: true, immediate: true });
     try { renderTsTable(tsEntriesForCurrentView()); } catch {}
     updateDeepSeekStatus(`已完成 ${completed} 条`, 'ok');
-    const languageName = { ZH: '中文', JA: '日文', EN: '英文' }[lang];
+    const languageName = { ZH: '中文', EN: '英文' }[lang];
     showToast(`DeepSeek 已优化 ${completed} 条${languageName}工时描述`);
   } catch (err) {
     // 部分成功也尽量落盘
@@ -16668,7 +16639,7 @@ function renderTsTable(entries) {
     for (const e of list) {
       const translation = getTsTranslation(e);
       const translationText = translation?.text || '';
-      const langLabel = { ZH: '中文', JA: '日文', EN: '英文' }[tsTranslationLang];
+      const langLabel = { ZH: '中文', EN: '英文' }[tsTranslationLang];
       html += `<article class="ts-entry" data-task-id="${e.taskId}" data-date="${escapeHtml(date || '')}"><button type="button" class="ts-entry-handle" title="拖动排序">⠿</button><div class="ts-entry-main">
         <div class="ts-entry-path"><span class="ts-project-name" title="项目">${escapeHtml(e.projectName || '未命名项目')}</span></div>
         <div class="ts-entry-task"><div class="ts-title-box"><div class="ts-entry-title" contenteditable="true" spellcheck="false" data-title-edit="${e.taskId}" data-placeholder="点击填写中文任务名称" title="点击修改中文任务名称">${escapeHtml(e.title)}</div></div></div>
@@ -16859,13 +16830,6 @@ function setTopPanelViewEnabled(view, enabled, persist = true) {
   if (!store.prefs.topPanelViews || typeof store.prefs.topPanelViews !== 'object') store.prefs.topPanelViews = {};
   store.prefs.topPanelViews[view] = !!enabled;
   if (persist) save({ skipVault: true });
-  applyTopPanelPreference();
-}
-function setAllTopPanelViews(enabled) {
-  if (!store.prefs) store.prefs = {};
-  if (!store.prefs.topPanelViews || typeof store.prefs.topPanelViews !== 'object') store.prefs.topPanelViews = {};
-  TOP_PANEL_VIEW_KEYS.forEach(view => { store.prefs.topPanelViews[view] = !!enabled; });
-  save({ skipVault: true });
   applyTopPanelPreference();
 }
 /** v5.97: 项目内任务按截止日期排序 — 未完成优先，有日期的越紧急越靠上，无日期靠后，已完成最后 */
@@ -20513,7 +20477,7 @@ function renderLearning() {
   }
 
   let list = cards.slice();
-  list.sort((a,b) => String(a.nextReview||'').localeCompare(String(b.nextReview||'')) || String(a.word||'').localeCompare(String(b.word||''),'ja'));
+  list.sort((a,b) => String(a.nextReview||'').localeCompare(String(b.nextReview||'')) || String(a.word||'').localeCompare(String(b.word||''),'en'));
   const listEl = document.getElementById('learningList');
   const sub = document.getElementById('learningLibrarySub');
   if (sub) sub.textContent = `显示 ${list.length} / ${cards.length} 个词`;
@@ -29768,7 +29732,6 @@ ${details.join('\n')}`;
         <div class="mobile-theme-label" style="margin-top:4px;">工时描述语言</div>
         <div class="mobile-ai-langs" id="mobileAiLangs">
           <button type="button" class="btn mobile-ai-lang" data-mobile-lang="ZH">中文</button>
-          <button type="button" class="btn mobile-ai-lang" data-mobile-lang="JA">日文</button>
           <button type="button" class="btn mobile-ai-lang" data-mobile-lang="EN">英文</button>
         </div>
         <button class="btn" id="mobileAiOptimizeAll" type="button">AI 一键优化全部</button>
@@ -30174,7 +30137,7 @@ self.addEventListener('fetch', e => {
 
   // v5.34: 同步手机端 AI 面板的语言高亮与 API 状态文案
   function syncMobileAiPanel() {
-    const cur = (typeof tsTranslationLang !== 'undefined') ? tsTranslationLang : 'JA';
+    const cur = (typeof tsTranslationLang !== 'undefined') ? tsTranslationLang : 'EN';
     document.querySelectorAll('#mobileAiLangs .mobile-ai-lang').forEach(b => {
       b.classList.toggle('active', b.dataset.mobileLang === cur);
     });
