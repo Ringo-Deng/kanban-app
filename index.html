@@ -4,7 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · 习惯统计按实际记录天数 v5.261</title>
+<!-- 维护规则：每次交付功能或修复更新时，将下方页面版本号末位加 1。 -->
+<title>Kanban · 习惯统计按实际记录天数 v5.262</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
@@ -15462,7 +15463,8 @@ let deepseekSessionKey = '';
 let tsTranslationBusy = false;
 let activeTermLibraryKey = '';
 const TS_AI_PREFETCH_IDLE_MS = 30000;
-const TS_AI_PREFETCH_BATCH = 4;
+const TS_AI_PREFETCH_BATCH = 2;
+const TS_AI_PREFETCH_GAP_MS = 15000;
 let tsAiPrefetchTimer = null;
 let tsAiPrefetchLastActivity = Date.now();
 let tsAiPrefetchPausedUntil = 0;
@@ -15616,6 +15618,20 @@ function takeTsAiDraft(entry, lang) {
   if (!Object.keys(drafts[taskId]).length) delete drafts[taskId];
   return rec;
 }
+function tsEntryTimestamp(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const parsed = Date.parse(String(value || ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+function sortTsEntriesNewestFirst(entries) {
+  return (entries || []).slice().sort((a, b) => {
+    const dateA = String(a?.completedAt || a?.monthKey || '');
+    const dateB = String(b?.completedAt || b?.monthKey || '');
+    const dateCompare = dateB.localeCompare(dateA);
+    if (dateCompare) return dateCompare;
+    return tsEntryTimestamp(b?.archivedAt || b?.updatedAt) - tsEntryTimestamp(a?.archivedAt || a?.updatedAt);
+  });
+}
 
 // v5.107: 把工时单行内未失焦的编辑写回 entry，保证 AI 用的是最新标题/描述
 function flushTsLiveEdits(entries) {
@@ -15716,12 +15732,16 @@ async function requestDeepSeek(entries, targetLang, override = {}) {
     let data = null;
     try { data = await response.json(); } catch {}
     if (!response.ok) {
-      const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
-      throw makeDeepSeekError(
-        data?.error?.message || `DeepSeek 请求失败（HTTP ${response.status}）`,
+      const apiMessage = data?.error?.message || `DeepSeek 请求失败（HTTP ${response.status}）`;
+      const busyMessage = /(server\s*overloaded|overload|server\s*busy|too many requests|rate.?limit|服务器繁忙|服务繁忙)/i.test(apiMessage);
+      const retryable = busyMessage || response.status === 408 || response.status === 429 || response.status >= 500;
+      const apiError = makeDeepSeekError(
+        apiMessage,
         'api',
         retryable
       );
+      apiError.deepSeekStatus = response.status;
+      throw apiError;
     }
 
     const choice = data?.choices?.[0];
@@ -15769,11 +15789,16 @@ async function requestDeepSeek(entries, targetLang, override = {}) {
       return await runRequest(requestEntries, 0);
     } catch (firstError) {
       if (!firstError.deepSeekRetryable) throw firstError;
+      // 服务器繁忙或网络异常时只等待后重试一次，绝不能拆分成更多请求。
+      if (firstError.deepSeekReason === 'api' || firstError.deepSeekReason === 'network') {
+        await new Promise(resolve => setTimeout(resolve, 2500));
+      }
       try {
         return await runRequest(requestEntries, 1);
       } catch (secondError) {
-        if (!secondError.deepSeekRetryable || requestEntries.length === 1 || splitDepth >= 4) throw secondError;
-        // 整批重试仍失败时自动对半拆分，降低输出长度和单次格式错误影响。
+        const contentFailure = ['empty', 'length', 'invalid_json', 'incomplete'].includes(secondError.deepSeekReason);
+        if (!secondError.deepSeekRetryable || !contentFailure || requestEntries.length === 1 || splitDepth >= 4) throw secondError;
+        // 只有返回内容为空、截断或 JSON 格式异常时才拆分；API 过载绝不拆分。
         const middle = Math.ceil(requestEntries.length / 2);
         const left = await requestWithRecovery(requestEntries.slice(0, middle), splitDepth + 1);
         const right = await requestWithRecovery(requestEntries.slice(middle), splitDepth + 1);
@@ -15795,6 +15820,13 @@ async function requestDeepSeek(entries, targetLang, override = {}) {
     if (err.deepSeekReason === 'invalid_json' || err.deepSeekReason === 'incomplete') {
       const snippet = String(err.deepSeekRawContent || '').replace(/\s+/g, ' ').trim().slice(0, 180);
       throw new Error(`DeepSeek 返回格式异常，${recovered}${snippet ? ` 返回片段：${snippet}` : ''}`);
+    }
+    if (err.deepSeekReason === 'api' && err.deepSeekRetryable) {
+      const busyError = new Error('DeepSeek 服务器繁忙，已停止继续请求，请稍后再试。');
+      busyError.deepSeekReason = 'overloaded';
+      busyError.deepSeekRetryable = false;
+      busyError.deepSeekStatus = err.deepSeekStatus;
+      throw busyError;
     }
     throw err;
   }
@@ -15902,7 +15934,7 @@ async function translateTsEntries(entries, lang, force = false) {
   if (!deepSeekSettings().apiKey) { openDeepSeekSettings(); return; }
   // v5.107: 先把行内未失焦的标题写回，确保按最新任务描述生成
   flushTsLiveEdits(entries);
-  const allCandidates = entries.filter(e => force || !getTsTranslation(e, lang));
+  const allCandidates = sortTsEntriesNewestFirst(entries.filter(e => force || !getTsTranslation(e, lang)));
   if (!allCandidates.length) { showToast('当前范围没有缺失描述'); return; }
   tsTranslationBusy = true;
   document.getElementById('tsTranslateAll')?.setAttribute('disabled', '');
@@ -15923,9 +15955,9 @@ async function translateTsEntries(entries, lang, force = false) {
     }
   }
   if (cachedApplied) updateDeepSeekStatus(`已读取后台结果 ${completed}/${allCandidates.length}`);
-  // 稳定性优先：每批最多 8 条、最多 3 路并行；请求层会对异常批次自动重试和继续拆分。
+  // 稳定性优先：每批最多 8 条、最多 2 路并行；API 过载时不会继续拆分请求。
   const BATCH = force && candidates.length === 1 ? 1 : Math.min(8, Math.max(4, candidates.length));
-  const CONCURRENCY = force && candidates.length === 1 ? 1 : Math.min(3, Math.max(2, Math.ceil(candidates.length / BATCH)));
+  const CONCURRENCY = force && candidates.length === 1 ? 1 : Math.min(2, Math.max(1, Math.ceil(candidates.length / BATCH)));
   try {
     const chunks = [];
     for (let i = 0; i < candidates.length; i += BATCH) chunks.push(candidates.slice(i, i + BATCH));
@@ -16014,7 +16046,7 @@ async function runTsAiPrefetch() {
 
   // 只准备当前工时月份、当前看板范围内、当前所选语言的隐藏草稿。
   const monthKey = tsCurrentMonth || localDateStr(new Date()).slice(0, 7);
-  const rows = typeof tsEntriesForMonth === 'function' ? tsEntriesForMonth(monthKey) : [];
+  const rows = sortTsEntriesNewestFirst(typeof tsEntriesForMonth === 'function' ? tsEntriesForMonth(monthKey) : []);
   const unique = [];
   const seen = new Set();
   for (const entry of rows) {
@@ -16037,6 +16069,7 @@ async function runTsAiPrefetch() {
   tsAiPrefetchActive = true;
   const languageName = { JA: '日文', EN: '英文' }[lang] || lang;
   updateDeepSeekStatus(`空闲时后台准备${languageName} ${batch.length} 条…`);
+  let prefetchError = null;
   try {
     const generated = await requestDeepSeek(batch, lang, { forceFromTitle: true });
     let prepared = 0;
@@ -16053,18 +16086,27 @@ async function runTsAiPrefetch() {
     updateDeepSeekStatus(`后台已准备 ${prepared} 条${languageName}描述 · 点击 AI 优化后显示`, 'ok');
     tsAiPrefetchPausedUntil = 0;
   } catch (err) {
-    tsAiPrefetchPausedUntil = Date.now() + 5 * 60 * 1000;
-    updateDeepSeekStatus(`后台准备已暂停：${err.message}`, 'error');
+    prefetchError = err;
+    const overloaded = err.deepSeekReason === 'overloaded' || /(server\s*overloaded|overload|服务器繁忙|服务繁忙)/i.test(err.message || '');
+    const pauseMs = overloaded ? 15 * 60 * 1000 : 5 * 60 * 1000;
+    tsAiPrefetchPausedUntil = Date.now() + pauseMs;
+    updateDeepSeekStatus(
+      overloaded ? 'DeepSeek 服务器繁忙 · 后台翻译暂停 15 分钟' : `后台准备已暂停：${err.message}`,
+      'error'
+    );
   } finally {
     tsTranslationBusy = false;
     tsAiPrefetchActive = false;
     const pending = tsAiPrefetchPendingAction;
     tsAiPrefetchPendingAction = null;
-    if (pending) {
+    if (pending && !prefetchError) {
       setTimeout(() => translateTsEntries(pending.entries, pending.lang, pending.force), 0);
+    } else if (pending && prefetchError) {
+      showToast(prefetchError.deepSeekReason === 'overloaded' ? 'DeepSeek 服务器繁忙，请稍后再试' : `DeepSeek：${prefetchError.message}`);
+      scheduleTsAiPrefetch(tsAiPrefetchPausedUntil - Date.now());
     } else {
       const stillIdle = Date.now() - tsAiPrefetchLastActivity >= TS_AI_PREFETCH_IDLE_MS;
-      scheduleTsAiPrefetch(stillIdle ? 1800 : null);
+      scheduleTsAiPrefetch(stillIdle ? TS_AI_PREFETCH_GAP_MS : null);
     }
   }
 }
