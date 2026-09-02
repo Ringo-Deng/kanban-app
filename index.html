@@ -11921,7 +11921,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
   </div>
 </div>
 
-<!-- Obsidian 手动数据同步 modal -->
+<!-- Obsidian 数据同步与自动备份 modal -->
 <div class="modal hidden" id="vaultModal">
   <div class="modal-backdrop" data-action="vault-close"></div>
   <div class="modal-content vault-modal-content">
@@ -11940,6 +11940,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
         <button class="btn btn-primary" id="vaultUpload" style="display:none">上传到仓库</button>
         <button class="btn" id="vaultDownload" style="display:none">从仓库下载</button>
         <button class="btn btn-ghost" id="vaultHistory" style="display:none">历史备份</button>
+        <button class="btn btn-ghost" id="vaultLocalHistory" type="button">本地历史</button>
         <button class="btn btn-ghost" id="vaultDisconnect" style="display:none">断开连接</button>
       </div>
       <!-- v5.140: 手机端 / 无文件夹 API 时用文件导出导入 -->
@@ -11995,13 +11996,17 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
         </div>
       </div>
       <div class="vault-history-panel hidden" id="vaultHistoryPanel">
-        <div class="vault-history-head"><strong>最近备份</strong><span>最多保留 10 份</span></div>
+        <div class="vault-history-head"><strong id="vaultHistoryTitle">最近备份</strong><span id="vaultHistoryMeta">最多保留 10 份</span></div>
         <div class="vault-history-list" id="vaultHistoryList">尚无备份</div>
       </div>
       <div class="vault-info" id="vaultInfo" style="display:none">
         <div class="vault-info-row">
           <span class="vault-info-label">仓库目录:</span>
           <span class="vault-info-value" id="vaultDirName">—</span>
+        </div>
+        <div class="vault-info-row">
+          <span class="vault-info-label">每日自动备份:</span>
+          <span class="vault-info-value" id="vaultLastAutoBackup">等待首次备份</span>
         </div>
         <div class="vault-info-row">
           <span class="vault-info-label">最后手动操作:</span>
@@ -12013,7 +12018,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
         </div>
       </div>
       <div class="vault-help" id="vaultHelp">
-        <strong>电脑：</strong>「上传到仓库」默认只覆盖 <code>Kanban同步/Kanban数据同步.md</code> 这一份主文件；如需保留旧版本，请在确认页主动勾选备份。
+        <strong>电脑：</strong>连接并授权 Obsidian 仓库后，网页打开期间每天自动保存一份历史备份；主同步文件仍只在手动确认后覆盖。
         <br><strong>手机：</strong>填写一次 Vault 名称或 ID 后，可用「上传到仓库」把最新数据交给 Obsidian，并覆盖 <code>Kanban同步/Kanban数据同步.md</code>；导出/导入仍保留为兜底。
       </div>
       <!-- v5.104: 已移除实时同步与同步日志 -->
@@ -12128,8 +12133,6 @@ function storedKanbanDataWeight(data) {
 
 function selectKanbanStorageKey() {
   try {
-    // 演示空白链接不得碰旧数据区。
-    if (new URLSearchParams(location.search).get('fresh') === '1') return PRIMARY_STORAGE_KEY;
     const currentRaw = localStorage.getItem(PRIMARY_STORAGE_KEY);
     const currentData = currentRaw ? JSON.parse(currentRaw) : null;
     if (storedKanbanDataWeight(currentData) > 0) return PRIMARY_STORAGE_KEY;
@@ -14808,9 +14811,10 @@ function projectColor(p) {
 }
 
 function save(opts = {}) {
-  // 统一入口：只写入本机。Obsidian 改为用户确认后手动上传/下载。
+  // 统一入口：先写入本机；每日仓库备份由独立安全任务处理。
   // opts.immediate  → 跳过 300ms 防抖,立即写(导入/重置用)
   // opts.skipVault  → 跳过 vault 同步(vault pull/syncAllToVault 自身已写存储,避免重入循环)
+  // opts.skipAutoHistory → 跳过本地历史快照调度（快照自身写状态时避免递归）
   // 1) localStorage
   if (opts.immediate) {
     _writeStorage();
@@ -14827,6 +14831,9 @@ function save(opts = {}) {
   if (!opts.skipVault && typeof store !== 'undefined') {
     if (!store.vaultConfig) store.vaultConfig = {};
     store.vaultConfig.localChangedAt = Date.now();
+  }
+  if (!opts.skipAutoHistory && typeof window.__scheduleAutoHistoryRefresh === 'function') {
+    window.__scheduleAutoHistoryRefresh();
   }
 }
 let _dirty = false;
@@ -15575,73 +15582,158 @@ async function requestDeepSeek(entries, targetLang, override = {}) {
     JA: '専門的な工数記載として、簡潔で自然なビジネス日本語・リーガル日本語を使用する。',
     EN: 'Write the professional work description in concise, natural English suitable for a legal timesheet, preferably as noun phrases.',
   };
-  // v5.134: 精简 system，限制 max_tokens，减少生成耗时
-  const system = `律师工时描述编辑器。${languageRules[targetLang]}
+  const baseSystem = `律师工时描述编辑器。${languageRules[targetLang]}
 规则：仅用 original_title 事实，不虚构；输出简洁专业描述；多动作用换行；regenerate=true 必须重写；遵守 terminology。
-仅返回 JSON：{"items":[{"description":"..."}]}，数量与顺序与输入一致。`;
-  const tasks = entries.map(entry => ({
-    original_title: String(entry.title || ''),
-    current_description: forceFromTitle ? '' : String(getTsTranslation(entry, targetLang)?.text || ''),
-    regenerate: forceFromTitle,
-    project: String(entry.projectName || ''),
-    terminology: termLibraryPromptText(entry),
-  }));
-  // 每条描述约 40–80 tokens，预留余量
-  const maxTokens = Math.min(4096, Math.max(256, entries.length * 120));
-  let response;
-  try {
-    response = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: settings.model || 'deepseek-chat',
-        temperature: 0,
-        max_tokens: maxTokens,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: JSON.stringify({ target_language: targetLang, tasks }) },
-        ],
-      }),
-    });
-  } catch (err) {
-    throw new Error(`无法连接 DeepSeek（可能是网络或浏览器跨域限制）：${err.message}`);
-  }
-  let data = null;
-  try { data = await response.json(); } catch {}
-  if (!response.ok) throw new Error(data?.error?.message || `DeepSeek 请求失败（HTTP ${response.status}）`);
-  let rawContent = data?.choices?.[0]?.message?.content || '';
-  // 常见情况：DeepSeek 将 JSON 包在 ```json ... ``` 中，或前后有多余文字
-  let cleaned = rawContent.trim();
-  // 1) 剥离 markdown 代码块
-  const fenceMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-  if (fenceMatch && fenceMatch[1]) cleaned = fenceMatch[1].trim();
-  // 2) 尝试解析
-  let parsed = null;
-  const tryParse = (s) => { try { return JSON.parse(s); } catch { return null; } };
-  parsed = tryParse(cleaned);
-  // 3) 仍未成功：从大段文字中捞出第一个完整 JSON（{…} 或 […]）
-  if (!parsed) {
+仅返回合法 JSON，不得使用 Markdown 代码块或添加解释。格式必须是：{"items":[{"description":"..."}]}，items 数量及顺序必须与输入完全一致。`;
+
+  const makeDeepSeekError = (message, reason, retryable = true, rawContent = '', finishReason = '') => {
+    const err = new Error(message);
+    err.deepSeekReason = reason;
+    err.deepSeekRetryable = retryable;
+    err.deepSeekRawContent = rawContent;
+    err.deepSeekFinishReason = finishReason;
+    return err;
+  };
+  const tryParse = (value) => { try { return JSON.parse(value); } catch { return null; } };
+  const parseReturnedJson = (rawContent) => {
+    let cleaned = String(rawContent || '').trim();
+    const fenceMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/i);
+    if (fenceMatch && fenceMatch[1]) cleaned = fenceMatch[1].trim();
+    let parsed = tryParse(cleaned);
+    if (parsed) return parsed;
     const firstBrace = Math.min(
       cleaned.indexOf('{') === -1 ? Infinity : cleaned.indexOf('{'),
       cleaned.indexOf('[') === -1 ? Infinity : cleaned.indexOf('[')
     );
     if (firstBrace !== Infinity) {
       const lastBrace = Math.max(cleaned.lastIndexOf('}'), cleaned.lastIndexOf(']'));
-      if (lastBrace > firstBrace) {
-        parsed = tryParse(cleaned.slice(firstBrace, lastBrace + 1));
+      if (lastBrace > firstBrace) parsed = tryParse(cleaned.slice(firstBrace, lastBrace + 1));
+    }
+    return parsed;
+  };
+
+  const runRequest = async (requestEntries, retryAttempt = 0) => {
+    const tasks = requestEntries.map(entry => ({
+      original_title: String(entry.title || ''),
+      current_description: forceFromTitle ? '' : String(getTsTranslation(entry, targetLang)?.text || ''),
+      regenerate: forceFromTitle,
+      project: String(entry.projectName || ''),
+      terminology: termLibraryPromptText(entry),
+    }));
+    // 首次请求已留足余量；格式修复重试进一步增加输出空间，避免 JSON 在结尾被截断。
+    const tokensPerItem = retryAttempt ? 240 : 180;
+    const maxTokens = Math.min(4096, Math.max(retryAttempt ? 768 : 512, requestEntries.length * tokensPerItem));
+    const retryRule = retryAttempt
+      ? '\n这是格式修复重试：请从头生成完整 JSON，确保所有引号、换行转义、方括号和花括号均正确闭合。'
+      : '';
+    let response;
+    try {
+      response = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: settings.model || 'deepseek-chat',
+          temperature: 0,
+          max_tokens: maxTokens,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: baseSystem + retryRule },
+            { role: 'user', content: JSON.stringify({ target_language: targetLang, tasks }) },
+          ],
+        }),
+      });
+    } catch (err) {
+      throw makeDeepSeekError(
+        `无法连接 DeepSeek（可能是网络或浏览器跨域限制）：${err.message}`,
+        'network',
+        true
+      );
+    }
+    let data = null;
+    try { data = await response.json(); } catch {}
+    if (!response.ok) {
+      const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
+      throw makeDeepSeekError(
+        data?.error?.message || `DeepSeek 请求失败（HTTP ${response.status}）`,
+        'api',
+        retryable
+      );
+    }
+
+    const choice = data?.choices?.[0];
+    const rawContent = String(choice?.message?.content || '');
+    const finishReason = String(choice?.finish_reason || '');
+    if (!rawContent.trim()) {
+      throw makeDeepSeekError(
+        finishReason === 'length' ? 'DeepSeek 输出被截断' : 'DeepSeek 返回了空内容',
+        finishReason === 'length' ? 'length' : 'empty',
+        true,
+        rawContent,
+        finishReason
+      );
+    }
+    const parsed = parseReturnedJson(rawContent);
+    if (!parsed) {
+      throw makeDeepSeekError(
+        finishReason === 'length' ? 'DeepSeek 输出被截断' : 'DeepSeek 返回的 JSON 格式错误',
+        finishReason === 'length' ? 'length' : 'invalid_json',
+        true,
+        rawContent,
+        finishReason
+      );
+    }
+    if (!Array.isArray(parsed.items) || parsed.items.length !== requestEntries.length) {
+      throw makeDeepSeekError(
+        `DeepSeek 返回条数不完整（应为 ${requestEntries.length} 条，实际为 ${Array.isArray(parsed.items) ? parsed.items.length : 0} 条）`,
+        'incomplete',
+        true,
+        rawContent,
+        finishReason
+      );
+    }
+    const results = parsed.items.map(item => ({
+      description: String(item?.description || '').trim(),
+    }));
+    if (results.some(item => !item.description)) {
+      throw makeDeepSeekError('DeepSeek 返回了空的工时描述', 'incomplete', true, rawContent, finishReason);
+    }
+    return results;
+  };
+
+  const requestWithRecovery = async (requestEntries, splitDepth = 0) => {
+    try {
+      return await runRequest(requestEntries, 0);
+    } catch (firstError) {
+      if (!firstError.deepSeekRetryable) throw firstError;
+      try {
+        return await runRequest(requestEntries, 1);
+      } catch (secondError) {
+        if (!secondError.deepSeekRetryable || requestEntries.length === 1 || splitDepth >= 4) throw secondError;
+        // 整批重试仍失败时自动对半拆分，降低输出长度和单次格式错误影响。
+        const middle = Math.ceil(requestEntries.length / 2);
+        const left = await requestWithRecovery(requestEntries.slice(0, middle), splitDepth + 1);
+        const right = await requestWithRecovery(requestEntries.slice(middle), splitDepth + 1);
+        return left.concat(right);
       }
     }
+  };
+
+  try {
+    return await requestWithRecovery(entries);
+  } catch (err) {
+    const recovered = entries.length > 1 ? '已自动重试并拆分批次，仍未成功。' : '已自动重试，仍未成功。';
+    if (err.deepSeekReason === 'empty') {
+      throw new Error(`DeepSeek 返回了空内容，${recovered}请稍后再试。`);
+    }
+    if (err.deepSeekReason === 'length') {
+      throw new Error(`DeepSeek 输出过长并被截断，${recovered}请缩短工时标题后再试。`);
+    }
+    if (err.deepSeekReason === 'invalid_json' || err.deepSeekReason === 'incomplete') {
+      const snippet = String(err.deepSeekRawContent || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+      throw new Error(`DeepSeek 返回格式异常，${recovered}${snippet ? ` 返回片段：${snippet}` : ''}`);
+    }
+    throw err;
   }
-  if (!parsed) {
-    // 调试：把原始返回的前 500 字附到错误信息中
-    throw new Error('DeepSeek 未返回有效 JSON — 原始返回：' + rawContent.slice(0, 500));
-  }
-  if (!Array.isArray(parsed?.items) || !parsed.items.length) throw new Error('DeepSeek 未返回有效结果');
-  // v5.135: 数量不完全一致时仍按索引取用，避免整批失败导致「有的优化不出」
-  return entries.map((_, i) => ({
-    description: String(parsed.items[i]?.description || '').trim(),
-  }));
 }
 function findTsArchiveEntry(taskId) {
   for (const arr of Object.values(store.archive || {})) {
@@ -15744,10 +15836,9 @@ async function translateTsEntries(entries, lang, force = false) {
   document.querySelectorAll('[data-translate-one]').forEach(b => b.setAttribute('disabled', ''));
   updateDeepSeekStatus(`优化中 0/${candidates.length}`);
   let completed = 0;
-  // v5.134: 更大批次 + 更高并发 + 结束再存盘（避免每波写 localStorage）
-  // 单条仍走 1；多条每批最多 16 条，最多 5 路并行（约 80 条同轮）
-  const BATCH = force && candidates.length === 1 ? 1 : Math.min(16, Math.max(8, candidates.length));
-  const CONCURRENCY = force && candidates.length === 1 ? 1 : Math.min(5, Math.max(2, Math.ceil(candidates.length / BATCH)));
+  // 稳定性优先：每批最多 8 条、最多 3 路并行；请求层会对异常批次自动重试和继续拆分。
+  const BATCH = force && candidates.length === 1 ? 1 : Math.min(8, Math.max(4, candidates.length));
+  const CONCURRENCY = force && candidates.length === 1 ? 1 : Math.min(3, Math.max(2, Math.ceil(candidates.length / BATCH)));
   try {
     const chunks = [];
     for (let i = 0; i < candidates.length; i += BATCH) chunks.push(candidates.slice(i, i + BATCH));
@@ -22296,7 +22387,7 @@ document.addEventListener('click', e => {
   }
   if (t.id === 'export') { exportJSON(); return; }
   if (t.id === 'import') { document.getElementById('importFile').click(); return; }
-  // v1.2: 清空按钮已移除 — resetAll 改为仅在 ?fresh=1 时触发
+  // v1.2: 清空按钮已移除；网址参数不再允许触发清空。
 
   // 卡片内
   const card = t.closest('.card');
@@ -24833,7 +24924,7 @@ function exportJSON() {
 }
 
 // v47: 清空所有数据(项目/任务/月份/回收站/vault 配置),回到全新空白
-// - silent: true → 跳过 confirm(用于 URL ?fresh=1 启动时自动清空)
+// - silent: true → 跳过 confirm（仅供受控的内部调用）
 function resetAllData(opts = {}) {
   const silent = opts.silent === true;
   if (!silent) {
@@ -24858,17 +24949,15 @@ function resetAllData(opts = {}) {
       if (!confirm('再次确认:真的要清空所有数据吗?')) return;
     }
   }
+  // 清空前先异步保留一份当天历史；即使后续反悔或误操作，仍可从“本地历史”恢复。
+  if (typeof saveAutoHistorySnapshot === 'function') {
+    saveAutoHistorySnapshot('清空前保护').catch(() => {});
+  }
   // 清除当前空白版数据空间。
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
-  // 清 vault 句柄(IndexedDB,异步但不用 await,fire-and-forget 即可)
-  if (typeof indexedDB !== 'undefined' && indexedDB.databases) {
-    indexedDB.databases().then(dbs => {
-      for (const db of dbs) {
-        if (db && db.name) try { indexedDB.deleteDatabase(db.name); } catch {}
-      }
-    }).catch(() => {});
-  }
-  // 清 vault 句柄
+  // 只断开仓库句柄，不删除整个 IndexedDB；自动历史与恢复点必须保留。
+  if (typeof clearVaultHandle === 'function') clearVaultHandle().catch(() => {});
+  if (typeof clearManualSyncFileHandle === 'function') clearManualSyncFileHandle().catch(() => {});
   vaultDirHandle = null;
   stopVaultPolling();
   // 重新初始化空 store(v1.5 schema)
@@ -24886,7 +24975,7 @@ function resetAllData(opts = {}) {
   updateTrashCount();
   updateVaultBtn();
   render();
-  // 清 URL 上的分享 hash / ?fresh=1 参数
+  // 清 URL 上的分享参数
   if (location.hash || location.search) {
     history.replaceState(null, '', location.origin + location.pathname);
   }
@@ -26000,8 +26089,12 @@ const MANUAL_SYNC_SCHEMA = 3;
 // v5.253: 兼容同一 MD 中误粘贴出的多份同步数据块，读取最后一份有效快照。
 const MANUAL_SYNC_COMPAT_SCHEMAS = [1, 2, 3];
 const MANUAL_LOCAL_RECOVERY_KEY = 'kanban_manual_sync_local_recovery_v2';
+const AUTO_HISTORY_KEY = 'kanban_auto_history_v1';
+const AUTO_HISTORY_LIMIT = 10;
 const MANUAL_SYNC_FILE_HANDLE_KEY = 'kanban_manual_sync_file_handle_v1';
 let manualSyncFileHandle = null;
+let autoHistoryRefreshTimer = null;
+let dailyAutoBackupTimer = null;
 const MANUAL_SYNC_START = '<!-- KANBAN_SYNC_DATA_START -->';
 const MANUAL_SYNC_END = '<!-- KANBAN_SYNC_DATA_END -->';
 let manualRemoteSnapshot = null;
@@ -26312,6 +26405,130 @@ async function writeManualBackup(prefix, content) {
   return filename;
 }
 
+function autoBackupDayKey(value = Date.now()) {
+  const d = new Date(value);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+async function readAutoHistoryRecord() {
+  if (typeof indexedDB === 'undefined') return { key: AUTO_HISTORY_KEY, items: [] };
+  try {
+    const db = await openIdb();
+    const rec = await idbGet(db, 'kv', AUTO_HISTORY_KEY);
+    return rec && Array.isArray(rec.items) ? rec : { key: AUTO_HISTORY_KEY, items: [] };
+  } catch {
+    return { key: AUTO_HISTORY_KEY, items: [] };
+  }
+}
+
+async function saveAutoHistorySnapshot(reason = '每日自动备份') {
+  if (typeof indexedDB === 'undefined') return null;
+  const savedAt = Date.now();
+  const day = autoBackupDayKey(savedAt);
+  const data = buildBusinessData();
+  const summary = summarizeBusinessData(data);
+  if (!hasMeaningfulBusinessData(summary)) return null;
+  const snapshot = {
+    id: `auto-${day}`,
+    day,
+    savedAt,
+    reason,
+    device: currentDeviceLabel(),
+    hash: syncHash(data),
+    summary,
+    data,
+  };
+  const rec = await readAutoHistoryRecord();
+  const items = [snapshot, ...rec.items.filter(item => item && item.day !== day)]
+    .sort((a, b) => Number(b.savedAt || 0) - Number(a.savedAt || 0))
+    .slice(0, AUTO_HISTORY_LIMIT);
+  const db = await openIdb();
+  await idbPut(db, 'kv', { key: AUTO_HISTORY_KEY, updatedAt: savedAt, items });
+  if (!store.vaultConfig) store.vaultConfig = {};
+  store.vaultConfig.lastAutoHistoryDay = day;
+  store.vaultConfig.lastAutoHistoryAt = savedAt;
+  save({ skipVault: true, skipAutoHistory: true, immediate: true });
+  return snapshot;
+}
+
+function scheduleAutoHistoryRefresh() {
+  clearTimeout(autoHistoryRefreshTimer);
+  autoHistoryRefreshTimer = setTimeout(() => {
+    saveAutoHistorySnapshot('当日自动快照').catch(err => addVaultLog('本地自动快照失败：' + (err.message || err), 'warn'));
+  }, 60000);
+}
+window.__scheduleAutoHistoryRefresh = scheduleAutoHistoryRefresh;
+
+async function writeDailyAutoVaultBackup(content, day = autoBackupDayKey()) {
+  const dirs = await getManualSyncDirectories(true, true);
+  if (!dirs?.backupDir) throw new Error('无法创建历史备份目录');
+  const filename = `${safeFileBase(`自动备份-${currentDeviceLabel()}`)}-${day.replace(/-/g, '')}.md`;
+  await writeManualTextFile(dirs.backupDir, filename, content);
+  await pruneManualBackups(dirs.backupDir);
+  return filename;
+}
+
+async function runDailyAutoBackup(opts = {}) {
+  const day = autoBackupDayKey();
+  const refreshToday = !!opts.refreshToday;
+  if (!store.vaultConfig) store.vaultConfig = {};
+  const cfg = store.vaultConfig;
+  const localChangedAt = Number(cfg.localChangedAt || 0);
+  const refreshLocalToday = refreshToday && localChangedAt > Number(cfg.lastAutoHistoryAt || 0);
+
+  if (refreshLocalToday || cfg.lastAutoHistoryDay !== day) {
+    try { await saveAutoHistorySnapshot('每日自动备份'); }
+    catch (err) { addVaultLog('本地每日备份失败：' + (err.message || err), 'warn'); }
+  }
+
+  if (opts.localOnly || !vaultDirHandle) return false;
+  const refreshVaultToday = refreshToday && localChangedAt > Number(cfg.lastAutoVaultBackupAt || 0);
+  if (!refreshVaultToday && cfg.lastAutoVaultBackupDay === day) return true;
+  if (!(await ensureManualVaultPermission(false))) {
+    cfg.lastAutoBackupStatus = '等待仓库授权';
+    save({ skipVault: true, skipAutoHistory: true, immediate: true });
+    refreshVaultModal();
+    return false;
+  }
+
+  const data = buildBusinessData();
+  const summary = summarizeBusinessData(data);
+  if (!hasMeaningfulBusinessData(summary)) return false;
+  try {
+    const envelope = makeSyncEnvelope(data);
+    const filename = await writeDailyAutoVaultBackup(buildSyncMarkdown(envelope, '每日自动备份'), day);
+    const now = Date.now();
+    cfg.lastAutoVaultBackupDay = day;
+    cfg.lastAutoVaultBackupAt = now;
+    cfg.lastAutoVaultBackupFile = filename;
+    cfg.lastAutoBackupStatus = '已完成';
+    save({ skipVault: true, skipAutoHistory: true, immediate: true });
+    addVaultLog(`每日自动备份已写入仓库：${filename}`);
+    refreshVaultModal();
+    if (opts.notify && typeof showToast === 'function') showToast('今日数据已自动备份到 Obsidian 仓库');
+    return true;
+  } catch (err) {
+    cfg.lastAutoBackupStatus = '备份失败';
+    save({ skipVault: true, skipAutoHistory: true, immediate: true });
+    addVaultLog('每日仓库备份失败：' + (err.message || err), 'warn');
+    refreshVaultModal();
+    return false;
+  }
+}
+
+function scheduleNextDailyAutoBackup() {
+  clearTimeout(dailyAutoBackupTimer);
+  const now = new Date();
+  const next = new Date(now);
+  next.setDate(next.getDate() + 1);
+  next.setHours(0, 2, 0, 0);
+  dailyAutoBackupTimer = setTimeout(async () => {
+    await runDailyAutoBackup({ notify: true });
+    scheduleNextDailyAutoBackup();
+  }, Math.max(60000, next.getTime() - now.getTime()));
+}
+
 function manualSyncRelation(remote) {
   const localData = buildBusinessData();
   const localHash = syncHash(localData);
@@ -26554,8 +26771,12 @@ async function executeManualSync() {
 async function loadManualHistory() {
   const panel = document.getElementById('vaultHistoryPanel');
   const list = document.getElementById('vaultHistoryList');
+  const title = document.getElementById('vaultHistoryTitle');
+  const meta = document.getElementById('vaultHistoryMeta');
   panel.classList.remove('hidden');
   document.getElementById('vaultPreview')?.classList.add('hidden');
+  if (title) title.textContent = 'Obsidian 仓库备份';
+  if (meta) meta.textContent = '最近 10 份';
   list.textContent = '正在读取…';
   try {
     if (!(await ensureManualVaultPermission(true))) throw new Error('未获得文件夹权限');
@@ -26574,6 +26795,56 @@ async function loadManualHistory() {
     ).join('');
   } catch (err) {
     list.textContent = `读取备份失败：${err.message}`;
+  }
+}
+
+async function loadAutoLocalHistory() {
+  const panel = document.getElementById('vaultHistoryPanel');
+  const list = document.getElementById('vaultHistoryList');
+  const title = document.getElementById('vaultHistoryTitle');
+  const meta = document.getElementById('vaultHistoryMeta');
+  panel?.classList.remove('hidden');
+  document.getElementById('vaultPreview')?.classList.add('hidden');
+  if (title) title.textContent = '本地自动历史';
+  if (meta) meta.textContent = '按天保留最近 10 份';
+  if (!list) return;
+  list.textContent = '正在读取…';
+  try {
+    const rec = await readAutoHistoryRecord();
+    const items = (rec.items || []).slice(0, AUTO_HISTORY_LIMIT);
+    if (!items.length) { list.textContent = '尚无自动历史备份'; return; }
+    list.innerHTML = items.map(item => {
+      const summary = item.summary || summarizeBusinessData(item.data || {});
+      const label = `${item.reason || '自动备份'} · ${summary.projects || 0} 个项目 / ${summary.totalTasks || 0} 个任务`;
+      return `<div class="vault-history-item"><span class="vault-history-name" title="${escapeHtml(label)}">${escapeHtml(label)}</span><span>${new Date(item.savedAt).toLocaleString('zh-CN')}</span><button class="btn btn-ghost" data-local-history-restore="${escapeHtml(item.id)}">恢复</button></div>`;
+    }).join('');
+  } catch (err) {
+    list.textContent = `读取本地历史失败：${err.message}`;
+  }
+}
+
+async function restoreAutoLocalHistory(snapshotId) {
+  const rec = await readAutoHistoryRecord();
+  const snapshot = (rec.items || []).find(item => item && item.id === snapshotId);
+  if (!snapshot?.data) { showToast('未找到该历史备份'); return false; }
+  const timeText = new Date(snapshot.savedAt).toLocaleString('zh-CN');
+  if (!confirm(`恢复 ${timeText} 的本地历史备份？\n当前看板、工时、诉讼记录、学习词库和习惯打卡将被替换。\n恢复前会先保存当前状态，便于撤回。`)) return false;
+  const restoreData = cloneSyncValue(snapshot.data, null);
+  if (!restoreData) { showToast('历史备份数据无法读取'); return false; }
+  try {
+    await saveAutoHistorySnapshot('恢复前保护');
+    applyBusinessData(restoreData);
+    if (!store.vaultConfig) store.vaultConfig = {};
+    store.vaultConfig.localChangedAt = Date.now();
+    save({ skipVault: true, skipAutoHistory: true, immediate: true });
+    addVaultLog(`已恢复本地历史：${timeText}`);
+    showToast('本地历史备份已恢复');
+    await loadAutoLocalHistory();
+    refreshVaultModal();
+    return true;
+  } catch (err) {
+    setVaultError(err.message || '恢复本地历史失败');
+    return false;
   }
 }
 
@@ -27147,10 +27418,19 @@ function refreshVaultModal() {
   refreshManualLocalRecoveryButton();
   refreshMobilePullBindingUI();
   const dirName = document.getElementById('vaultDirName');
+  const lastAutoBackup = document.getElementById('vaultLastAutoBackup');
   const lastSync = document.getElementById('vaultLastSync');
   const fileCount = document.getElementById('vaultFileCount');
   const help = document.getElementById('vaultHelp');
   if (!icon) return;
+
+  if (lastAutoBackup) {
+    const autoAt = store.vaultConfig?.lastAutoVaultBackupAt || store.vaultConfig?.lastAutoHistoryAt;
+    const target = store.vaultConfig?.lastAutoVaultBackupAt ? 'Obsidian 仓库＋本地历史' : '本地历史';
+    lastAutoBackup.textContent = autoAt
+      ? `${new Date(autoAt).toLocaleString('zh-CN')} · ${target}`
+      : (store.vaultConfig?.lastAutoBackupStatus || '等待首次备份');
+  }
 
   const folderOk = supportsVaultFolderAPI();
   const mobile = isMobileVaultUI();
@@ -27199,7 +27479,7 @@ function refreshVaultModal() {
     detail.textContent = folderOk
       ? '可连接 Obsidian 仓库文件夹，或直接导出/导入同步文件'
       : '当前浏览器不支持文件夹直连，请用「导出同步文件 / 从文件导入」经 Obsidian Sync 中转';
-    info.style.display = (store.vaultConfig?.lastSyncAt || store.vaultConfig?.lastExportAt || store.vaultConfig?.lastImportAt) ? 'block' : 'none';
+    info.style.display = (store.vaultConfig?.lastSyncAt || store.vaultConfig?.lastExportAt || store.vaultConfig?.lastImportAt || store.vaultConfig?.lastAutoHistoryAt) ? 'block' : 'none';
     connectBtn.style.display = folderOk ? '' : 'none';
     uploadBtn.style.display = 'none';
     downloadBtn.style.display = 'none';
@@ -27221,8 +27501,9 @@ function refreshVaultModal() {
         (folderOk ? '<br><strong>电脑：</strong>也可「连接 Obsidian 仓库」后直接上传/下载。' : '');
     } else {
       help.innerHTML =
-        '<strong>电脑：</strong>连接共用的 Obsidian Vault 根目录，或直接连接其中的「Kanban同步」文件夹后，即可「上传到仓库 / 从仓库下载」。程序会自动识别目录层级；仅手动操作，不做实时同步。' +
+        '<strong>电脑：</strong>连接共用的 Obsidian Vault 根目录，或直接连接其中的「Kanban同步」文件夹后，即可「上传到仓库 / 从仓库下载」。连接并授权后，网页打开期间每天自动在「历史备份」中保存一份当日数据。' +
         '<br><strong>手机：</strong>填写一次 Vault 名称或 ID 后可用「上传到仓库」更新同一个 MD 主文件；支持持久文件句柄的浏览器还可首次绑定后直接从主文件下载，iPhone/Safari 则需通过系统文件选择器授权读取。' +
+        '<br><strong>自动历史：</strong>浏览器本地按天保留最近 10 份；Obsidian 仓库历史目录也最多保留 10 份。' +
         '<br><strong>同步内容：</strong>看板、任务、工时、诉讼记录、学习词库和完整复习进度，以及习惯配置与历史打卡。';
     }
   }
@@ -27235,20 +27516,27 @@ function closeVaultModal() {
   document.getElementById('vaultModal')?.classList.add('hidden');
 }
 
-// ====== save() 只保存本机；Obsidian 读写必须由用户在预览中确认 ======
+// ====== save() 保存本机；主同步文件仍需确认，自动任务只写独立的每日历史备份 ======
 
 // ====== 模态框事件绑定 ======
 document.getElementById('vaultBtn')?.addEventListener('click', async () => {
   openVaultModal();
-  if (vaultDirHandle) await refreshManualSyncState({ interactive: true });
+  if (vaultDirHandle) {
+    const refreshed = await refreshManualSyncState({ interactive: true });
+    if (refreshed) await runDailyAutoBackup({ notify: true });
+  }
 });
 document.getElementById('vaultConnect')?.addEventListener('click', async () => {
   const ok = await connectManualVault();
-  if (ok) refreshVaultModal();
+  if (ok) {
+    await runDailyAutoBackup({ notify: true });
+    refreshVaultModal();
+  }
 });
 document.getElementById('vaultUpload')?.addEventListener('click', () => prepareManualSync('upload'));
 document.getElementById('vaultDownload')?.addEventListener('click', () => prepareManualSync('download'));
 document.getElementById('vaultHistory')?.addEventListener('click', loadManualHistory);
+document.getElementById('vaultLocalHistory')?.addEventListener('click', loadAutoLocalHistory);
 document.getElementById('vaultPreviewCancel')?.addEventListener('click', cancelManualPreview);
 document.getElementById('vaultPreviewConfirm')?.addEventListener('click', executeManualSync);
 // v5.140: 文件导出 / 导入 / 分享
@@ -27270,7 +27558,9 @@ document.getElementById('vaultImportFile')?.addEventListener('change', async (e)
 });
 document.getElementById('vaultHistoryList')?.addEventListener('click', e => {
   const btn = e.target.closest('[data-vault-restore]');
-  if (btn) prepareManualBackupRestore(btn.dataset.vaultRestore);
+  if (btn) { prepareManualBackupRestore(btn.dataset.vaultRestore); return; }
+  const localBtn = e.target.closest('[data-local-history-restore]');
+  if (localBtn) restoreAutoLocalHistory(localBtn.dataset.localHistoryRestore);
 });
 document.getElementById('vaultDisconnect')?.addEventListener('click', async () => {
   await disconnectManualVault();
@@ -27293,6 +27583,7 @@ document.addEventListener('keydown', e => {
 // ====== 启动时恢复连接 ======
 (async () => {
   addVaultLog('启动：尝试恢复 Obsidian 仓库连接…');
+  await runDailyAutoBackup({ localOnly: true });
   manualSyncFileHandle = await restoreManualSyncFileHandle();
   refreshMobilePullBindingUI();
   const handle = await restoreVaultHandle();
@@ -27302,10 +27593,12 @@ document.addEventListener('keydown', e => {
     addVaultLog(`已恢复仓库连接：${handle.name}`);
     // 只做静默状态检查；权限需重新确认时，等用户点开同步面板。
     await refreshManualSyncState({ interactive: false });
+    await runDailyAutoBackup({ notify: true });
   } else {
     updateVaultBtn();
     addVaultLog('未找到仓库连接，需手动连接');
   }
+  scheduleNextDailyAutoBackup();
 })();
 
 // ============== Obsidian 阶段 2:反向同步(.md → 看板) ==============
@@ -27317,10 +27610,13 @@ function stopVaultPolling() {
   if (vaultPollTimer) { clearTimeout(vaultPollTimer); vaultPollTimer = null; }
 }
 document.addEventListener('visibilitychange', () => {
-  if (!vaultDirHandle) return;
   if (document.visibilityState === 'visible') {
+    runDailyAutoBackup().catch(() => {});
     // 从其他窗口返回时仅检查提示，绝不自动下载或覆盖。
-    refreshManualSyncState({ interactive: false }).catch(() => {});
+    if (vaultDirHandle) refreshManualSyncState({ interactive: false }).catch(() => {});
+  } else {
+    // 当天有新修改时，页面转入后台前更新当天快照；仓库中始终只保留一天一份文件。
+    runDailyAutoBackup({ refreshToday: true }).catch(() => {});
   }
 });
 
@@ -27695,11 +27991,13 @@ function mergeVaultToStore(parsedFiles) {
 })();
 
 // ============== 启动 ==============
-// v47: URL 带 ?fresh=1 → 自动清空(适合演示/分享空白版,跳过 confirm)
+// v5.263: 网址参数不得再清空数据。兼容旧链接时只移除 fresh 参数。
 if (new URLSearchParams(location.search).get('fresh') === '1') {
-  resetAllData({ silent: true });
-  // 跳个 toast 让用户知道发生了什么
-  setTimeout(() => alert('已根据 ?fresh=1 清空所有数据 ✓\n\n分享链接:在 URL 后加 ?fresh=1 让对方打开就是空白'), 50);
+  try {
+    const safeUrl = new URL(location.href);
+    safeUrl.searchParams.delete('fresh');
+    history.replaceState(null, '', safeUrl.pathname + safeUrl.search + safeUrl.hash);
+  } catch {}
 }
 if (!state.trash) state.trash = [];
 cleanupTrash();
