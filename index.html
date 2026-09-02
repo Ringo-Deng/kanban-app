@@ -4,8 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · v5.0</title>
-<meta name="description" content="律师专属任务管理系统">
+<title>Kanban · 习惯统计按实际记录天数 v5.261</title>
+<meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4850,6 +4850,12 @@ button.card-add-due svg {
   font-size: 12px;
   color: var(--green);
   font-weight: 500;
+}
+.cal-unscheduled-more {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 4px 8px;
+  white-space: nowrap;
 }
 .cal-unscheduled-chip {
   font-size: 12px;
@@ -11579,8 +11585,8 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
           <div class="settings-flyout-title">工时 AI</div>
           <div id="settingsAiBlock">
             <div class="settings-ai-langs" role="group" aria-label="描述语言">
-              <button class="btn ts-ai-menu-item ts-lang-opt" data-lang="ZH" type="button">中文描述</button>
-              <button class="btn ts-ai-menu-item ts-lang-opt active" data-lang="EN" type="button">英文描述</button>
+              <button class="btn ts-ai-menu-item ts-lang-opt" data-lang="JA" type="button">翻译为日文</button>
+              <button class="btn ts-ai-menu-item ts-lang-opt active" data-lang="EN" type="button">翻译为英文</button>
             </div>
             <button class="btn ts-ai-menu-item" id="tsTranslateAll" type="button" title="一键优化当前看板范围">AI 一键优化全部</button>
             <button class="btn ts-ai-menu-item" id="tsTermLibrary" type="button">术语库</button>
@@ -12085,18 +12091,9 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
 // ============== 数据(多看板) ==============
 // v1.5: 从「按月份切」改成「按内容/主题切」 — 每块 board 是独立的项目容器,有 name/icon/color
 // 旧 schema { months: { 'YYYY-MM': {...} }, currentMonth } → 新 schema { boards: { 'b_xxx': {...} }, currentBoard, boardOrder }
-const ORIGINAL_STORAGE_KEY = 'kanban_projects_v2';
-const V24_STORAGE_KEY = 'kanban_projects_v24_bot';
-const STORAGE_KEY = 'kanban_projects_v30_bot'; // 3.0 独立数据空间
-const LEGACY_KEY = 'kanban_projects_v1';   // 旧版 key,只在启动时读一次迁移
+const STORAGE_KEY = 'kanban_projects_v31_blank'; // 空白版独立数据空间
 
-// 3.0 首次启动时优先复制 2.4 数据；此后两个版本互不影响。
-try {
-  if (!localStorage.getItem(STORAGE_KEY)) {
-    const seed = localStorage.getItem(V24_STORAGE_KEY) || localStorage.getItem(ORIGINAL_STORAGE_KEY);
-    if (seed) localStorage.setItem(STORAGE_KEY, seed);
-  }
-} catch {}
+// 空白版不复制旧版本的本地数据。
 
 function generateBoardId() {
   return 'b_' + uid();
@@ -12185,23 +12182,9 @@ function loadStore() {
       return migrated;
     }
   } catch {}
-  // 2) 从 v1 一次性迁移
+  // 2) 全新用户 — 使用空白数据
   try {
-    const v1 = JSON.parse(localStorage.getItem(LEGACY_KEY));
-    if (v1 && Array.isArray(v1.projects)) {
-      const id = generateBoardId();
-      const next = {
-        boards: { [id]: { name: '默认', icon: '📋', color: '', projects: v1.projects, trash: Array.isArray(v1.trash) ? v1.trash : [], createdAt: Date.now() } },
-        currentBoard: id,
-        boardOrder: [id],
-      };
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
-      return next;
-    }
-  } catch {}
-  // 3) 全新用户 — 使用内置演示数据（工作/生活看板 + 工时 + 诉讼）
-  try {
-    return JSON.parse(JSON.stringify(DEMO_SEED_DATA));
+    return JSON.parse(JSON.stringify(BLANK_SEED_DATA));
   } catch {
     const id = generateBoardId();
     return {
@@ -12212,637 +12195,36 @@ function loadStore() {
   }
 }
 
-// v5.123: 内置演示数据（与 kanban-demo-data.json 同步）
-const DEMO_SEED_DATA = {
-  "_demo": true,
-  "_demoNote": "Kanban 演示数据 · 导入后可在工作看板 / 生活看板 / 工时 / 诉讼中浏览。导入会覆盖当前全部数据，请先自行导出备份。",
-  "boards": {
-    "b_demo_work": {
-      "name": "工作看板",
-      "icon": "💼",
-      "color": "#0284c7",
-      "projects": [
-        {
-          "id": "p_001",
-          "name": "Kanban 产品迭代",
-          "fileName": "Kanban 产品迭代",
-          "description": "本地优先看板 · 面向律师与自由职业者的工时与任务管理",
-          "color": "#0284c7",
-          "createdAt": 1782518400000,
-          "tasks": [
-            {
-              "id": "t_001",
-              "title": "修复月历已完成任务无法查看",
-              "done": false,
-              "due": "2026-08-06",
-              "startDate": "2026-08-04",
-              "notes": "朋友演示前优先修完",
-              "createdAt": 1,
-              "checklist": [
-                {
-                  "id": "c_001",
-                  "text": "复现路径",
-                  "done": true
-                },
-                {
-                  "id": "c_002",
-                  "text": "补回归用例",
-                  "done": false
-                },
-                {
-                  "id": "c_003",
-                  "text": "发补丁说明",
-                  "done": false
-                }
-              ]
-            },
-            {
-              "id": "t_002",
-              "title": "第二列空卡导致无法拖入",
-              "done": false,
-              "due": "2026-08-07",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 2
-            },
-            {
-              "id": "t_003",
-              "title": "背景图主题色跟随优化",
-              "done": false,
-              "due": "2026-08-08",
-              "startDate": "2026-08-06",
-              "notes": "文字强制深色已完成，继续调饱和度",
-              "createdAt": 3
-            },
-            {
-              "id": "t_005",
-              "title": "写一页给朋友的演示说明",
-              "done": false,
-              "due": "2026-08-06",
-              "startDate": null,
-              "notes": "导入 demo 数据后打开工作看板即可",
-              "createdAt": 5
-            }
-          ]
-        },
-        {
-          "id": "p_002",
-          "name": "星河科技 · 常年顾问",
-          "fileName": "星河科技 · 常年顾问",
-          "description": "合同审查、劳动争议与合规咨询",
-          "color": "#7c3aed",
-          "createdAt": 1780790400000,
-          "tasks": [
-            {
-              "id": "t_010",
-              "title": "审查《软件服务框架协议》修订稿",
-              "done": false,
-              "due": "2026-08-06",
-              "startDate": "2026-08-05",
-              "notes": "重点：保密、违约金、管辖",
-              "createdAt": 10
-            },
-            {
-              "id": "t_011",
-              "title": "整理上月法律意见书清单",
-              "done": false,
-              "due": "2026-08-07",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 11
-            },
-            {
-              "id": "t_012",
-              "title": "回复 HR 关于竞业限制咨询",
-              "done": false,
-              "due": "2026-08-09",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 12
-            },
-            {
-              "id": "t_013",
-              "title": "更新常年顾问工作台账",
-              "done": false,
-              "due": "2026-08-11",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 13
-            }
-          ]
-        },
-        {
-          "id": "p_003",
-          "name": "诉讼案件协同",
-          "fileName": "诉讼案件协同",
-          "description": "与诉讼看板联动的准备事项",
-          "color": "#dc2626",
-          "createdAt": 1783814400000,
-          "tasks": [
-            {
-              "id": "t_020",
-              "title": "准备张某劳动仲裁证据目录",
-              "done": false,
-              "due": "2026-08-08",
-              "startDate": "2026-08-05",
-              "notes": "工资条、打卡记录、解除通知",
-              "createdAt": 20
-            },
-            {
-              "id": "t_021",
-              "title": "核对被告主体工商信息",
-              "done": false,
-              "due": "2026-08-10",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 21
-            },
-            {
-              "id": "t_022",
-              "title": "起草代理词初稿",
-              "done": false,
-              "due": "2026-08-13",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 22
-            }
-          ]
-        },
-        {
-          "id": "p_004",
-          "name": "内容与分享",
-          "fileName": "内容与分享",
-          "description": "",
-          "color": "#059669",
-          "createdAt": 1784678400000,
-          "tasks": [
-            {
-              "id": "t_030",
-              "title": "录一段 2 分钟产品演示",
-              "done": false,
-              "due": "2026-08-07",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 30
-            },
-            {
-              "id": "t_031",
-              "title": "整理「本地优先」卖点三条",
-              "done": false,
-              "due": "2026-08-09",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 31
-            },
-            {
-              "id": "t_032",
-              "title": "朋友试用反馈收集表",
-              "done": false,
-              "due": "2026-08-12",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 32
-            }
-          ]
-        }
-      ],
-      "trash": [],
-      "createdAt": 1778198400000,
-      "cardFrost": 52,
-      "bgFollowTheme": true
-    },
-    "b_demo_life": {
-      "name": "生活看板",
-      "icon": "🌿",
-      "color": "#059669",
-      "projects": [
-        {
-          "id": "p_005",
-          "name": "健身打卡",
-          "fileName": "健身打卡",
-          "description": "每周至少 3 练",
-          "color": "#ea580c",
-          "createdAt": 1784246400000,
-          "tasks": [
-            {
-              "id": "t_040",
-              "title": "力量训练 · 推",
-              "done": false,
-              "due": "2026-08-06",
-              "startDate": null,
-              "notes": "卧推 / 肩推 / 臂屈伸",
-              "createdAt": 40
-            },
-            {
-              "id": "t_041",
-              "title": "力量训练 · 拉",
-              "done": false,
-              "due": "2026-08-08",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 41
-            },
-            {
-              "id": "t_042",
-              "title": "有氧 30 分钟",
-              "done": false,
-              "due": "2026-08-09",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 42
-            },
-            {
-              "id": "t_043",
-              "title": "力量训练 · 腿",
-              "done": false,
-              "due": "2026-08-11",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 43
-            }
-          ]
-        },
-        {
-          "id": "p_006",
-          "name": "生活待办",
-          "fileName": "生活待办",
-          "description": "",
-          "color": "#db2777",
-          "createdAt": 1785110400000,
-          "tasks": [
-            {
-              "id": "t_050",
-              "title": "预约牙医洗牙",
-              "done": false,
-              "due": "2026-08-10",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 50
-            },
-            {
-              "id": "t_051",
-              "title": "给爸妈买生日礼物",
-              "done": false,
-              "due": "2026-08-14",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 51
-            },
-            {
-              "id": "t_052",
-              "title": "整理书房书架",
-              "done": false,
-              "due": "2026-08-16",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 52
-            }
-          ]
-        },
-        {
-          "id": "p_007",
-          "name": "学习充电",
-          "fileName": "学习充电",
-          "description": "每周读一点",
-          "color": "#4f46e5",
-          "createdAt": 1784937600000,
-          "tasks": [
-            {
-              "id": "t_060",
-              "title": "读《精益创业》第 5–6 章",
-              "done": false,
-              "due": "2026-08-07",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 60
-            },
-            {
-              "id": "t_061",
-              "title": "英语法律播客 20 分钟",
-              "done": false,
-              "due": "2026-08-06",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 61
-            },
-            {
-              "id": "t_062",
-              "title": "整理本周法律读书笔记",
-              "done": false,
-              "due": "2026-08-12",
-              "startDate": null,
-              "notes": "",
-              "createdAt": 62
-            }
-          ]
-        }
-      ],
-      "trash": [],
-      "createdAt": 1780790400000,
-      "cardFrost": 48,
-      "bgFollowTheme": true
+// 空白初始数据：只保留一个可操作的空看板。
+const BLANK_SEED_DATA = {
+  _demo: false,
+  boards: {
+    b_blank: {
+      name: '默认',
+      icon: '📋',
+      color: '',
+      projects: [],
+      trash: [],
+      createdAt: 0,
+      cardFrost: 46,
+      bgFollowTheme: true
     }
   },
-  "currentBoard": "b_demo_work",
-  "boardOrder": [
-    "b_demo_work",
-    "b_demo_life"
-  ],
-  "timeEntries": [
-    {
-      "id": "te_001",
-      "taskId": "t_010",
-      "projectId": "p_002",
-      "start": 1785574800000,
-      "end": 1785582000000,
-      "note": "审查合同初稿",
-      "localDate": "2026-08-01"
-    },
-    {
-      "id": "te_002",
-      "taskId": "t_010",
-      "projectId": "p_002",
-      "start": 1785592800000,
-      "end": 1785598200000,
-      "note": "标注争议条款",
-      "localDate": "2026-08-01"
-    },
-    {
-      "id": "te_003",
-      "taskId": "t_014",
-      "projectId": "p_002",
-      "start": 1785600000000,
-      "end": 1785602880000,
-      "note": "电话沟通",
-      "localDate": "2026-08-01"
-    },
-    {
-      "id": "te_004",
-      "taskId": "t_011",
-      "projectId": "p_002",
-      "start": 1785664800000,
-      "end": 1785670200000,
-      "note": "整理意见书",
-      "localDate": "2026-08-02"
-    },
-    {
-      "id": "te_005",
-      "taskId": "t_001",
-      "projectId": "p_001",
-      "start": 1785682800000,
-      "end": 1785691800000,
-      "note": "排查月历 bug",
-      "localDate": "2026-08-02"
-    },
-    {
-      "id": "te_006",
-      "taskId": "t_020",
-      "projectId": "p_003",
-      "start": 1785747600000,
-      "end": 1785758400000,
-      "note": "整理证据材料",
-      "localDate": "2026-08-03"
-    },
-    {
-      "id": "te_007",
-      "taskId": "t_004",
-      "projectId": "p_001",
-      "start": 1785765600000,
-      "end": 1785772800000,
-      "note": "设置菜单交互",
-      "localDate": "2026-08-03"
-    },
-    {
-      "id": "te_008",
-      "taskId": "t_010",
-      "projectId": "p_002",
-      "start": 1785834000000,
-      "end": 1785843000000,
-      "note": "修订协议意见",
-      "localDate": "2026-08-04"
-    },
-    {
-      "id": "te_009",
-      "taskId": "t_002",
-      "projectId": "p_001",
-      "start": 1785852000000,
-      "end": 1785857400000,
-      "note": "拖拽边界 case",
-      "localDate": "2026-08-04"
-    },
-    {
-      "id": "te_010",
-      "taskId": "t_040",
-      "projectId": "p_005",
-      "start": 1785870000000,
-      "end": 1785873600000,
-      "note": "力量训练",
-      "localDate": "2026-08-04"
-    },
-    {
-      "id": "te_011",
-      "taskId": "t_001",
-      "projectId": "p_001",
-      "start": 1785920400000,
-      "end": 1785931200000,
-      "note": "修复与自测",
-      "localDate": "2026-08-05"
-    },
-    {
-      "id": "te_012",
-      "taskId": "t_011",
-      "projectId": "p_002",
-      "start": 1785938400000,
-      "end": 1785945600000,
-      "note": "清单核对",
-      "localDate": "2026-08-05"
-    },
-    {
-      "id": "te_013",
-      "taskId": "t_061",
-      "projectId": "p_007",
-      "start": 1785963600000,
-      "end": 1785965400000,
-      "note": "听力练习",
-      "localDate": "2026-08-05"
-    },
-    {
-      "id": "te_014",
-      "taskId": "t_010",
-      "projectId": "p_002",
-      "start": 1786006800000,
-      "end": 1786012200000,
-      "note": "继续审查",
-      "localDate": "2026-08-06"
-    },
-    {
-      "id": "te_015",
-      "taskId": "t_005",
-      "projectId": "p_001",
-      "start": 1786014000000,
-      "end": 1786017600000,
-      "note": "写演示说明",
-      "localDate": "2026-08-06"
-    },
-    {
-      "id": "te_016",
-      "taskId": "t_003",
-      "projectId": "p_001",
-      "start": 1786024800000,
-      "end": 1786032000000,
-      "note": "主题色跟随",
-      "localDate": "2026-08-06"
-    }
-  ],
-  "archive": {
-    "2026-08": [
-      {
-        "taskId": "t_004",
-        "title": "设置菜单悬停小窗体验",
-        "projectId": "p_001",
-        "projectName": "Kanban 产品迭代",
-        "projectColor": "#0284c7",
-        "due": "2026-08-03",
-        "completedAt": "2026-08-03",
-        "archivedAt": 1785715200000,
-        "totalTimeMs": 7200000,
-        "notes": "",
-        "boardKey": "b_demo_work",
-        "boardName": "工作看板"
-      },
-      {
-        "taskId": "t_014",
-        "title": "电话沟通产品合规边界",
-        "projectId": "p_002",
-        "projectName": "星河科技 · 常年顾问",
-        "projectColor": "#7c3aed",
-        "due": "2026-08-01",
-        "completedAt": "2026-08-01",
-        "archivedAt": 1785542400000,
-        "totalTimeMs": 2880000,
-        "notes": "",
-        "boardKey": "b_demo_work",
-        "boardName": "工作看板"
-      },
-      {
-        "taskId": "t_053",
-        "title": "缴纳本月水电燃气",
-        "projectId": "p_006",
-        "projectName": "生活待办",
-        "projectColor": "#db2777",
-        "due": "2026-08-04",
-        "completedAt": "2026-08-04",
-        "archivedAt": 1785801600000,
-        "totalTimeMs": 0,
-        "notes": "",
-        "boardKey": "b_demo_life",
-        "boardName": "生活看板"
-      }
-    ]
+  currentBoard: 'b_blank',
+  boardOrder: ['b_blank'],
+  timeEntries: [],
+  archive: {},
+  litigationRecords: [],
+  litigationReminders: [],
+  habitLog: {},
+  learningCards: [],
+  prefs: {
+    autoRolloverDue: false,
+    autoSortTasksByDue: false,
+    topPanelViews: { board: true, calendar: true, timesheet: true, litigation: true, habits: true, learning: true }
   },
-  "litigationRecords": [
-    {
-      "id": "lit_demo_001",
-      "caseName": "张某与某网络公司劳动争议仲裁",
-      "caseNumber": "京劳人仲字〔2026〕第1287号",
-      "court": "北京市朝阳区劳动人事争议仲裁委员会",
-      "contact": "张某 138****2618",
-      "note": "解除劳动合同、经济补偿金争议",
-      "projectId": "p_003",
-      "createdAt": 1784246400000,
-      "updatedAt": 1785888000000,
-      "timeline": [
-        {
-          "id": "tl_001",
-          "date": "2026-07-19",
-          "text": "接受委托，签署代理合同",
-          "todos": []
-        },
-        {
-          "id": "tl_002",
-          "date": "2026-07-27",
-          "text": "提交仲裁申请书及证据材料",
-          "todos": [
-            {
-              "id": "td_001",
-              "text": "证据目录盖章",
-              "status": "已完成",
-              "due": "2026-07-26"
-            },
-            {
-              "id": "td_002",
-              "text": "申请人身份证明复印件",
-              "status": "已完成",
-              "due": "2026-07-26"
-            }
-          ]
-        },
-        {
-          "id": "tl_003",
-          "date": "2026-08-11",
-          "text": "仲裁开庭",
-          "todos": [
-            {
-              "id": "td_003",
-              "text": "准备质证提纲",
-              "status": "待处理",
-              "due": "2026-08-09"
-            },
-            {
-              "id": "td_004",
-              "text": "与当事人庭前沟通",
-              "status": "待处理",
-              "due": "2026-08-10"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "lit_demo_002",
-      "caseName": "星河科技诉供应商买卖合同纠纷",
-      "caseNumber": "（2026）京0105民初4421号",
-      "court": "北京市朝阳区人民法院",
-      "contact": "法务部 李工",
-      "note": "货款拖欠，拟调解",
-      "projectId": "p_002",
-      "createdAt": 1782950400000,
-      "updatedAt": 1785628800000,
-      "timeline": [
-        {
-          "id": "tl_010",
-          "date": "2026-07-07",
-          "text": "立案受理",
-          "todos": []
-        },
-        {
-          "id": "tl_011",
-          "date": "2026-07-25",
-          "text": "被告提交答辩状",
-          "todos": []
-        },
-        {
-          "id": "tl_012",
-          "date": "2026-08-18",
-          "text": "第一次开庭",
-          "todos": [
-            {
-              "id": "td_010",
-              "text": "补充交货验收记录",
-              "status": "待处理",
-              "due": "2026-08-14"
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  "prefs": {
-    "autoRolloverDue": true,
-    "autoSortTasksByDue": false
-  },
-  "lastView": "board",
-  "lastFilter": "all"
+  lastView: 'board',
+  lastFilter: 'all'
 };
 
 function isStoreEffectivelyEmpty(s) {
@@ -12862,13 +12244,13 @@ function isStoreEffectivelyEmpty(s) {
 }
 
 let store = loadStore();
-// 本地无有效内容时，灌入内置演示数据，方便直接展示
+// 本地无有效内容时，恢复为空白看板。
 if (isStoreEffectivelyEmpty(store)) {
   try {
-    store = JSON.parse(JSON.stringify(DEMO_SEED_DATA));
+    store = JSON.parse(JSON.stringify(BLANK_SEED_DATA));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
   } catch (e) {
-    console.warn('seed demo data failed', e);
+    console.warn('initialize blank data failed', e);
   }
 }
 // 公开 PWA：若仍无诉讼字段则补齐
@@ -14852,7 +14234,7 @@ function bindMobileBoardBgControls() {
 // 启动时应用（桌面控件）；手机控件等菜单 DOM 就绪后再 bindMobileBoardBgControls
 try { initBoardBackgroundControls(); } catch (e) { console.warn('board bg init', e); }
 
-// ============== v5.114 / v5.117: 设置邻接小菜单（背景图悬停右侧 / 工时 AI） ==============
+// ============== v5.114 / v5.117: 设置邻接小菜单（桌面悬停右侧） ==============
 function closeAllSettingsFlyouts() {
   document.querySelectorAll('.settings-flyout').forEach(el => {
     el.hidden = true;
@@ -14910,7 +14292,7 @@ function openSettingsFlyout(which, opts) {
     bg: { trigger: 'settingsBgTrigger', fly: 'settingsBgFlyout', preferRight: true },
     assistant: { trigger: 'settingsAssistantTrigger', fly: 'settingsAssistantFlyout', preferRight: true },
     topPanel: { trigger: 'settingsTopPanelTrigger', fly: 'settingsTopPanelFlyout', preferRight: true },
-    ai: { trigger: 'settingsAiTrigger', fly: 'settingsAiFlyout', preferRight: false },
+    ai: { trigger: 'settingsAiTrigger', fly: 'settingsAiFlyout', preferRight: true },
   };
   const cfg = map[which];
   if (!cfg) return;
@@ -14951,12 +14333,13 @@ function openSettingsFlyout(which, opts) {
   }
 }
 
-// ---- v5.117/v5.229: 顶部面板、看板背景图、AI助手 — 桌面悬停右侧自动出现，触摸端保留点击 ----
+// ---- v5.117/v5.229: 设置子面板 — 桌面悬停右侧自动出现，触摸端保留点击 ----
 function bindSettingsFlyoutHover(which) {
   const map = {
     topPanel: { trigger: 'settingsTopPanelTrigger', fly: 'settingsTopPanelFlyout' },
     bg: { trigger: 'settingsBgTrigger', fly: 'settingsBgFlyout' },
     assistant: { trigger: 'settingsAssistantTrigger', fly: 'settingsAssistantFlyout' },
+    ai: { trigger: 'settingsAiTrigger', fly: 'settingsAiFlyout' },
   };
   const cfg = map[which];
   if (!cfg) return;
@@ -15011,13 +14394,7 @@ function bindSettingsFlyoutHover(which) {
 bindSettingsFlyoutHover('topPanel');
 bindSettingsFlyoutHover('bg');
 bindSettingsFlyoutHover('assistant');
-
-// 工时 AI 仍用点击
-document.getElementById('settingsAiTrigger')?.addEventListener('click', e => {
-  e.preventDefault();
-  e.stopPropagation();
-  openSettingsFlyout('ai');
-}, true);
+bindSettingsFlyoutHover('ai');
 document.getElementById('settingsTopPanelFlyout')?.addEventListener('change', e => {
   const input = e.target.closest('input[data-top-panel-view]');
   if (!input) return;
@@ -15756,11 +15133,17 @@ let calBoardFilterSet = new Set();
     if (!raw || raw === '""' || raw === 'null') { calBoardFilterSet = new Set(); return; }
     let parsed;
     try { parsed = JSON.parse(raw); } catch { parsed = null; }
-    if (Array.isArray(parsed)) { calBoardFilterSet = new Set(parsed.filter(k => k)); return; }
+    if (Array.isArray(parsed)) {
+      calBoardFilterSet = new Set(parsed.filter(k => k === '__none__' || !!store.boards?.[k]));
+      return;
+    }
     // 兼容 v5.153 单选字符串
-    if (typeof parsed === 'string' && parsed) { calBoardFilterSet = new Set([parsed]); return; }
+    if (typeof parsed === 'string' && parsed) {
+      calBoardFilterSet = parsed === '__none__' || store.boards?.[parsed] ? new Set([parsed]) : new Set();
+      return;
+    }
     if (typeof raw === 'string' && raw && raw !== '""' && raw !== 'null' && raw[0] !== '[') {
-      calBoardFilterSet = new Set([raw]);
+      calBoardFilterSet = raw === '__none__' || store.boards?.[raw] ? new Set([raw]) : new Set();
       return;
     }
   } catch {}
@@ -15885,9 +15268,18 @@ let tsBoardFilterSet = new Set();
     if (!raw || raw === '""' || raw === 'null') { tsBoardFilterSet = new Set(); return; }
     let parsed;
     try { parsed = JSON.parse(raw); } catch { parsed = null; }
-    if (Array.isArray(parsed)) { tsBoardFilterSet = new Set(parsed.filter(k => k)); return; }
-    if (typeof parsed === 'string' && parsed) { tsBoardFilterSet = new Set([parsed]); return; }
-    if (typeof raw === 'string' && raw && raw !== '""' && raw !== 'null') { tsBoardFilterSet = new Set([raw]); return; }
+    if (Array.isArray(parsed)) {
+      tsBoardFilterSet = new Set(parsed.filter(k => k === '__none__' || !!store.boards?.[k]));
+      return;
+    }
+    if (typeof parsed === 'string' && parsed) {
+      tsBoardFilterSet = parsed === '__none__' || store.boards?.[parsed] ? new Set([parsed]) : new Set();
+      return;
+    }
+    if (typeof raw === 'string' && raw && raw !== '""' && raw !== 'null') {
+      tsBoardFilterSet = raw === '__none__' || store.boards?.[raw] ? new Set([raw]) : new Set();
+      return;
+    }
   } catch {}
   tsBoardFilterSet = new Set();
 })();
@@ -15991,7 +15383,7 @@ function toggleTsBoardFilterMenu(force) {
 }
 
 const DEEPSEEK_SETTINGS_KEY = 'kanban_deepseek_settings_v3';
-const TS_LANGUAGES = ['ZH', 'EN'];
+const TS_LANGUAGES = ['JA', 'EN'];
 const TERM_FIELDS = ['company', 'caseNames', 'legal', 'people', 'noTranslate', 'expressions'];
 let tsTranslationLang = 'EN';
 let deepseekSessionKey = '';
@@ -16005,7 +15397,7 @@ function loadDeepSeekSettings() {
     if (!raw) {
       const legacy = JSON.parse(localStorage.getItem(legacyKey) || '{}');
       if (legacy.deepseekApiKey) {
-        raw = JSON.stringify({ apiKey: legacy.deepseekApiKey, model: legacy.deepseekModel || 'deepseek-chat', targetLang: legacy.targetLang === 'ZH' ? 'ZH' : 'EN' });
+        raw = JSON.stringify({ apiKey: legacy.deepseekApiKey, model: legacy.deepseekModel || 'deepseek-chat', targetLang: legacy.targetLang === 'JA' ? 'JA' : 'EN' });
         localStorage.setItem(DEEPSEEK_SETTINGS_KEY, raw);
       }
     }
@@ -16115,7 +15507,7 @@ async function requestDeepSeek(entries, targetLang, override = {}) {
   if (!apiKey) throw new Error('请先设置 DeepSeek API Key');
   const forceFromTitle = !!override.forceFromTitle;
   const languageRules = {
-    ZH: '专业工时描述使用正式、简洁、自然的中文法律服务表达。',
+    JA: '専門的な工数記載として、簡潔で自然なビジネス日本語・リーガル日本語を使用する。',
     EN: 'Write the professional work description in concise, natural English suitable for a legal timesheet, preferably as noun phrases.',
   };
   // v5.134: 精简 system，限制 max_tokens，减少生成耗时
@@ -16271,7 +15663,7 @@ async function testDeepSeekConnection() {
   result.textContent = '正在测试 DeepSeek…'; result.className = 'ai-test-result';
   try {
     const sample = { title: '审阅补充材料', projectName: '连接测试', translations: {} };
-    const generated = await requestDeepSeek([sample], 'ZH', { apiKey, model });
+    const generated = await requestDeepSeek([sample], 'JA', { apiKey, model });
     result.textContent = `连接成功：${generated[0].description}`; result.className = 'ai-test-result ok';
   } catch (err) { result.textContent = err.message; result.className = 'ai-test-result error'; }
 }
@@ -16314,7 +15706,7 @@ async function translateTsEntries(entries, lang, force = false) {
     save({ skipVault: true, immediate: true });
     try { renderTsTable(tsEntriesForCurrentView()); } catch {}
     updateDeepSeekStatus(`已完成 ${completed} 条`, 'ok');
-    const languageName = { ZH: '中文', EN: '英文' }[lang];
+    const languageName = { JA: '日文', EN: '英文' }[lang];
     showToast(`DeepSeek 已优化 ${completed} 条${languageName}工时描述`);
   } catch (err) {
     // 部分成功也尽量落盘
@@ -16639,7 +16031,7 @@ function renderTsTable(entries) {
     for (const e of list) {
       const translation = getTsTranslation(e);
       const translationText = translation?.text || '';
-      const langLabel = { ZH: '中文', EN: '英文' }[tsTranslationLang];
+      const langLabel = { JA: '日文', EN: '英文' }[tsTranslationLang];
       html += `<article class="ts-entry" data-task-id="${e.taskId}" data-date="${escapeHtml(date || '')}"><button type="button" class="ts-entry-handle" title="拖动排序">⠿</button><div class="ts-entry-main">
         <div class="ts-entry-path"><span class="ts-project-name" title="项目">${escapeHtml(e.projectName || '未命名项目')}</span></div>
         <div class="ts-entry-task"><div class="ts-title-box"><div class="ts-entry-title" contenteditable="true" spellcheck="false" data-title-edit="${e.taskId}" data-placeholder="点击填写中文任务名称" title="点击修改中文任务名称">${escapeHtml(e.title)}</div></div></div>
@@ -21108,7 +20500,7 @@ function renderCalendar() {
       <div class="cal-unscheduled-body">
         ${unscheduledTasks.length > 0 ? `
           <span class="cal-unscheduled-label">📦 未排期 (${unscheduledTasks.length})</span>
-          ${unscheduledTasks.map(t => {
+          ${unscheduledTasks.slice(0, 8).map(t => {
             const isCrossBoard = t.boardKey !== store.currentBoard;
             return `
             <div class="cal-unscheduled-chip" data-task-id="${t.id}" data-project-id="${t.project.id}" data-board-key="${t.boardKey}" draggable="true"
@@ -21119,6 +20511,7 @@ function renderCalendar() {
               ${isCrossBoard ? `<span class="chip-board" title="来自 ${formatBoardLabel(t.board)}">${t.board?.icon || '📋'}</span>` : ''}
             </div>
           `;}).join('')}
+          ${unscheduledTasks.length > 8 ? `<span class="cal-unscheduled-more">另有 ${unscheduledTasks.length - 8} 项未排期任务，请在看板中查看</span>` : ''}
         ` : '<span class="cal-unscheduled-empty">✓ 全部已排期</span>'}
       </div>
     </div>
@@ -25400,9 +24793,8 @@ function resetAllData(opts = {}) {
       if (!confirm('再次确认:真的要清空所有数据吗?')) return;
     }
   }
-  // 清 localStorage(包括 v1/v2 key + vault handle)
+  // 清除当前空白版数据空间。
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
-  try { localStorage.removeItem(LEGACY_KEY); } catch {}
   // 清 vault 句柄(IndexedDB,异步但不用 await,fire-and-forget 即可)
   if (typeof indexedDB !== 'undefined' && indexedDB.databases) {
     indexedDB.databases().then(dbs => {
@@ -29731,8 +29123,8 @@ ${details.join('\n')}`;
         <button class="btn btn-primary" id="mobileOpenBot" type="button" style="min-height:44px;font-weight:700;">打开 AI 对话助手</button>
         <div class="mobile-theme-label" style="margin-top:4px;">工时描述语言</div>
         <div class="mobile-ai-langs" id="mobileAiLangs">
-          <button type="button" class="btn mobile-ai-lang" data-mobile-lang="ZH">中文</button>
-          <button type="button" class="btn mobile-ai-lang" data-mobile-lang="EN">英文</button>
+          <button type="button" class="btn mobile-ai-lang" data-mobile-lang="JA">翻译为日文</button>
+          <button type="button" class="btn mobile-ai-lang" data-mobile-lang="EN">翻译为英文</button>
         </div>
         <button class="btn" id="mobileAiOptimizeAll" type="button">AI 一键优化全部</button>
         <button class="btn" id="mobileAiTerms" type="button">术语库</button>
