@@ -4,8 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kanban · v5.0</title>
-<meta name="description" content="律师专属任务管理系统">
+<title>Kanban · 习惯统计按实际记录天数 v5.261</title>
+<meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12091,9 +12091,74 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
 // ============== 数据(多看板) ==============
 // v1.5: 从「按月份切」改成「按内容/主题切」 — 每块 board 是独立的项目容器,有 name/icon/color
 // 旧 schema { months: { 'YYYY-MM': {...} }, currentMonth } → 新 schema { boards: { 'b_xxx': {...} }, currentBoard, boardOrder }
-const STORAGE_KEY = 'kanban_projects_v31_blank'; // 空白版独立数据空间
+const PRIMARY_STORAGE_KEY = 'kanban_projects_v31_blank';
 
-// 空白版不复制旧版本的本地数据。
+// v5.263: 升级恢复保护。
+// 新版数据区为空时，自动继续使用同源下仍有实际内容的旧版 kanban_projects_* 数据区。
+// 只切换读取目标，不删除、覆盖或复制旧数据；新版已有内容时始终优先使用新版。
+function storedKanbanDataWeight(data) {
+  if (!data || typeof data !== 'object') return 0;
+  let weight = 0;
+  const containers = data.boards && typeof data.boards === 'object'
+    ? Object.values(data.boards)
+    : data.months && typeof data.months === 'object'
+      ? Object.values(data.months)
+      : [];
+  for (const container of containers) {
+    if (!container || typeof container !== 'object') continue;
+    const projects = Array.isArray(container.projects) ? container.projects : [];
+    weight += projects.length * 100;
+    for (const project of projects) {
+      weight += (Array.isArray(project?.tasks) ? project.tasks.length : 0) * 20;
+    }
+    weight += (Array.isArray(container.trash) ? container.trash.length : 0) * 20;
+  }
+  weight += (Array.isArray(data.timeEntries) ? data.timeEntries.length : 0) * 20;
+  if (data.archive && typeof data.archive === 'object') {
+    for (const entries of Object.values(data.archive)) {
+      weight += (Array.isArray(entries) ? entries.length : 0) * 20;
+    }
+  }
+  weight += (Array.isArray(data.litigationRecords) ? data.litigationRecords.length : 0) * 100;
+  weight += (Array.isArray(data.litigationReminders) ? data.litigationReminders.length : 0) * 20;
+  weight += (Array.isArray(data.learningCards) ? data.learningCards.length : 0) * 20;
+  weight += data.habitLog && typeof data.habitLog === 'object' ? Object.keys(data.habitLog).length : 0;
+  return weight;
+}
+
+function selectKanbanStorageKey() {
+  try {
+    // 演示空白链接不得碰旧数据区。
+    if (new URLSearchParams(location.search).get('fresh') === '1') return PRIMARY_STORAGE_KEY;
+    const currentRaw = localStorage.getItem(PRIMARY_STORAGE_KEY);
+    const currentData = currentRaw ? JSON.parse(currentRaw) : null;
+    if (storedKanbanDataWeight(currentData) > 0) return PRIMARY_STORAGE_KEY;
+
+    let best = null;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || key === PRIMARY_STORAGE_KEY || !/^kanban_projects(?:_|$)/i.test(key)) continue;
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      let data = null;
+      try { data = JSON.parse(raw); } catch { continue; }
+      const weight = storedKanbanDataWeight(data);
+      if (weight <= 0) continue;
+      if (!best || weight > best.weight || (weight === best.weight && raw.length > best.size)) {
+        best = { key, weight, size: raw.length };
+      }
+    }
+    if (best) {
+      window.__kanbanRecoveredStorageKey = best.key;
+      return best.key;
+    }
+  } catch (e) {
+    console.warn('旧版本地数据检测失败：', e);
+  }
+  return PRIMARY_STORAGE_KEY;
+}
+
+const STORAGE_KEY = selectKanbanStorageKey();
 
 function generateBoardId() {
   return 'b_' + uid();
@@ -27657,6 +27722,9 @@ if (activeTimer && !activeTimer.isPaused) {
   } else startTimerInterval();
 }
 render();
+if (window.__kanbanRecoveredStorageKey) {
+  setTimeout(() => showToast('已自动恢复旧版本地数据'), 120);
+}
 // v1.1: 启动时初始化 timer 面板(空状态)
 renderTimerPanel();
 // v3.1: 页面打开即扫描；若当天没有打开，之后首次打开时补提醒。
