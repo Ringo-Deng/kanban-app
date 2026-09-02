@@ -15461,6 +15461,14 @@ let tsTranslationLang = 'EN';
 let deepseekSessionKey = '';
 let tsTranslationBusy = false;
 let activeTermLibraryKey = '';
+const TS_AI_PREFETCH_IDLE_MS = 30000;
+const TS_AI_PREFETCH_BATCH = 4;
+let tsAiPrefetchTimer = null;
+let tsAiPrefetchLastActivity = Date.now();
+let tsAiPrefetchPausedUntil = 0;
+let tsAiPrefetchInitialized = false;
+let tsAiPrefetchActive = false;
+let tsAiPrefetchPendingAction = null;
 
 function loadDeepSeekSettings() {
   try {
@@ -15492,6 +15500,7 @@ function saveDeepSeekSettings(settings) {
   tsTranslationLang = clean.targetLang;
   localStorage.setItem(DEEPSEEK_SETTINGS_KEY, JSON.stringify(clean));
   updateDeepSeekStatus();
+  if (typeof scheduleTsAiPrefetch === 'function') scheduleTsAiPrefetch();
   return clean;
 }
 function deepSeekSettings() {
@@ -15551,6 +15560,61 @@ function termLibraryPromptText(entry) {
   };
   const labels = { company: '公司名称固定译法', caseNames: '案件简称', legal: '法律术语', people: '人名和部门名', noTranslate: '禁止翻译的词', expressions: '常用工时表达' };
   return TERM_FIELDS.filter(k => lib[k]).map(k => `${labels[k]}：\n${lib[k]}`).join('\n\n') || '（无常用工时表达）';
+}
+
+// 空闲预翻译只保存为隐藏草稿；用户点击 AI 优化按钮后才正式写入 translations 并显示。
+function ensureTsAiDrafts() {
+  if (!store.tsAiDraftsByTaskId || typeof store.tsAiDraftsByTaskId !== 'object') store.tsAiDraftsByTaskId = {};
+  return store.tsAiDraftsByTaskId;
+}
+function tsAiDraftFingerprint(entry, lang) {
+  const source = JSON.stringify([
+    String(entry?.title || ''),
+    String(entry?.projectName || ''),
+    termLibraryPromptText(entry),
+    String(lang || ''),
+  ]);
+  let hash = 2166136261;
+  for (let i = 0; i < source.length; i++) {
+    hash ^= source.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+function getTsAiDraft(entry, lang) {
+  const taskId = entry?.taskId;
+  if (!taskId) return null;
+  const drafts = ensureTsAiDrafts();
+  const rec = drafts[taskId]?.[lang];
+  if (!rec?.text) return null;
+  if (rec.fingerprint !== tsAiDraftFingerprint(entry, lang)) {
+    delete drafts[taskId][lang];
+    if (!Object.keys(drafts[taskId]).length) delete drafts[taskId];
+    return null;
+  }
+  return rec;
+}
+function setTsAiDraft(entry, lang, text) {
+  const taskId = entry?.taskId;
+  const clean = String(text || '').trim();
+  if (!taskId || !clean) return;
+  const drafts = ensureTsAiDrafts();
+  if (!drafts[taskId] || typeof drafts[taskId] !== 'object') drafts[taskId] = {};
+  drafts[taskId][lang] = {
+    text: clean,
+    fingerprint: tsAiDraftFingerprint(entry, lang),
+    engine: 'deepseek-prefetch',
+    updatedAt: Date.now(),
+  };
+}
+function takeTsAiDraft(entry, lang) {
+  const rec = getTsAiDraft(entry, lang);
+  if (!rec) return null;
+  const taskId = entry.taskId;
+  const drafts = ensureTsAiDrafts();
+  delete drafts[taskId][lang];
+  if (!Object.keys(drafts[taskId]).length) delete drafts[taskId];
+  return rec;
 }
 
 // v5.107: 把工时单行内未失焦的编辑写回 entry，保证 AI 用的是最新标题/描述
@@ -15825,17 +15889,40 @@ async function testDeepSeekConnection() {
   } catch (err) { result.textContent = err.message; result.className = 'ai-test-result error'; }
 }
 async function translateTsEntries(entries, lang, force = false) {
-  if (tsTranslationBusy) return;
+  if (tsTranslationBusy) {
+    if (tsAiPrefetchActive) {
+      // 用户点击优先：当前后台小批次完成后，自动执行这次显示操作。
+      tsAiPrefetchPendingAction = { entries: entries.slice(), lang, force };
+      showToast('后台优化即将完成，完成后会自动显示');
+    } else {
+      showToast('DeepSeek 正在处理，请稍后');
+    }
+    return;
+  }
   if (!deepSeekSettings().apiKey) { openDeepSeekSettings(); return; }
   // v5.107: 先把行内未失焦的标题写回，确保按最新任务描述生成
   flushTsLiveEdits(entries);
-  const candidates = entries.filter(e => force || !getTsTranslation(e, lang));
-  if (!candidates.length) { showToast('当前范围没有缺失描述'); return; }
+  const allCandidates = entries.filter(e => force || !getTsTranslation(e, lang));
+  if (!allCandidates.length) { showToast('当前范围没有缺失描述'); return; }
   tsTranslationBusy = true;
   document.getElementById('tsTranslateAll')?.setAttribute('disabled', '');
   document.querySelectorAll('[data-translate-one]').forEach(b => b.setAttribute('disabled', ''));
-  updateDeepSeekStatus(`优化中 0/${candidates.length}`);
+  updateDeepSeekStatus(`优化中 0/${allCandidates.length}`);
   let completed = 0;
+  let cachedApplied = 0;
+  // 先消费空闲期间生成的隐藏草稿；只有用户点击此按钮后才正式写入并显示。
+  const candidates = [];
+  for (const entry of allCandidates) {
+    const draft = takeTsAiDraft(entry, lang);
+    if (draft?.text) {
+      setTsTranslationDurable(entry, lang, draft.text, false);
+      cachedApplied++;
+      completed++;
+    } else {
+      candidates.push(entry);
+    }
+  }
+  if (cachedApplied) updateDeepSeekStatus(`已读取后台结果 ${completed}/${allCandidates.length}`);
   // 稳定性优先：每批最多 8 条、最多 3 路并行；请求层会对异常批次自动重试和继续拆分。
   const BATCH = force && candidates.length === 1 ? 1 : Math.min(8, Math.max(4, candidates.length));
   const CONCURRENCY = force && candidates.length === 1 ? 1 : Math.min(3, Math.max(2, Math.ceil(candidates.length / BATCH)));
@@ -15854,7 +15941,7 @@ async function translateTsEntries(entries, lang, force = false) {
           if (desc) setTsTranslationDurable(entry, lang, desc, false);
         });
         completed += batch.length;
-        updateDeepSeekStatus(`优化中 ${completed}/${candidates.length}`);
+        updateDeepSeekStatus(`优化中 ${completed}/${allCandidates.length}`);
         batchUpdateTsTranslationDom(batch, lang);
       }
     });
@@ -15863,7 +15950,13 @@ async function translateTsEntries(entries, lang, force = false) {
     try { renderTsTable(tsEntriesForCurrentView()); } catch {}
     updateDeepSeekStatus(`已完成 ${completed} 条`, 'ok');
     const languageName = { JA: '日文', EN: '英文' }[lang];
-    showToast(`DeepSeek 已优化 ${completed} 条${languageName}工时描述`);
+    if (cachedApplied === completed) {
+      showToast(`已立即显示 ${cachedApplied} 条后台准备的${languageName}描述`);
+    } else if (cachedApplied) {
+      showToast(`已优化 ${completed} 条${languageName}描述，其中 ${cachedApplied} 条来自后台结果`);
+    } else {
+      showToast(`DeepSeek 已优化 ${completed} 条${languageName}工时描述`);
+    }
   } catch (err) {
     // 部分成功也尽量落盘
     try { save({ skipVault: true, immediate: true }); } catch {}
@@ -15876,6 +15969,124 @@ async function translateTsEntries(entries, lang, force = false) {
     document.querySelectorAll('[data-translate-one]').forEach(b => b.removeAttribute('disabled'));
   }
 }
+
+function scheduleTsAiPrefetch(delayMs = null) {
+  if (tsAiPrefetchTimer) clearTimeout(tsAiPrefetchTimer);
+  tsAiPrefetchTimer = null;
+  const settings = deepSeekSettings();
+  if (!settings.apiKey) return;
+  const idleFor = Date.now() - tsAiPrefetchLastActivity;
+  const wait = Number.isFinite(delayMs)
+    ? Math.max(800, delayMs)
+    : Math.max(1000, TS_AI_PREFETCH_IDLE_MS - idleFor);
+  tsAiPrefetchTimer = setTimeout(() => {
+    tsAiPrefetchTimer = null;
+    const start = () => runTsAiPrefetch();
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(start, { timeout: 2500 });
+    } else {
+      start();
+    }
+  }, wait);
+}
+
+async function runTsAiPrefetch() {
+  const settings = deepSeekSettings();
+  if (!settings.apiKey) return;
+  const now = Date.now();
+  if (now < tsAiPrefetchPausedUntil) {
+    scheduleTsAiPrefetch(tsAiPrefetchPausedUntil - now);
+    return;
+  }
+  const idleFor = now - tsAiPrefetchLastActivity;
+  if (idleFor < TS_AI_PREFETCH_IDLE_MS) {
+    scheduleTsAiPrefetch(TS_AI_PREFETCH_IDLE_MS - idleFor);
+    return;
+  }
+  if (tsTranslationBusy) {
+    scheduleTsAiPrefetch(8000);
+    return;
+  }
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    scheduleTsAiPrefetch(60000);
+    return;
+  }
+
+  // 只准备当前工时月份、当前看板范围内、当前所选语言的隐藏草稿。
+  const monthKey = tsCurrentMonth || localDateStr(new Date()).slice(0, 7);
+  const rows = typeof tsEntriesForMonth === 'function' ? tsEntriesForMonth(monthKey) : [];
+  const unique = [];
+  const seen = new Set();
+  for (const entry of rows) {
+    const taskId = entry?.taskId;
+    if (!taskId || seen.has(taskId) || !String(entry.title || '').trim()) continue;
+    seen.add(taskId);
+    unique.push(entry);
+  }
+  const lang = tsTranslationLang;
+  const candidates = unique.filter(entry => !getTsTranslation(entry, lang) && !getTsAiDraft(entry, lang));
+  if (!candidates.length) {
+    // 保持低频巡检，以便同步或计时产生新工时后也能继续准备。
+    scheduleTsAiPrefetch(5 * 60 * 1000);
+    return;
+  }
+
+  const batch = candidates.slice(0, TS_AI_PREFETCH_BATCH);
+  const sourceFingerprints = batch.map(entry => tsAiDraftFingerprint(entry, lang));
+  tsTranslationBusy = true;
+  tsAiPrefetchActive = true;
+  const languageName = { JA: '日文', EN: '英文' }[lang] || lang;
+  updateDeepSeekStatus(`空闲时后台准备${languageName} ${batch.length} 条…`);
+  try {
+    const generated = await requestDeepSeek(batch, lang, { forceFromTitle: true });
+    let prepared = 0;
+    batch.forEach((entry, index) => {
+      const text = generated[index]?.description || '';
+      // 请求过程中若中文标题/术语已变化，或用户已经正式生成/手工填写，则丢弃旧结果。
+      const sourceUnchanged = sourceFingerprints[index] === tsAiDraftFingerprint(entry, lang);
+      if (text && sourceUnchanged && !getTsTranslation(entry, lang)) {
+        setTsAiDraft(entry, lang, text);
+        prepared++;
+      }
+    });
+    if (prepared) save({ skipVault: true, immediate: true });
+    updateDeepSeekStatus(`后台已准备 ${prepared} 条${languageName}描述 · 点击 AI 优化后显示`, 'ok');
+    tsAiPrefetchPausedUntil = 0;
+  } catch (err) {
+    tsAiPrefetchPausedUntil = Date.now() + 5 * 60 * 1000;
+    updateDeepSeekStatus(`后台准备已暂停：${err.message}`, 'error');
+  } finally {
+    tsTranslationBusy = false;
+    tsAiPrefetchActive = false;
+    const pending = tsAiPrefetchPendingAction;
+    tsAiPrefetchPendingAction = null;
+    if (pending) {
+      setTimeout(() => translateTsEntries(pending.entries, pending.lang, pending.force), 0);
+    } else {
+      const stillIdle = Date.now() - tsAiPrefetchLastActivity >= TS_AI_PREFETCH_IDLE_MS;
+      scheduleTsAiPrefetch(stillIdle ? 1800 : null);
+    }
+  }
+}
+
+function initTsAiPrefetch() {
+  if (tsAiPrefetchInitialized) return;
+  tsAiPrefetchInitialized = true;
+  const markActivity = () => {
+    tsAiPrefetchLastActivity = Date.now();
+    scheduleTsAiPrefetch();
+  };
+  document.addEventListener('pointerdown', markActivity, true);
+  document.addEventListener('keydown', markActivity, true);
+  document.addEventListener('wheel', markActivity, { capture: true, passive: true });
+  document.addEventListener('touchstart', markActivity, { capture: true, passive: true });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) scheduleTsAiPrefetch(2000);
+    else markActivity();
+  });
+  scheduleTsAiPrefetch();
+}
+
 function batchUpdateTsTranslationDom(entries, lang) {
   for (const entry of entries) {
     const text = getTsTranslation(entry, lang)?.text || '';
@@ -28489,6 +28700,7 @@ document.addEventListener('click', e => {
 });
 // v3.1: 译名语言 — 改用 details 弹窗菜单，点击时直接切换
 updateDeepSeekStatus();
+initTsAiPrefetch();
 document.getElementById('settingsAiBlock')?.addEventListener('click', e => {
   const btn = e.target.closest('.ts-lang-opt');
   if (!btn || btn.classList.contains('active')) return;
