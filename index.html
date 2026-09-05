@@ -1,18 +1,19 @@
 
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <!-- 维护规则：每次交付功能或修复更新时，将下方页面版本号末位加 1。 -->
-<title>Kanban · 习惯统计按实际记录天数 v5.262</title>
+<title>Kanban v5.32</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="5_261_260818">
+<meta name="build-hash" content="5_32_sync_260905">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -8564,10 +8565,9 @@ input, select, textarea, button, [contenteditable] {
   }
   .card-add-form {
     display: grid !important;
-    grid-template-columns: 32px 1fr 32px;
-    grid-template-areas:
-      "title title title"
-      "due submit .";
+    /* v5.32：新任务输入框、日历和添加按钮始终同一行。 */
+    grid-template-columns: minmax(0, 1fr) 32px 32px;
+    grid-template-areas: "title due submit";
     gap: 8px !important;
     padding: 6px 0 !important;
     align-items: center;
@@ -11395,6 +11395,61 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
   }
 }
 </style>
+<style>
+/* 窄屏继续使用手机导航；设置和工时编辑在所有宽度均可用。 */
+#mobileNav .top-panel-disabled,
+#mobileNav.top-panel-empty { display: none !important; }
+@media (max-width: 767px) {
+  .container:has(#headerDataMenu[open]) { z-index: 1200; }
+  body:has(#headerDataMenu[open]) .mobile-fab,
+  body:has(#headerDataMenu[open]) .bot-fab { visibility: hidden !important; }
+  #headerDataMenu { display: block !important; flex-shrink: 0; }
+  body[data-view="calendar"] .container > header > .toolbar {
+    display: flex !important; flex: 0 0 auto;
+  }
+  body[data-view="calendar"] .container > header > .title-group {
+    flex: 1 1 300px; width: auto;
+  }
+  .container > header,
+  body[data-view="board"] .container > header { flex-wrap: wrap !important; }
+  body[data-view="board"] .container > header > .toolbar {
+    flex-wrap: wrap !important;
+  }
+  #headerDataMenu > summary { min-height: 34px; padding: 6px 10px; }
+  #headerDataMenuBody {
+    position: fixed; top: 76px; right: 10px; left: auto;
+    max-width: calc(100vw - 20px); max-height: calc(100dvh - 156px);
+    overflow-y: auto;
+  }
+  .settings-flyout {
+    max-width: calc(100vw - 20px); max-height: calc(100dvh - 156px);
+    overflow-y: auto;
+  }
+  .timesheet .ts-table-card { display: block !important; }
+  .timesheet #tsMobileList { display: none !important; }
+  .ts-entry {
+    grid-template-columns: 18px minmax(0, 1fr) 48px 86px;
+    grid-template-areas:
+      "handle context time actions"
+      "handle task task task"
+      "handle translation translation translation";
+    gap: 8px; padding: 12px 0;
+  }
+  .ts-entry-path, .ts-entry-task { border-right: 0; margin-right: 0; padding-right: 0; }
+  .ts-entry-notes { display: none !important; }
+  .ts-entry-actions { text-align: right; }
+  .ts-entry-translation, .ts-entry-title, .ts-translation-text { min-width: 0; overflow-wrap: anywhere; }
+  .ts-translation-box { flex-wrap: nowrap; align-items: flex-start; }
+  .ts-translation-tools { flex-shrink: 0; }
+  .ts-title-month-nav { flex-wrap: wrap; }
+}
+</style>
+<style>
+.ts-ai-feedback { padding: 10px 14px; margin: 0 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card-bg-solid); color: var(--text); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.ts-ai-feedback[hidden] { display: none; }
+.ts-ai-feedback[data-kind="error"] { color: var(--red); }
+.ts-ai-feedback[data-kind="ok"] { color: var(--green); }
+</style>
 </head>
 <body>
 <div id="boardBgLayer" aria-hidden="true"></div>
@@ -11500,8 +11555,8 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
             </div>
           </div>
           <div class="ts-top-menu-divider"></div>
-          <button type="button" class="btn ts-ai-menu-item settings-fly-trigger" id="settingsTopPanelTrigger" aria-expanded="false" aria-controls="settingsTopPanelFlyout" title="选择顶部视图面板中显示哪些功能；左侧导航不受影响">
-            <span>顶部面板</span>
+          <button type="button" class="btn ts-ai-menu-item settings-fly-trigger" id="settingsTopPanelTrigger" aria-expanded="false" aria-controls="settingsTopPanelFlyout" title="选择顶部面板和窄屏底部导航显示哪些功能；左侧导航不受影响">
+            <span>导航显示</span>
             <span class="settings-panel-meta"><span id="settingsTopPanelStatus">6/6</span><span class="settings-fly-chevron">›</span></span>
           </button>
           <button type="button" class="btn ts-ai-menu-item settings-fly-trigger" id="settingsBgTrigger" aria-expanded="false" aria-controls="settingsBgFlyout">
@@ -11572,8 +11627,8 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
           </div>
         </div>
         <div class="settings-flyout" id="settingsTopPanelFlyout" role="menu" hidden>
-          <div class="settings-flyout-title">顶部面板显示功能</div>
-          <div class="settings-top-panel-list" role="group" aria-label="选择顶部面板显示功能">
+          <div class="settings-flyout-title">导航显示功能</div>
+          <div class="settings-top-panel-list" role="group" aria-label="选择导航显示功能">
             <label class="settings-top-panel-option"><span>看板</span><input type="checkbox" data-top-panel-view="board" checked></label>
             <label class="settings-top-panel-option"><span>月历</span><input type="checkbox" data-top-panel-view="calendar" checked></label>
             <label class="settings-top-panel-option"><span>工时</span><input type="checkbox" data-top-panel-view="timesheet" checked></label>
@@ -11780,6 +11835,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
       <div class="ts-overview-donut" id="tsOverviewDonut"></div>
       <div class="ts-overview-daily" id="tsOverviewDaily"></div>
     </div>
+    <div class="ts-ai-feedback" id="tsAiFeedback" role="status" aria-live="polite" hidden></div>
     <div class="ts-table-card">
       <div id="tsTableBody"></div>
     </div>
@@ -11820,7 +11876,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
           </div>
           <div class="ts-edit-row">
             <label>工时</label>
-            <input type="text" id="tsEditInput" placeholder="如 1h30m / 1:30 / 1.5 / 2" autocomplete="off" />
+            <input type="text" id="tsEditInput" placeholder="选填；如 1.5 / 1h30m" autocomplete="off" />
           </div>
         </div>
         <div class="ts-edit-hint" id="tsEditHint"></div>
@@ -11862,7 +11918,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
         </div>
         <div class="ts-edit-row">
           <label>工时</label>
-          <input type="text" id="tsCreateDuration" class="ts-create-field" placeholder="如 1h30m / 1:30 / 1.5 / 2" autocomplete="off" />
+          <input type="text" id="tsCreateDuration" class="ts-create-field" placeholder="可留空，稍后补充；如 1.5 / 1h30m" autocomplete="off" />
         </div>
         <div class="ts-edit-row">
           <label>备注</label>
@@ -11948,8 +12004,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
       <div class="vault-mobile-actions" id="vaultMobileActions">
         <button class="btn btn-primary" id="vaultExportFile" type="button">导出同步文件</button>
         <button class="btn" id="vaultImportFileBtn" type="button">从文件导入</button>
-        <button class="btn btn-ghost" id="vaultRestoreLocal" type="button" style="display:none">恢复导入前数据</button>
-        <button class="btn btn-ghost" id="vaultShareFile" type="button" style="display:none">分享到…</button>
+        <button class="btn btn-ghost" id="vaultRestoreLocal" type="button" style="display:none">恢复替换前数据</button>
         <input type="file" id="vaultImportFile" hidden>
       </div>
       <div class="vault-mobile-direct" id="vaultMobileDirect">
@@ -12303,9 +12358,17 @@ function isStoreEffectivelyEmpty(s) {
       if (b && Array.isArray(b.projects) && b.projects.length > 0) return false;
       if (b && Array.isArray(b.trash) && b.trash.length > 0) return false;
     }
+    // 手工新增的工时记录可能尚未关联看板项目、也尚未填写时长。
+    if (Object.values(s.archive || {}).some(rows => Array.isArray(rows) && rows.length > 0)) return false;
     if (Array.isArray(s.timeEntries) && s.timeEntries.length > 0) return false;
     if (Array.isArray(s.litigationRecords) && s.litigationRecords.length > 0) return false;
     if (Array.isArray(s.learningCards) && s.learningCards.length > 0) return false;
+    if (Array.isArray(s.habits?.items) && s.habits.items.length > 0) return false;
+    if (s.habits?.logs && Object.keys(s.habits.logs).length > 0) return false;
+    if (Array.isArray(s.litigationReminders) && s.litigationReminders.length > 0) return false;
+    for (const key of ['timesheetDayNotes', 'tsDescByTaskId', 'termLibraries']) {
+      if (s[key] && typeof s[key] === 'object' && Object.keys(s[key]).length > 0) return false;
+    }
     return true;
   } catch {
     return true;
@@ -14347,11 +14410,10 @@ function positionSettingsFlyout(fly, trigger, preferRight) {
       top = menuRect.bottom + gap;
     }
   }
-  // 垂直别超出视口
-  if (top + flyH > window.innerHeight - 8) {
-    top = Math.max(8, window.innerHeight - flyH - 8);
-  }
-  if (top < 8) top = 8;
+  // 窄屏为底部导航留出空间，子菜单始终完整落在可操作区域。
+  const bottomInset = window.matchMedia('(max-width: 767px)').matches ? 90 : 8;
+  left = Math.max(8, Math.min(left, window.innerWidth - flyW - 8));
+  top = Math.max(8, Math.min(top, window.innerHeight - flyH - bottomInset));
   fly.style.left = Math.round(left) + 'px';
   fly.style.top = Math.round(top) + 'px';
   fly.style.right = 'auto';
@@ -15471,6 +15533,27 @@ let tsAiPrefetchPausedUntil = 0;
 let tsAiPrefetchInitialized = false;
 let tsAiPrefetchActive = false;
 let tsAiPrefetchPendingAction = null;
+let tsAiPrefetchController = null;
+let tsAiForegroundIds = new Set();
+const TS_AI_REQUEST_TIMEOUT_MS = 45000;
+
+function showTsAiFeedback(message, kind = '') {
+  const el = document.getElementById('tsAiFeedback');
+  if (!el) return;
+  el.hidden = !message;
+  el.textContent = message;
+  el.dataset.kind = kind;
+}
+function syncTsAiButtons() {
+  const busy = tsTranslationBusy && !tsAiPrefetchActive;
+  document.getElementById('tsTranslateAll')?.toggleAttribute('disabled', busy);
+  document.querySelectorAll('[data-translate-one]').forEach(button => {
+    const working = busy && tsAiForegroundIds.has(button.dataset.translateOne);
+    button.disabled = busy;
+    button.textContent = working ? '优化中…' : 'AI优化';
+    button.setAttribute('aria-busy', String(working));
+  });
+}
 
 function loadDeepSeekSettings() {
   try {
@@ -15706,10 +15789,17 @@ async function requestDeepSeek(entries, targetLang, override = {}) {
     const retryRule = retryAttempt
       ? '\n这是格式修复重试：请从头生成完整 JSON，确保所有引号、换行转义、方括号和花括号均正确闭合。'
       : '';
-    let response;
+    let response, data = null;
+    const controller = new AbortController();
+    const abortFromCaller = () => controller.abort();
+    if (override.signal?.aborted) throw makeDeepSeekError('请求已取消', 'cancelled', false);
+    override.signal?.addEventListener('abort', abortFromCaller, { once: true });
+    let timedOut = false;
+    const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, TS_AI_REQUEST_TIMEOUT_MS);
     try {
       response = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
+        signal: controller.signal,
         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: settings.model || 'deepseek-chat',
@@ -15722,17 +15812,19 @@ async function requestDeepSeek(entries, targetLang, override = {}) {
           ],
         }),
       });
+      try { data = await response.json(); } catch (err) {
+        if (controller.signal.aborted) throw err;
+      }
     } catch (err) {
-      throw makeDeepSeekError(
-        `无法连接 DeepSeek（可能是网络或浏览器跨域限制）：${err.message}`,
-        'network',
-        true
-      );
+      if (override.signal?.aborted) throw makeDeepSeekError('请求已取消', 'cancelled', false);
+      if (timedOut) throw makeDeepSeekError('等待 DeepSeek 超时，请重试；已有描述已保留。', 'timeout', false);
+      throw makeDeepSeekError('无法连接 DeepSeek，请检查网络后重试。', 'network', true);
+    } finally {
+      clearTimeout(timeout);
+      override.signal?.removeEventListener('abort', abortFromCaller);
     }
-    let data = null;
-    try { data = await response.json(); } catch {}
     if (!response.ok) {
-      const apiMessage = data?.error?.message || `DeepSeek 请求失败（HTTP ${response.status}）`;
+      const apiMessage = ({401: 'API Key 无效或已失效，请在工时 AI 设置中重新填写。', 402: 'DeepSeek 账户余额不足，请检查账户。', 403: '当前 API Key 无权访问，请检查工时 AI 设置。', 429: '请求过于频繁，请稍后重试。'})[response.status] || `DeepSeek 请求失败（HTTP ${response.status}）`;
       const busyMessage = /(server\s*overloaded|overload|server\s*busy|too many requests|rate.?limit|服务器繁忙|服务繁忙)/i.test(apiMessage);
       const retryable = busyMessage || response.status === 408 || response.status === 429 || response.status >= 500;
       const apiError = makeDeepSeekError(
@@ -15923,82 +16015,83 @@ async function testDeepSeekConnection() {
 async function translateTsEntries(entries, lang, force = false) {
   if (tsTranslationBusy) {
     if (tsAiPrefetchActive) {
-      // 用户点击优先：当前后台小批次完成后，自动执行这次显示操作。
-      tsAiPrefetchPendingAction = { entries: entries.slice(), lang, force };
-      showToast('后台优化即将完成，完成后会自动显示');
+      const prior = tsAiPrefetchPendingAction;
+      const combined = prior && prior.lang === lang ? prior.entries.concat(entries) : entries;
+      tsAiPrefetchPendingAction = { entries: combined.slice(), lang, force };
+      showTsAiFeedback('正在切换到本次优化…');
+      tsAiPrefetchController?.abort();
     } else {
-      showToast('DeepSeek 正在处理，请稍后');
+      showToast('正在优化，完成后会直接显示在对应工时中');
     }
     return;
   }
-  if (!deepSeekSettings().apiKey) { openDeepSeekSettings(); return; }
-  // v5.107: 先把行内未失焦的标题写回，确保按最新任务描述生成
-  flushTsLiveEdits(entries);
-  const allCandidates = sortTsEntriesNewestFirst(entries.filter(e => force || !getTsTranslation(e, lang)));
-  if (!allCandidates.length) { showToast('当前范围没有缺失描述'); return; }
-  tsTranslationBusy = true;
-  document.getElementById('tsTranslateAll')?.setAttribute('disabled', '');
-  document.querySelectorAll('[data-translate-one]').forEach(b => b.setAttribute('disabled', ''));
-  updateDeepSeekStatus(`优化中 0/${allCandidates.length}`);
-  let completed = 0;
-  let cachedApplied = 0;
-  // 先消费空闲期间生成的隐藏草稿；只有用户点击此按钮后才正式写入并显示。
-  const candidates = [];
-  for (const entry of allCandidates) {
-    const draft = takeTsAiDraft(entry, lang);
-    if (draft?.text) {
-      setTsTranslationDurable(entry, lang, draft.text, false);
-      cachedApplied++;
-      completed++;
-    } else {
-      candidates.push(entry);
-    }
+  if (!deepSeekSettings().apiKey) {
+    showTsAiFeedback('请先填写 DeepSeek API Key，保存后再点击 AI优化。', 'error');
+    openDeepSeekSettings(); return;
   }
-  if (cachedApplied) updateDeepSeekStatus(`已读取后台结果 ${completed}/${allCandidates.length}`);
-  // 稳定性优先：每批最多 8 条、最多 2 路并行；API 过载时不会继续拆分请求。
-  const BATCH = force && candidates.length === 1 ? 1 : Math.min(8, Math.max(4, candidates.length));
-  const CONCURRENCY = force && candidates.length === 1 ? 1 : Math.min(2, Math.max(1, Math.ceil(candidates.length / BATCH)));
+  flushTsLiveEdits(entries);
+  const unique = [...new Map(entries.filter(e => e?.taskId).map(e => [e.taskId, e])).values()];
+  const allCandidates = sortTsEntriesNewestFirst(unique.filter(e => force || !getTsTranslation(e, lang)));
+  if (!allCandidates.length) { showTsAiFeedback('当前范围没有需要优化的描述。'); return; }
+  tsTranslationBusy = true;
+  tsAiForegroundIds = new Set(allCandidates.map(e => e.taskId));
+  syncTsAiButtons();
+  const languageName = { JA: '日文', EN: '英文' }[lang] || lang;
+  let completed = 0;
+  const progress = () => {
+    const message = `正在优化${languageName}描述 ${completed}/${allCandidates.length}，结果会直接显示在工时中。`;
+    showTsAiFeedback(message);
+    updateDeepSeekStatus(message);
+  };
+  progress();
   try {
+    const candidates = [];
+    for (const entry of allCandidates) {
+      const draft = takeTsAiDraft(entry, lang);
+      if (draft?.text) {
+        setTsTranslationDurable(entry, lang, draft.text, false);
+        completed++;
+      } else candidates.push(entry);
+    }
+    if (completed) {
+      save({ skipVault: true, immediate: true });
+      batchUpdateTsTranslationDom(allCandidates, lang);
+      progress();
+    }
     const chunks = [];
-    for (let i = 0; i < candidates.length; i += BATCH) chunks.push(candidates.slice(i, i + BATCH));
-    // 真正的并发池：始终保持最多 CONCURRENCY 个请求在飞，而不是整波等待
-    let next = 0;
-    const workers = Array.from({ length: Math.min(CONCURRENCY, chunks.length) }, async () => {
-      while (next < chunks.length) {
-        const my = next++;
-        const batch = chunks[my];
-        const generated = await requestDeepSeek(batch, lang, { forceFromTitle: !!force });
-        batch.forEach((entry, j) => {
-          const desc = generated[j]?.description || '';
-          if (desc) setTsTranslationDurable(entry, lang, desc, false);
-        });
-        completed += batch.length;
-        updateDeepSeekStatus(`优化中 ${completed}/${allCandidates.length}`);
-        batchUpdateTsTranslationDom(batch, lang);
+    for (let i = 0; i < candidates.length; i += 8) chunks.push(candidates.slice(i, i + 8));
+    let next = 0, failure = null;
+    const workers = Array.from({ length: Math.min(2, chunks.length) }, async () => {
+      while (!failure && next < chunks.length) {
+        const batch = chunks[next++];
+        try {
+          const generated = await requestDeepSeek(batch, lang, { forceFromTitle: !!force });
+          batch.forEach((entry, j) => setTsTranslationDurable(entry, lang, generated[j].description, false));
+          completed += batch.length;
+          // 每批成功就保存并显示；其它批次失败也不会丢失这些结果。
+          save({ skipVault: true, immediate: true });
+          batchUpdateTsTranslationDom(batch, lang);
+          progress();
+        } catch (err) { failure ||= err; }
       }
     });
+    // 等已发出的请求全部结束后才解锁，防止旧请求覆盖新一轮优化。
     await Promise.all(workers);
-    save({ skipVault: true, immediate: true });
-    try { renderTsTable(tsEntriesForCurrentView()); } catch {}
-    updateDeepSeekStatus(`已完成 ${completed} 条`, 'ok');
-    const languageName = { JA: '日文', EN: '英文' }[lang];
-    if (cachedApplied === completed) {
-      showToast(`已立即显示 ${cachedApplied} 条后台准备的${languageName}描述`);
-    } else if (cachedApplied) {
-      showToast(`已优化 ${completed} 条${languageName}描述，其中 ${cachedApplied} 条来自后台结果`);
-    } else {
-      showToast(`DeepSeek 已优化 ${completed} 条${languageName}工时描述`);
-    }
+    if (failure) throw failure;
+    const suffix = lang === tsTranslationLang ? '，已显示并保存。' : '，已保存；切换到对应语言即可查看。';
+    const message = `已优化 ${completed} 条${languageName}描述${suffix}`;
+    showTsAiFeedback('');
+    showToast(message);
+    updateDeepSeekStatus(message, 'ok');
   } catch (err) {
-    // 部分成功也尽量落盘
-    try { save({ skipVault: true, immediate: true }); } catch {}
-    updateDeepSeekStatus(err.message, 'error');
-    showToast(`DeepSeek：${err.message}`);
-    try { renderTsTable(tsEntriesForCurrentView()); } catch {}
+    const prefix = completed ? `已保存 ${completed} 条结果；其余未完成。` : '本次优化未完成。';
+    const message = prefix + err.message;
+    showTsAiFeedback(message, 'error');
+    updateDeepSeekStatus(message, 'error');
   } finally {
     tsTranslationBusy = false;
-    document.getElementById('tsTranslateAll')?.removeAttribute('disabled');
-    document.querySelectorAll('[data-translate-one]').forEach(b => b.removeAttribute('disabled'));
+    tsAiForegroundIds.clear();
+    syncTsAiButtons();
   }
 }
 
@@ -16067,11 +16160,12 @@ async function runTsAiPrefetch() {
   const sourceFingerprints = batch.map(entry => tsAiDraftFingerprint(entry, lang));
   tsTranslationBusy = true;
   tsAiPrefetchActive = true;
+  tsAiPrefetchController = new AbortController();
   const languageName = { JA: '日文', EN: '英文' }[lang] || lang;
   updateDeepSeekStatus(`空闲时后台准备${languageName} ${batch.length} 条…`);
   let prefetchError = null;
   try {
-    const generated = await requestDeepSeek(batch, lang, { forceFromTitle: true });
+    const generated = await requestDeepSeek(batch, lang, { forceFromTitle: true, signal: tsAiPrefetchController.signal });
     let prepared = 0;
     batch.forEach((entry, index) => {
       const text = generated[index]?.description || '';
@@ -16097,13 +16191,11 @@ async function runTsAiPrefetch() {
   } finally {
     tsTranslationBusy = false;
     tsAiPrefetchActive = false;
+    tsAiPrefetchController = null;
     const pending = tsAiPrefetchPendingAction;
     tsAiPrefetchPendingAction = null;
-    if (pending && !prefetchError) {
+    if (pending) {
       setTimeout(() => translateTsEntries(pending.entries, pending.lang, pending.force), 0);
-    } else if (pending && prefetchError) {
-      showToast(prefetchError.deepSeekReason === 'overloaded' ? 'DeepSeek 服务器繁忙，请稍后再试' : `DeepSeek：${prefetchError.message}`);
-      scheduleTsAiPrefetch(tsAiPrefetchPausedUntil - Date.now());
     } else {
       const stillIdle = Date.now() - tsAiPrefetchLastActivity >= TS_AI_PREFETCH_IDLE_MS;
       scheduleTsAiPrefetch(stillIdle ? TS_AI_PREFETCH_GAP_MS : null);
@@ -16130,10 +16222,12 @@ function initTsAiPrefetch() {
 }
 
 function batchUpdateTsTranslationDom(entries, lang) {
+  if (lang !== tsTranslationLang) return;
   for (const entry of entries) {
     const text = getTsTranslation(entry, lang)?.text || '';
-    const el = document.querySelector(`[data-translation-edit="${CSS.escape(entry.taskId)}"]`);
-    if (el) el.textContent = text;
+    document.querySelectorAll(`[data-translation-edit="${CSS.escape(entry.taskId)}"]`).forEach(el => {
+      if (document.activeElement !== el) el.textContent = text;
+    });
   }
 }
 
@@ -16386,10 +16480,7 @@ function setTsDayNote(date, value) {
 }
 
 function renderTsTable(entries) {
-  // 3.1.1 移动端: 走卡片版
-  if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
-    return renderTsMobileList(entries);
-  }
+  // 所有宽度共用日期分组列表及行内编辑，窄屏只调整排版。
   // v5.61: 切回桌面时务必收起手机列表，否则会叠在下方变成「乱码」
   const mob = document.getElementById('tsMobileList');
   if (mob) {
@@ -16461,130 +16552,9 @@ function renderTsTable(entries) {
   }
   html += '</div>';
   body.innerHTML = html;
+  syncTsAiButtons();
   // 行内按钮的 click 委托在初始化时绑一次(下方)
 }
-
-// 3.1.1 移动端工时单: 按日期分组的卡片列表(简化版,隐藏 AI 翻译/编辑控件)
-function renderTsMobileList(entries) {
-  const body = document.getElementById('tsMobileList');
-  const empty = document.getElementById('tsEmpty');
-  if (!body) return;
-  // v5.61: 手机模式清空桌面列表，避免切换后两套 DOM 并存
-  const desk = document.getElementById('tsTableBody');
-  if (desk) desk.innerHTML = '';
-  body.hidden = false;
-  // 复用桌面版的搜索/过滤逻辑
-  const q = (tsSearchQuery || '').toLowerCase().trim();
-  let filtered = entries;
-  if (q) {
-    filtered = entries.filter(e =>
-      (e.title || '').toLowerCase().includes(q) ||
-      Object.values(e.translations || {}).some(t => String(t?.text || '').toLowerCase().includes(q)) ||
-      (e.projectName || '').toLowerCase().includes(q) ||
-      (e.notes || '').toLowerCase().includes(q) ||
-      (e.completedAt || '').toLowerCase().includes(q)
-    );
-  }
-  if (filtered.length === 0) {
-    body.innerHTML = '';
-    if (empty) {
-      empty.classList.remove('hidden');
-      if (q) {
-        empty.querySelector('h2').textContent = '没有匹配的任务';
-        empty.querySelector('p').textContent = `搜索 "${q}" 无结果`;
-      } else {
-        empty.querySelector('h2').textContent = '暂无归档数据';
-        empty.querySelector('p').innerHTML = '完成任务后会自动写入这里。<br>先回看板打几个勾试试看 →';
-      }
-    }
-    return;
-  }
-  if (empty) empty.classList.add('hidden');
-  // 按日期分组
-  const groups = tsGroupByDate(filtered);
-  let html = '<div class="ts-mob-list">';
-  for (const [date, list] of groups) {
-    const dayMs = list.reduce((s, e) => s + (e.totalTimeMs || 0), 0);
-    const isToday = date === today();
-    const dateLabel = isToday ? '今天' : (tsFmtDateShort(date) || date);
-    const weekday = tsFmtWeekday(date);
-    const dayNote = getTsDayNote(date);
-    html += `<section class="ts-mob-day">
-      <header class="ts-mob-day-head ${isToday ? 'today' : ''}">
-        <div class="ts-mob-day-date">
-          <div class="ts-mob-day-main">${escapeHtml(dateLabel)}</div>
-          <div class="ts-mob-day-sub">${escapeHtml(weekday || '')}</div>
-        </div>
-        <div class="ts-mob-day-note" contenteditable="true" spellcheck="false" data-ts-day-note="${escapeHtml(date || '')}">${escapeHtml(dayNote)}</div>
-        <div class="ts-mob-day-total">${tsFmtHours(dayMs)}</div>
-      </header>
-      <ul class="ts-mob-entries">`;
-    for (const e of list) {
-      const color = e.projectColor || 'var(--accent)';
-      html += `<li class="ts-mob-entry" data-task-id="${e.taskId}" style="border-left-color:${color}">
-        <div class="ts-mob-entry-top">
-          <div class="ts-mob-entry-meta">
-            <span class="ts-mob-entry-project ts-project-name" title="项目">${escapeHtml(e.projectName || '未命名项目')}</span>
-          </div>
-          <div class="ts-mob-entry-toolbar">
-            <span class="ts-mob-entry-time">${e.totalTimeMs > 0 ? tsFmtHours(e.totalTimeMs) : '—'}</span>
-            <div class="ts-mob-entry-actions">
-              <button data-edit="${e.taskId}" type="button" aria-label="编辑" title="编辑任务与工时">✎</button>
-              <button data-restore="${e.taskId}" type="button" aria-label="恢复" title="恢复到看板上">↻</button>
-              <button data-del="${e.taskId}" type="button" aria-label="删除" title="彻底删除">×</button>
-            </div>
-          </div>
-        </div>
-        <div class="ts-mob-entry-title">${escapeHtml(e.title || '(无标题)')}</div>
-        ${(() => {
-          const tr = (typeof getTsTranslation === 'function' ? getTsTranslation(e) : null);
-          const t = (tr && tr.text) ? String(tr.text) : '';
-          return `<div class="ts-mob-entry-trans">
-            <div class="ts-mob-entry-trans-text${t ? '' : ' is-empty'}">${t ? escapeHtml(t) : 'AI优化工时描述'}</div>
-            <button type="button" class="ts-ai-optimize" data-translate-one="${e.taskId}" >AI优化</button>
-          </div>`;
-        })()}
-      </li>`;
-    }
-    html += '</ul></section>';
-  }
-  html += '</div>';
-  body.innerHTML = html;
-  // 让 body 里的 contenteditable 不生效(简化版没有编辑框,但防止事件冒泡干扰)
-}
-
-// 移动端工时单事件委托: 直接调桌面版的函数(避免查询不存在的桌面按钮)
-
-// v5.61: 窗口跨过 767 时强制按当前宽度重绘工时单，清掉另一套列表
-let __tsLayoutIsMobile = null;
-function ensureTsLayoutMode() {
-  const isMobile = !!(window.matchMedia && window.matchMedia('(max-width: 767px)').matches);
-  if (__tsLayoutIsMobile === isMobile) return;
-  __tsLayoutIsMobile = isMobile;
-  if (document.body.dataset.view === 'timesheet' && typeof renderTimesheet === 'function') {
-    renderTimesheet();
-  } else if (typeof renderTsTable === 'function' && typeof tsEntriesForCurrentView === 'function') {
-    try { renderTsTable(tsEntriesForCurrentView()); } catch (_) {}
-  }
-}
-(function bindTsLayoutResize() {
-  if (window.__tsLayoutResizeBound) return;
-  window.__tsLayoutResizeBound = true;
-  let t = null;
-  window.addEventListener('resize', () => {
-    clearTimeout(t);
-    t = setTimeout(ensureTsLayoutMode, 120);
-  }, { passive: true });
-  if (window.matchMedia) {
-    const mq = window.matchMedia('(max-width: 767px)');
-    const handler = () => ensureTsLayoutMode();
-    if (mq.addEventListener) mq.addEventListener('change', handler);
-    else if (mq.addListener) mq.addListener(handler);
-  }
-  // 初始化记录当前模式
-  __tsLayoutIsMobile = !!(window.matchMedia && window.matchMedia('(max-width: 767px)').matches);
-})();
-
 
 function updateRolloverDueMenuLabel() {
   const btn = document.getElementById('dataMenuRolloverDue');
@@ -16606,19 +16576,15 @@ function isTopPanelViewEnabled(view) {
   return !(store.prefs && store.prefs.topPanelViews && store.prefs.topPanelViews[view] === false);
 }
 function applyTopPanelPreference() {
-  const bar = document.getElementById('viewPills');
-  let enabledCount = 0;
-  if (bar) {
-    bar.querySelectorAll('.pill[data-view]').forEach(pill => {
-      const enabled = isTopPanelViewEnabled(pill.dataset.view);
-      pill.classList.toggle('top-panel-disabled', !enabled);
-      pill.setAttribute('aria-hidden', enabled ? 'false' : 'true');
-      if (enabled) enabledCount++;
+  const enabledCount = TOP_PANEL_VIEW_KEYS.filter(isTopPanelViewEnabled).length;
+  document.querySelectorAll('#viewPills, #mobileNav').forEach(bar => {
+    bar.querySelectorAll('[data-view]').forEach(item => {
+      const enabled = isTopPanelViewEnabled(item.dataset.view);
+      item.classList.toggle('top-panel-disabled', !enabled);
+      item.setAttribute('aria-hidden', enabled ? 'false' : 'true');
     });
     bar.classList.toggle('top-panel-empty', enabledCount === 0);
-  } else {
-    enabledCount = TOP_PANEL_VIEW_KEYS.filter(isTopPanelViewEnabled).length;
-  }
+  });
   const status = document.getElementById('settingsTopPanelStatus');
   if (status) status.textContent = `${enabledCount}/${TOP_PANEL_VIEW_KEYS.length}`;
   document.querySelectorAll('#settingsTopPanelFlyout input[data-top-panel-view]').forEach(input => {
@@ -17130,7 +17096,8 @@ function bindTimesheetDelegates() {
   body.addEventListener('focusout', e => {
     const titleEditable = e.target.closest('[data-title-edit]');
     if (titleEditable) {
-      const entry = findTsArchiveEntry(titleEditable.dataset.titleEdit);
+      const taskId = titleEditable.dataset.titleEdit;
+      const entry = findTsArchiveEntry(taskId) || findTaskAcrossBoards(taskId)?.task;
       if (!entry) return;
       const value = titleEditable.innerText.replace(/\s+/g, ' ').trim();
       if (!value) { renderTsTable(tsEntriesForCurrentView()); showToast('任务名称不能为空'); return; }
@@ -17156,10 +17123,12 @@ function bindTimesheetDelegates() {
     if (value === old) return;
     setTsTranslationDurable(entry, tsTranslationLang, value, !!value);
     save({ skipVault: true, immediate: true });
-    renderTsTable(tsEntriesForCurrentView());
+    editable.textContent = value;
+    batchUpdateTsTranslationDom([entry], tsTranslationLang);
     showToast(value ? '工时描述已保存' : '工时描述已清空');
   });
   body.addEventListener('keydown', e => {
+    if (e.isComposing) return;
     const titleEditable = e.target.closest('[data-title-edit]');
     if (titleEditable) {
       if (e.key === 'Enter') { e.preventDefault(); titleEditable.blur(); }
@@ -17273,7 +17242,8 @@ function commitTsEdit() {
     titleEditable?.focus();
     return false;
   }
-  const ms = parseTimeInputToMs(input.value);
+  const duration = input.value.trim();
+  const ms = duration ? parseTimeInputToMs(duration) : 0;
   if (ms === null) {
     hint.textContent = '工时格式识别不了 — 请输入小时，例如 1.5 / 2 / 0.5';
     hint.className = 'ts-edit-hint error';
@@ -17494,6 +17464,7 @@ function tsCreateBindProjectCombo() {
     tsCreateRenderProjectMenu(true);
   });
   input.addEventListener('keydown', e => {
+    if (e.isComposing || e.keyCode === 229) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (menu.hidden) tsCreateRenderProjectMenu(true);
@@ -17569,16 +17540,6 @@ function openTsCreateEntryModal() {
       if (ms === null) { hintEl.textContent = '格式识别不了'; hintEl.className = 'ts-edit-hint error'; }
       else { hintEl.textContent = '→ ' + fmtMsToHuman(ms); hintEl.className = 'ts-edit-hint ok'; }
     });
-    durationInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); commitTsCreateEntry(); }
-      if (e.key === 'Escape') { e.preventDefault(); closeTsCreateEntryModal(); }
-    });
-    titleInput.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { e.preventDefault(); closeTsCreateEntryModal(); }
-    });
-    notesInput.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { e.preventDefault(); closeTsCreateEntryModal(); }
-    });
   }
   modal.classList.remove('hidden');
   setTimeout(() => { (projectInput || titleInput)?.focus(); }, 50);
@@ -17616,7 +17577,9 @@ function commitTsCreateEntry() {
     titleInput.focus();
     return;
   }
-  const ms = parseTimeInputToMs(durationInput.value.trim());
+  const duration = durationInput.value.trim();
+  // 工时可稍后补充；留空时沿用零时长记录，不计入工时合计。
+  const ms = duration ? parseTimeInputToMs(duration) : 0;
   if (ms === null) {
     hintEl.textContent = '工时格式识别不了 — 试试 1h30m / 1:30 / 1.5 / 2';
     hintEl.className = 'ts-edit-hint error';
@@ -17682,7 +17645,7 @@ function commitTsCreateEntry() {
     manuallyEditedAt: Date.now(),
   });
 
-  save();
+  save({ immediate: true });
 
   // 如果当前开了看板过滤,且新建记录的 boardKey 不在已选看板中,自动把该看板加入筛选
   if (!tsBoardFilterAllSelected() && !tsBoardFilterSet.has(boardKey)) {
@@ -17974,7 +17937,7 @@ function applyMasonryLayout() {
       const p = state.projects.find(x => x.id === c.dataset.projectId);
       if (!p) return null;
       const pos = ensureProjectPosition(p, cols, colWidth, gap);
-      return { card: c, project: p, col: pos.col, top: pos.top };
+      return { card: c, project: p, col: Math.max(0, pos.col) % cols, top: pos.top };
     })
     .filter(Boolean)
     .sort((a, b) => a.col - b.col || a.top - b.top);
@@ -18606,7 +18569,7 @@ function applyStableLayout(snap, draggedId, targetId) {
       const p = state.projects.find(x => x.id === c.dataset.projectId);
       if (!p) return null;
       const pos = ensureProjectPosition(p, cols, colWidth, gap);
-      return { card: c, project: p, col: pos.col, top: pos.top };
+      return { card: c, project: p, col: Math.max(0, pos.col) % cols, top: pos.top };
     })
     .filter(Boolean)
     .sort((a, b) => a.col - b.col || a.top - b.top);
@@ -26201,6 +26164,7 @@ function idbPut(db, store, value) {
     tx.objectStore(store).put(value);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || new Error('本地备份写入已中止'));
   });
 }
 function idbGet(db, store, key) {
@@ -26315,8 +26279,13 @@ async function writeProjectFile(project, existingFiles = null, force = false) {
   const content = projectToMarkdown(project);
   const fileHandle = await vaultDirHandle.getFileHandle(filename, { create: true });
   const writable = await fileHandle.createWritable();
-  await writable.write(content);
-  await writable.close();
+  try {
+    await writable.write(content);
+    await writable.close();
+  } catch (err) {
+    try { await writable.abort?.(); } catch {}
+    throw err;
+  }
   // 记录映射
   if (!store.vaultConfig) store.vaultConfig = {};
   if (!store.vaultConfig.fileMap) store.vaultConfig.fileMap = {};
@@ -26338,9 +26307,9 @@ const MANUAL_SYNC_DIR = 'Kanban同步';
 const MANUAL_SYNC_FILE = 'Kanban数据同步.md';
 const MANUAL_BACKUP_DIR = '历史备份';
 const MANUAL_BACKUP_LIMIT = 10;
-const MANUAL_SYNC_SCHEMA = 3;
-// v5.253: 兼容同一 MD 中误粘贴出的多份同步数据块，读取最后一份有效快照。
-const MANUAL_SYNC_COMPAT_SCHEMAS = [1, 2, 3];
+const MANUAL_SYNC_SCHEMA = 4;
+// v4 补齐工时附属数据、术语与提醒；继续读取 v1/v2/v3 文件。
+const MANUAL_SYNC_COMPAT_SCHEMAS = [1, 2, 3, 4];
 const MANUAL_LOCAL_RECOVERY_KEY = 'kanban_manual_sync_local_recovery_v2';
 const AUTO_HISTORY_KEY = 'kanban_auto_history_v1';
 const AUTO_HISTORY_LIMIT = 10;
@@ -26352,6 +26321,63 @@ const MANUAL_SYNC_START = '<!-- KANBAN_SYNC_DATA_START -->';
 const MANUAL_SYNC_END = '<!-- KANBAN_SYNC_DATA_END -->';
 let manualRemoteSnapshot = null;
 let manualPendingAction = null;
+let manualSyncBusy = false;
+let manualPreviewRevision = 0;
+const SYNC_EXTRA_DEFAULTS = { litigationReminders: [], timesheetDayNotes: {}, tsDescByTaskId: {}, termLibraries: {} };
+
+function validateBusinessData(data) {
+  const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const fail = field => { throw new Error(`同步数据格式错误：${field}。未修改本机数据。`); };
+  if (!object(data) || !object(data.boards)) fail('boards');
+  for (const [key, board] of Object.entries(data.boards)) {
+    if (['__proto__', 'constructor', 'prototype'].includes(key) || !object(board)) fail('看板');
+    if (board.projects !== undefined && !Array.isArray(board.projects)) fail('项目列表');
+    if (board.trash !== undefined && !Array.isArray(board.trash)) fail('回收站');
+    for (const project of board.projects || []) {
+      if (!object(project) || (project.tasks !== undefined && !Array.isArray(project.tasks))) fail('项目任务');
+      if ((project.tasks || []).some(task => !object(task))) fail('任务');
+    }
+  }
+  for (const field of ['boardOrder', 'timeEntries', 'litigationRecords', 'learningCards', 'litigationReminders']) {
+    if (data[field] !== undefined && !Array.isArray(data[field])) fail(field);
+  }
+  if (data.boardOrder?.some(key => typeof key !== 'string')) fail('boardOrder');
+  for (const field of ['timeEntries', 'litigationRecords', 'learningCards', 'litigationReminders']) {
+    if (data[field]?.some(row => !object(row))) fail(field);
+  }
+  for (const field of ['archive', 'habits', 'timesheetDayNotes', 'tsDescByTaskId', 'termLibraries']) {
+    if (data[field] !== undefined && !object(data[field])) fail(field);
+  }
+  for (const rows of Object.values(data.archive || {})) {
+    if (!Array.isArray(rows) || rows.some(row => !object(row))) fail('归档工时');
+  }
+  if (data.habits) {
+    if (!Array.isArray(data.habits.items) || !object(data.habits.logs) || data.habits.items.some(row => !object(row))) fail('习惯记录');
+  }
+  return data;
+}
+function validateSyncEnvelope(envelope) {
+  if (!envelope || !MANUAL_SYNC_COMPAT_SCHEMAS.includes(Number(envelope.schemaVersion))) throw new Error('同步文件版本不受支持，请使用相同或更新版本的看板');
+  validateBusinessData(envelope.data);
+  return envelope;
+}
+function setManualSyncBusy(busy) {
+  manualSyncBusy = busy;
+  ['vaultPreviewConfirm','vaultPreviewCancel','vaultUpload','vaultDownload','vaultImportFileBtn','vaultMobilePull','vaultMobilePush','vaultMobileRebind','vaultHistory','vaultLocalHistory','vaultRestoreLocal','vaultDisconnect','vaultConnect'].forEach(id => {
+    const button = document.getElementById(id);
+    if (button) button.disabled = busy;
+  });
+}
+function assertManualLocalUnchanged(action) {
+  if (syncHash(buildBusinessData()) !== action.preparedLocalHash) throw new Error('本机数据在预览后又发生了变化，请重新预览后再确认');
+}
+function markManualSyncBaseline(remoteHash) {
+  if (!store.vaultConfig) store.vaultConfig = {};
+  store.vaultConfig.manualBaselineHash = remoteHash;
+  store.vaultConfig.manualRemoteBaselineHash = remoteHash;
+  store.vaultConfig.manualLocalBaselineHash = syncHash(buildBusinessData());
+}
+
 
 function cloneSyncValue(value, fallback) {
   try { return JSON.parse(JSON.stringify(value == null ? fallback : value)); }
@@ -26369,6 +26395,7 @@ function buildBusinessData() {
     learningCards: cloneSyncValue(store.learningCards, []),
     // v5.247: 习惯配置 + 全部历史打卡/备注一并同步
     habits: cloneSyncValue(store.habits, { items: [], logs: {} }),
+    ...Object.fromEntries(Object.entries(SYNC_EXTRA_DEFAULTS).map(([key, fallback]) => [key, cloneSyncValue(store[key], fallback)])),
   };
 }
 
@@ -26474,43 +26501,20 @@ function buildSyncMarkdown(envelope, kind = '主同步文件') {
   ].join('\n');
 }
 
-// v5.253: 容错读取同步 MD。手机端若曾把新版整段 Markdown 粘贴到旧文件后面，
-// 同一个文件中可能出现多组 START/END 数据块。旧逻辑会从第一个 START 一直截到最后一个 END，
-// 导致两个 JSON 被拼在一起并触发 Unexpected non-whitespace character after JSON。
-// 现在从后往前尝试每一组完整数据块，优先使用最后一份有效快照。
+// 只读取最后一个数据块；末尾损坏时停止导入，避免静默回退覆盖新数据。
 function parseSyncMarkdown(text) {
   const source = String(text || '');
-  const pairs = [];
-  let cursor = 0;
-
-  while (cursor < source.length) {
-    const start = source.indexOf(MANUAL_SYNC_START, cursor);
-    if (start < 0) break;
-    const end = source.indexOf(MANUAL_SYNC_END, start + MANUAL_SYNC_START.length);
-    if (end < 0) break;
-    pairs.push({ start, end });
-    cursor = end + MANUAL_SYNC_END.length;
-  }
-
-  if (!pairs.length) throw new Error('未找到 Kanban 同步数据块');
-
-  let lastError = null;
-  for (let i = pairs.length - 1; i >= 0; i--) {
-    const { start, end } = pairs[i];
-    let block = source.slice(start + MANUAL_SYNC_START.length, end).trim();
-    block = block.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
-    try {
-      const envelope = JSON.parse(block);
-      if (!envelope || !MANUAL_SYNC_COMPAT_SCHEMAS.includes(Number(envelope.schemaVersion)) || !envelope.data || !envelope.data.boards) {
-        throw new Error('同步文件格式或版本不受支持');
-      }
-      return envelope;
-    } catch (err) {
-      lastError = err;
-    }
-  }
-
-  throw new Error('同步数据块损坏：' + (lastError?.message || '无法解析 JSON'));
+  const starts = [...source.matchAll(/^<!-- KANBAN_SYNC_DATA_START -->[ \t]*\r?$/gm)];
+  if (!starts.length) throw new Error('未找到 Kanban 同步数据块');
+  const start = starts[starts.length - 1];
+  const tail = source.slice(start.index + start[0].length);
+  const end = /^<!-- KANBAN_SYNC_DATA_END -->[ \t]*\r?$/m.exec(tail);
+  if (!end) throw new Error('最新同步数据块不完整，请重新导出文件后导入');
+  const block = tail.slice(0, end.index).trim().replace(/^```json\s*/i, '').replace(/\s*```$/, '');
+  let envelope;
+  try { envelope = JSON.parse(block); }
+  catch { throw new Error('最新同步数据块损坏，请重新导出文件后导入'); }
+  return validateSyncEnvelope(envelope);
 }
 
 async function ensureManualVaultPermission(interactive = false) {
@@ -26603,8 +26607,13 @@ async function getManualSyncDirectories(create = false, createBackup = false) {
 async function writeManualTextFile(dirHandle, filename, content) {
   const handle = await dirHandle.getFileHandle(filename, { create: true });
   const writable = await handle.createWritable();
-  await writable.write(content);
-  await writable.close();
+  try {
+    await writable.write(content);
+    await writable.close();
+  } catch (err) {
+    try { await writable.abort?.(); } catch {}
+    throw err;
+  }
 }
 
 async function readManualRemoteSnapshot() {
@@ -26788,10 +26797,12 @@ function manualSyncRelation(remote) {
   const localSummary = summarizeBusinessData(localData);
   const baseline = store.vaultConfig?.manualBaselineHash || '';
   if (!remote) return { state: hasMeaningfulBusinessData(localSummary) ? 'local-only' : 'empty', localHash, localSummary };
-  const localChanged = baseline ? localHash !== baseline : hasMeaningfulBusinessData(localSummary) && localHash !== remote.hash;
-  const remoteChanged = baseline ? remote.hash !== baseline : localHash !== remote.hash;
+  const localBaseline = store.vaultConfig?.manualLocalBaselineHash || baseline;
+  const remoteBaseline = store.vaultConfig?.manualRemoteBaselineHash || baseline;
+  const localChanged = localBaseline ? localHash !== localBaseline : hasMeaningfulBusinessData(localSummary) && localHash !== remote.hash;
+  const remoteChanged = remoteBaseline ? remote.hash !== remoteBaseline : localHash !== remote.hash;
   let state = 'same';
-  if (localHash === remote.hash) state = 'same';
+  if (localHash === remote.hash || (!localChanged && !remoteChanged)) state = 'same';
   else if (localChanged && remoteChanged) state = 'conflict';
   else if (remoteChanged) state = 'remote-newer';
   else state = 'local-newer';
@@ -26843,7 +26854,11 @@ async function connectManualVault() {
   try {
     const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
     vaultDirHandle = handle;
+    cancelManualPreview();
     if (!store.vaultConfig) store.vaultConfig = {};
+    delete store.vaultConfig.manualBaselineHash;
+    delete store.vaultConfig.manualLocalBaselineHash;
+    delete store.vaultConfig.manualRemoteBaselineHash;
     store.vaultConfig.directoryName = handle.name;
     await persistVaultHandle(handle);
     save({ skipVault: true, immediate: true });
@@ -26882,8 +26897,11 @@ function renderManualComparison(remote = manualRemoteSnapshot) {
 }
 
 async function prepareManualSync(type, sourceSnapshot = null) {
+  if (manualSyncBusy) return;
+  cancelManualPreview();
+  const revision = manualPreviewRevision;
   const refreshed = await refreshManualSyncState({ interactive: true });
-  if (!refreshed && !sourceSnapshot) return;
+  if (revision !== manualPreviewRevision || (!refreshed && !sourceSnapshot)) return;
   const remote = sourceSnapshot || manualRemoteSnapshot;
   if ((type === 'download' || type === 'restore') && !remote) {
     showToast('未找到 Kanban数据同步.md；请确认 Obsidian Sync 已完成，连接整个 Vault 或直接连接「Kanban同步」文件夹均可');
@@ -26892,7 +26910,8 @@ async function prepareManualSync(type, sourceSnapshot = null) {
   const relation = manualSyncRelation(manualRemoteSnapshot);
   manualPendingAction = {
     type,
-    sourceSnapshot: remote,
+    sourceSnapshot: cloneSyncValue(remote, null),
+    preparedLocalHash: syncHash(buildBusinessData()),
     preparedRemoteHash: manualRemoteSnapshot ? manualRemoteSnapshot.hash : null,
   };
   const preview = document.getElementById('vaultPreview');
@@ -26920,13 +26939,14 @@ ${manualRemoteSnapshot ? '默认不会创建历史版本。' : '仓库尚无数�
     title.textContent = `准备${verb}`;
     text.textContent = `将以所选数据覆盖当前电脑的业务数据。
 ${syncSummaryText(remote.summary)}
-${type === 'restore' ? '将直接恢复所选历史版本。' : '默认不会额外生成 Obsidian 历史备份。'}`;
+${type === 'restore' ? '恢复前会先在本机保存可撤回的恢复点。' : '下载前会先在本机保存恢复点；Obsidian 历史备份可另行勾选。'}`;
     if (backupLabel) backupLabel.textContent = '下载前把当前电脑数据备份到 Obsidian';
     confirmBtn.textContent = type === 'restore' ? '确认恢复' : '确认下载';
   }
 }
 
 function cancelManualPreview() {
+  manualPreviewRevision++;
   manualPendingAction = null;
   document.getElementById('vaultPreview')?.classList.add('hidden');
   const backupCheck = document.getElementById('vaultPreviewBackupCheck');
@@ -26936,29 +26956,32 @@ function cancelManualPreview() {
 }
 
 function applyBusinessData(data) {
-  if (!data || !data.boards || typeof data.boards !== 'object') throw new Error('缺少看板数据');
-  const preservedCurrentBoard = store.currentBoard;
-  const preservedConfig = store.vaultConfig || {};
-  store.boards = cloneSyncValue(data.boards, {});
-  store.boardOrder = cloneSyncValue(data.boardOrder, Object.keys(store.boards));
-  store.timeEntries = cloneSyncValue(data.timeEntries, []);
-  store.archive = cloneSyncValue(data.archive, {});
-  store.litigationRecords = cloneSyncValue(data.litigationRecords, []);
-  // v5.243: 新版同步文件带 learningCards 时覆盖词库；旧 v1 文件未包含该字段时保留当前设备词库，避免误清空。
-  if (Array.isArray(data.learningCards)) store.learningCards = cloneSyncValue(data.learningCards, []);
-  // v5.247: Schema v3 开始同步习惯。读取 v1/v2 老文件时保留本机习惯，避免老快照把习惯清空。
-  if (data.habits && typeof data.habits === 'object') {
-    store.habits = cloneSyncValue(data.habits, { items: [], logs: {} });
+  validateBusinessData(data);
+  const next = { ...store };
+  next.boards = cloneSyncValue(data.boards, {});
+  next.boardOrder = [...new Set([...(data.boardOrder || []), ...Object.keys(next.boards)])].filter(key => Object.hasOwn(next.boards, key));
+  for (const board of Object.values(next.boards)) {
+    board.projects ||= [];
+    board.trash ||= [];
+    for (const project of board.projects) project.tasks ||= [];
   }
-  store.currentBoard = store.boards[preservedCurrentBoard] ? preservedCurrentBoard : (store.boardOrder.find(k => store.boards[k]) || Object.keys(store.boards)[0]);
-  if (!store.currentBoard) {
-    store.currentBoard = generateBoardId();
-    store.boards[store.currentBoard] = { name: '默认', icon: '📋', color: '', projects: [], trash: [], createdAt: Date.now() };
-    store.boardOrder = [store.currentBoard];
+  for (const [key, fallback] of Object.entries({timeEntries: [], archive: {}, litigationRecords: []})) next[key] = cloneSyncValue(data[key], fallback);
+  for (const [key, fallback] of Object.entries({learningCards: [], habits: {items: [], logs: {}}, ...SYNC_EXTRA_DEFAULTS})) {
+    // 旧版快照未携带的新字段保留本机值；新版明确的空值则正常覆盖。
+    if (Object.hasOwn(data, key)) next[key] = cloneSyncValue(data[key], fallback);
   }
-  store.vaultConfig = preservedConfig;
+  next.tsAiDraftsByTaskId = {};
+  next.currentBoard = Object.hasOwn(next.boards, store.currentBoard) ? store.currentBoard : next.boardOrder[0];
+  if (!next.currentBoard) {
+    next.currentBoard = generateBoardId();
+    next.boards[next.currentBoard] = { name: '默认', icon: '📋', color: '', projects: [], trash: [], createdAt: Date.now() };
+    next.boardOrder = [next.currentBoard];
+  }
+  // 写入成功后才替换运行中的数据；空间不足时保留原内存和原存储。
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); }
+  catch { throw new Error('本机存储写入失败，未替换当前数据。请检查浏览器存储空间后重试'); }
+  store = next;
   state = ensureBoardData(store.currentBoard);
-  save({ skipVault: true, immediate: true });
   updateBoardLabel();
   renderBoardMenu?.();
   updateTrashCount();
@@ -26968,29 +26991,34 @@ function applyBusinessData(data) {
 }
 
 async function executeManualSync() {
-  if (!manualPendingAction) return;
+  if (!manualPendingAction || manualSyncBusy) return;
   if (manualPendingAction.type === 'import-file') {
     return executeManualFileImport();
   }
   const confirmBtn = document.getElementById('vaultPreviewConfirm');
   const action = manualPendingAction;
-  confirmBtn.disabled = true;
+  setManualSyncBusy(true);
   try {
+    assertManualLocalUnchanged(action);
     if (!(await ensureManualVaultPermission(true))) throw new Error('未获得 Obsidian 文件夹读写权限');
     const latestRemote = action.type === 'restore' ? manualRemoteSnapshot : await readManualRemoteSnapshot();
     const latestHash = latestRemote ? latestRemote.hash : null;
     if (action.type !== 'restore' && latestHash !== action.preparedRemoteHash) {
       throw new Error('仓库数据在预览后又发生了变化，请重新预览后再确认');
     }
+    assertManualLocalUnchanged(action);
     const wantsBackup = !!document.getElementById('vaultPreviewBackupCheck')?.checked;
     if (action.type === 'upload') {
       if (wantsBackup && latestRemote) await writeManualBackup('仓库备份', latestRemote.text);
+      assertManualLocalUnchanged(action);
       const envelope = makeSyncEnvelope();
       const dirs = await getManualSyncDirectories(true, false);
+      assertManualLocalUnchanged(action);
       await writeManualTextFile(dirs.syncDir, MANUAL_SYNC_FILE, buildSyncMarkdown(envelope));
       const hash = syncHash(envelope.data);
       if (!store.vaultConfig) store.vaultConfig = {};
-      store.vaultConfig.manualBaselineHash = hash;
+      markManualSyncBaseline(hash);
+      store.vaultConfig.manualLocalBaselineHash = hash;
       store.vaultConfig.lastSyncAt = Date.now();
       store.vaultConfig.localChangedAt = store.vaultConfig.lastSyncAt;
       save({ skipVault: true, immediate: true });
@@ -27002,10 +27030,13 @@ async function executeManualSync() {
       if (action.type !== 'restore' && wantsBackup) {
         await writeManualBackup(`本机备份-${currentDeviceLabel()}`, buildSyncMarkdown(localEnvelope, '下载前的本机备份'));
       }
+      validateSyncEnvelope(source.envelope);
+      await saveManualLocalRecovery();
+      assertManualLocalUnchanged(action);
       applyBusinessData(source.envelope.data);
       const hash = syncHash(source.envelope.data);
       if (!store.vaultConfig) store.vaultConfig = {};
-      store.vaultConfig.manualBaselineHash = hash;
+      markManualSyncBaseline(hash);
       store.vaultConfig.lastSyncAt = Date.now();
       store.vaultConfig.localChangedAt = store.vaultConfig.lastSyncAt;
       save({ skipVault: true, immediate: true });
@@ -27017,7 +27048,7 @@ async function executeManualSync() {
   } catch (err) {
     setVaultError(err.message || '同步操作失败');
   } finally {
-    confirmBtn.disabled = false;
+    setManualSyncBusy(false);
   }
 }
 
@@ -27077,6 +27108,12 @@ async function loadAutoLocalHistory() {
 }
 
 async function restoreAutoLocalHistory(snapshotId) {
+  if (manualSyncBusy) return false;
+  setManualSyncBusy(true);
+  try { return await restoreAutoLocalHistoryImpl(snapshotId); }
+  finally { setManualSyncBusy(false); }
+}
+async function restoreAutoLocalHistoryImpl(snapshotId) {
   const rec = await readAutoHistoryRecord();
   const snapshot = (rec.items || []).find(item => item && item.id === snapshotId);
   if (!snapshot?.data) { showToast('未找到该历史备份'); return false; }
@@ -27085,7 +27122,10 @@ async function restoreAutoLocalHistory(snapshotId) {
   const restoreData = cloneSyncValue(snapshot.data, null);
   if (!restoreData) { showToast('历史备份数据无法读取'); return false; }
   try {
-    await saveAutoHistorySnapshot('恢复前保护');
+    const preparedLocalHash = syncHash(buildBusinessData());
+    validateBusinessData(restoreData);
+    await saveManualLocalRecovery();
+    assertManualLocalUnchanged({ preparedLocalHash });
     applyBusinessData(restoreData);
     if (!store.vaultConfig) store.vaultConfig = {};
     store.vaultConfig.localChangedAt = Date.now();
@@ -27156,38 +27196,6 @@ async function exportManualSyncFile() {
     return false;
   }
 }
-
-async function shareManualSyncFile() {
-  try {
-    const { blob, hash } = buildManualSyncBlob();
-    const file = new File([blob], MANUAL_SYNC_FILE, { type: 'text/markdown' });
-    if (!(navigator.canShare && navigator.canShare({ files: [file] }))) {
-      // 不支持文件分享时退回下载
-      return exportManualSyncFile();
-    }
-    await navigator.share({
-      files: [file],
-      title: 'Kanban 数据同步',
-      text: '请保存到 Obsidian 的 Kanban同步 文件夹',
-    });
-    if (!store.vaultConfig) store.vaultConfig = {};
-    // v5.243: 分享完成仍只是“把文件交给系统”，不假定 Obsidian 已经保存/同步。
-    store.vaultConfig.lastExportAt = Date.now();
-    store.vaultConfig.lastExportHash = hash;
-    store.vaultConfig.lastExportDevice = currentDeviceLabel();
-    save({ skipVault: true, immediate: true });
-    addVaultLog(`已分享同步文件（${currentDeviceLabel()}）`);
-    showToast('已分享，请保存到 Obsidian「Kanban同步」文件夹');
-    refreshVaultModal();
-    return true;
-  } catch (err) {
-    if (err && (err.name === 'AbortError' || /abort/i.test(err.message || ''))) return false;
-    // 分享失败时尝试下载
-    addVaultLog('分享失败，改为下载：' + (err.message || err), 'warn');
-    return exportManualSyncFile();
-  }
-}
-
 
 // v5.252: 手机端使用系统剪贴板 + Obsidian 官方 URI 上传固定主同步文件。
 // 同步正文可能很长，不能可靠地直接塞进 URI；先把完整 Markdown 写入系统剪贴板，再由 Obsidian 的 clipboard + overwrite 读取并覆盖。
@@ -27486,37 +27494,54 @@ async function refreshManualLocalRecoveryButton() {
   if (!btn) return;
   const rec = await readManualLocalRecovery();
   btn.style.display = rec && rec.data ? '' : 'none';
-  if (rec?.savedAt) btn.title = `恢复 ${new Date(rec.savedAt).toLocaleString('zh-CN')} 导入前的数据`;
+  if (rec?.savedAt) btn.title = `恢复 ${new Date(rec.savedAt).toLocaleString('zh-CN')} 替换前的数据`;
 }
 
 async function restoreManualLocalRecovery() {
+  if (manualSyncBusy) return false;
+  setManualSyncBusy(true);
+  try { return await restoreManualLocalRecoveryImpl(); }
+  finally { setManualSyncBusy(false); }
+}
+async function restoreManualLocalRecoveryImpl() {
   const rec = await readManualLocalRecovery();
-  if (!rec?.data) { showToast('没有可恢复的导入前数据'); return false; }
-  if (!confirm(`恢复 ${new Date(rec.savedAt).toLocaleString('zh-CN')} 导入前的数据？\n当前看板、工时、诉讼记录、学习词库和习惯打卡将被替换。`)) return false;
+  if (!rec?.data) { showToast('没有可恢复的替换前数据'); return false; }
+  if (!confirm(`恢复 ${new Date(rec.savedAt).toLocaleString('zh-CN')} 替换前的数据？\n当前看板、工时、诉讼记录、学习词库和习惯打卡将被替换。`)) return false;
   try {
     // 恢复前再给当前状态留一个恢复点，避免来回操作时无路可退。
     const current = buildBusinessData();
-    applyBusinessData(rec.data);
+    validateBusinessData(rec.data);
     const db = await openIdb();
     await idbPut(db, 'kv', { key: MANUAL_LOCAL_RECOVERY_KEY, savedAt: Date.now(), device: currentDeviceLabel(), data: current });
+    try {
+      assertManualLocalUnchanged({ preparedLocalHash: syncHash(current) });
+      applyBusinessData(rec.data);
+    } catch (err) {
+      // 恢复没有完成时，把原恢复点放回去，便于排除错误后重试。
+      await idbPut(db, 'kv', rec);
+      throw err;
+    }
     if (!store.vaultConfig) store.vaultConfig = {};
     store.vaultConfig.localChangedAt = Date.now();
     save({ skipVault: true, immediate: true });
-    addVaultLog('已恢复上一次文件导入前的数据');
-    showToast('已恢复导入前数据');
+    addVaultLog('已恢复上一次替换前的数据');
+    showToast('已恢复替换前数据');
     await refreshManualLocalRecoveryButton();
     refreshVaultModal();
     return true;
   } catch (err) {
-    setVaultError(err.message || '恢复导入前数据失败');
+    setVaultError(err.message || '恢复替换前数据失败');
     return false;
   }
 }
 
 async function importManualSyncFromFile(file) {
-  if (!file) return;
+  if (!file || manualSyncBusy) return;
+  cancelManualPreview();
+  const revision = manualPreviewRevision;
   try {
     const text = await file.text();
+    if (revision !== manualPreviewRevision) return false;
     let envelope;
     const name = (file.name || '').toLowerCase();
     if (name.endsWith('.json') || (text.trim().startsWith('{') && !text.includes(MANUAL_SYNC_START))) {
@@ -27525,6 +27550,7 @@ async function importManualSyncFromFile(file) {
       if (parsed && MANUAL_SYNC_COMPAT_SCHEMAS.includes(Number(parsed.schemaVersion)) && parsed.data && parsed.data.boards) {
         envelope = parsed;
       } else if (parsed && parsed.boards) {
+        validateBusinessData(parsed);
         // 兼容完整 store 备份 JSON
         const legacyData = {
           boards: parsed.boards,
@@ -27536,6 +27562,7 @@ async function importManualSyncFromFile(file) {
         // 老 JSON 备份没有 learningCards / habits 时不写对应字段，导入时会保留当前设备数据。
         if (Array.isArray(parsed.learningCards)) legacyData.learningCards = parsed.learningCards;
         if (parsed.habits && typeof parsed.habits === 'object') legacyData.habits = parsed.habits;
+        for (const key of Object.keys(SYNC_EXTRA_DEFAULTS)) if (Object.hasOwn(parsed, key)) legacyData[key] = parsed[key];
         envelope = makeSyncEnvelope(legacyData);
         envelope.updatedAt = parsed.vaultConfig?.lastSyncAt || Date.now();
         envelope.sourceDevice = parsed.vaultConfig?.lastExportDevice || 'JSON备份';
@@ -27545,6 +27572,7 @@ async function importManualSyncFromFile(file) {
     } else {
       envelope = parseSyncMarkdown(text);
     }
+    validateSyncEnvelope(envelope);
     const snapshot = {
       envelope,
       text: buildSyncMarkdown(envelope, '从文件导入'),
@@ -27560,6 +27588,7 @@ async function importManualSyncFromFile(file) {
       type: 'import-file',
       sourceSnapshot: snapshot,
       preparedRemoteHash: snapshot.hash,
+      preparedLocalHash: syncHash(buildBusinessData()),
     };
     const preview = document.getElementById('vaultPreview');
     const title = document.getElementById('vaultPreviewTitle');
@@ -27579,6 +27608,9 @@ async function importManualSyncFromFile(file) {
         `来源：${snapshot.envelope.sourceDevice || '未知'} · ${new Date(snapshot.envelope.updatedAt).toLocaleString('zh-CN')}\n` +
         `确认后会先在本机写入可恢复快照（若支持文件夹备份则同时写入历史备份）。`;
     }
+    document.getElementById('vaultPreviewBackupOption')?.classList.add('hidden');
+    const backupCheck = document.getElementById('vaultPreviewBackupCheck');
+    if (backupCheck) backupCheck.checked = false;
     if (confirmBtn) confirmBtn.textContent = '确认导入';
     addVaultLog(`已读取同步文件：${snapshot.fileName}`);
     return true;
@@ -27589,29 +27621,29 @@ async function importManualSyncFromFile(file) {
 }
 
 async function executeManualFileImport() {
-  if (!manualPendingAction || manualPendingAction.type !== 'import-file') return;
+  if (!manualPendingAction || manualPendingAction.type !== 'import-file' || manualSyncBusy) return;
   const confirmBtn = document.getElementById('vaultPreviewConfirm');
-  if (confirmBtn) confirmBtn.disabled = true;
+  const action = manualPendingAction;
+  setManualSyncBusy(true);
   try {
-    const source = manualPendingAction.sourceSnapshot;
+    assertManualLocalUnchanged(action);
+    const source = action.sourceSnapshot;
     if (!source?.envelope?.data) throw new Error('没有可导入的数据');
     // v5.243: 任何设备都先写 IndexedDB 本地恢复点；有文件夹权限时再额外写 Obsidian 历史备份。
-    try {
-      await saveManualLocalRecovery();
-      addVaultLog('已创建文件导入前的本地恢复点');
-    } catch (backupErr) {
-      addVaultLog('无法创建本地恢复点：' + (backupErr.message || backupErr), 'warn');
-    }
+    validateSyncEnvelope(source.envelope);
+    await saveManualLocalRecovery();
+    addVaultLog('已创建文件导入前的本地恢复点');
     try {
       if (vaultDirHandle && await ensureManualVaultPermission(false)) {
         const localEnvelope = makeSyncEnvelope();
         await writeManualBackup(`本机备份-${currentDeviceLabel()}`, buildSyncMarkdown(localEnvelope, '导入前的本机备份'));
       }
     } catch {}
+    assertManualLocalUnchanged(action);
     applyBusinessData(source.envelope.data);
     const hash = syncHash(source.envelope.data);
     if (!store.vaultConfig) store.vaultConfig = {};
-    store.vaultConfig.manualBaselineHash = hash;
+    markManualSyncBaseline(hash);
     store.vaultConfig.lastSyncAt = Date.now();
     store.vaultConfig.localChangedAt = store.vaultConfig.lastSyncAt;
     store.vaultConfig.lastImportAt = store.vaultConfig.lastSyncAt;
@@ -27627,7 +27659,7 @@ async function executeManualFileImport() {
   } catch (err) {
     setVaultError(err.message || '导入失败');
   } finally {
-    if (confirmBtn) confirmBtn.disabled = false;
+    setManualSyncBusy(false);
   }
 }
 
@@ -27665,7 +27697,6 @@ function refreshVaultModal() {
   const historyBtn = document.getElementById('vaultHistory');
   const disconnectBtn = document.getElementById('vaultDisconnect');
   const mobileActions = document.getElementById('vaultMobileActions');
-  const shareBtn = document.getElementById('vaultShareFile');
   const mobileDirect = document.getElementById('vaultMobileDirect');
   const mobileTarget = document.getElementById('vaultMobileTarget');
   refreshManualLocalRecoveryButton();
@@ -27696,16 +27727,6 @@ function refreshVaultModal() {
   if (mobileActions) mobileActions.classList.toggle('is-visible', useFilePath || true);
   // 实际上始终显示文件路径作为兜底，桌面连接后也保留
   if (mobileActions) mobileActions.classList.add('is-visible');
-
-  // 分享按钮：仅在支持 Web Share files 时显示
-  if (shareBtn) {
-    let canShareFiles = false;
-    try {
-      const probe = new File(['x'], 't.md', { type: 'text/markdown' });
-      canShareFiles = !!(navigator.canShare && navigator.canShare({ files: [probe] }));
-    } catch {}
-    shareBtn.style.display = canShareFiles ? '' : 'none';
-  }
 
   if (vaultDirHandle) {
     icon.textContent = '⇅';
@@ -27742,9 +27763,11 @@ function refreshVaultModal() {
     const ls = store.vaultConfig?.lastSyncAt || store.vaultConfig?.lastExportAt || store.vaultConfig?.lastImportAt;
     if (lastSync) lastSync.textContent = ls ? new Date(ls).toLocaleString('zh-CN') : '—';
     if (fileCount) fileCount.textContent = MANUAL_SYNC_FILE;
-    document.getElementById('vaultCompare')?.classList.add('hidden');
-    document.getElementById('vaultPreview')?.classList.add('hidden');
-    document.getElementById('vaultHistoryPanel')?.classList.add('hidden');
+    const filePreview = manualPendingAction?.type === 'import-file';
+    document.getElementById('vaultCompare')?.classList.toggle('hidden', !filePreview);
+    document.getElementById('vaultPreview')?.classList.toggle('hidden', !filePreview);
+    if (filePreview) renderManualComparison(manualPendingAction.sourceSnapshot);
+    // 本地历史不依赖仓库连接，刷新连接状态时不收起已经打开的历史列表。
   }
 
   if (help) {
@@ -27792,9 +27815,8 @@ document.getElementById('vaultHistory')?.addEventListener('click', loadManualHis
 document.getElementById('vaultLocalHistory')?.addEventListener('click', loadAutoLocalHistory);
 document.getElementById('vaultPreviewCancel')?.addEventListener('click', cancelManualPreview);
 document.getElementById('vaultPreviewConfirm')?.addEventListener('click', executeManualSync);
-// v5.140: 文件导出 / 导入 / 分享
+// 文件导出 / 导入
 document.getElementById('vaultExportFile')?.addEventListener('click', () => exportManualSyncFile());
-document.getElementById('vaultShareFile')?.addEventListener('click', () => shareManualSyncFile());
 document.getElementById('vaultMobilePush')?.addEventListener('click', () => pushManualSyncToObsidianMobile());
 document.getElementById('vaultMobilePull')?.addEventListener('click', () => pullManualSyncFromObsidianMobile());
 document.getElementById('vaultMobileRebind')?.addEventListener('click', async () => { await clearManualSyncFileHandle(); await selectAndBindManualSyncFile(); });
@@ -28791,7 +28813,7 @@ document.getElementById('tsTranslateAll')?.addEventListener('click', () => {
   // tsCurrentMonth === '' 表示"全部月份"视图,此时取所有 archive 条目
   // v3.0: 同时受看板过滤影响 — 只优化当前看板范围
   // v2.0: 不再 confirm — 按钮本身就是"一键",直接跑,toast 提示进度
-  const baseAll = collectArchiveEntries();
+  const baseAll = collectTimesheetEntries();
   const boardFiltered = tsFilterByBoards(baseAll);
   const entries = tsCurrentMonth === ''
     ? boardFiltered
@@ -28830,6 +28852,21 @@ document.getElementById('tsEditModal')?.addEventListener('click', e => {
   if (action === 'ts-edit-close') { commitTsEdit(); return; }
   if (action === 'ts-edit-cancel') { closeTsEditModal(); return; }
   if (action === 'ts-edit-save') { commitTsEdit(); return; }
+});
+// 新增工时：单行文本框回车保存；项目候选选择和输入法确认优先。
+document.getElementById('tsCreateEntryModal')?.addEventListener('keydown', e => {
+  if (e.currentTarget.classList.contains('hidden') || e.defaultPrevented || e.isComposing || e.keyCode === 229 || e.repeat) return;
+  if (e.key === 'Escape') {
+    e.preventDefault(); e.stopPropagation(); closeTsCreateEntryModal(); return;
+  }
+  if (e.key !== 'Enter') return;
+  const field = e.target;
+  const singleLine = field.matches('input[type="text"], input[type="number"]');
+  const multilineSubmit = field.matches('textarea') && (e.ctrlKey || e.metaKey);
+  if (!singleLine && !multilineSubmit) return;
+  if (e.shiftKey) return;
+  e.preventDefault(); e.stopPropagation();
+  commitTsCreateEntry();
 });
 // v1.6.12 / v5.126: 直接创建工时 modal 事件
 // 点遮罩 / 右上角 ×：有内容则尝试保存，无内容则取消关闭
@@ -29015,7 +29052,7 @@ html[data-assistant-mode="hidden"] #botFab,html[data-assistant-mode="hidden"] #b
   .learning-library-sub { display:block !important; font-size:9.5px; }
 }
 /* v5.248: 手机端学习页先显示今日复习+统计，再显示生词库；桌面布局不变 */
-@media(max-width:767px){
+@media(max-width: 767px){
   body[data-view="learning"] .learning-right-column { order:1; }
   body[data-view="learning"] .learning-library-panel { order:2; }
 }
@@ -29989,6 +30026,7 @@ self.addEventListener('fetch', e => {
 
   // ---- 7) 底部导航 ↔ setView 同步 ----
   function bindMobileNav() {
+    applyTopPanelPreference();
     const nav = document.getElementById('mobileNav');
     if (!nav) return;
     nav.addEventListener('click', e => {
