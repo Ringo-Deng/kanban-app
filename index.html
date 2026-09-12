@@ -6,14 +6,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <!-- 维护规则：每次交付功能或修复更新时，将下方页面版本号末位加 1。 -->
-<title>Kanban v5.33</title>
+<title>Kanban v5.34</title>
 <meta name="description" content="本地优先、支持离线使用的项目与任务管理工具">
 <meta name="theme-color" content="#f4e7d3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kanban">
-<meta name="build-hash" content="5_33_annual_target_260912">
+<meta name="build-hash" content="5_34_monthly_target_260912">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f4e7d3'/%3E%3Cg transform='translate(78,98) rotate(-10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%23d4691a'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(96,94) rotate(0)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%2365a30d'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(114,98) rotate(10)'%3E%3Crect x='-36' y='-50' width='72' height='100' rx='10' fill='%230284c7'/%3E%3Crect x='-28' y='-40' width='56' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-28' y='-28' width='40' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23f4e7d3'/%3E%3Cg transform='translate(72,92) rotate(-10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%23d4691a'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(90,88) rotate(0)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%2365a30d'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3Cg transform='translate(108,92) rotate(10)'%3E%3Crect x='-34' y='-48' width='68' height='96' rx='10' fill='%230284c7'/%3E%3Crect x='-26' y='-38' width='52' height='6' rx='3' fill='rgba(255,255,255,.3)'/%3E%3Crect x='-26' y='-26' width='38' height='4' rx='2' fill='rgba(255,255,255,.2)'/%3E%3C/g%3E%3C/svg%3E">
 <!-- 3.1 iOS PWA: manifest 由末尾 pwa.js 动态生成 Blob URL 后注入 -->
@@ -11831,7 +11831,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
   </div>
   <!-- v1.6: 工时单视图(归档 + 按月表格化) -->
   <div class="timesheet hidden" id="timesheet">
-    <div id="tsMonthlyOverview" class="ts-overview-panel" role="region" aria-label="年度工时目标与本月工时概览">
+    <div id="tsMonthlyOverview" class="ts-overview-panel" role="region" aria-label="本月工时概览">
       <div class="ts-overview-donut" id="tsOverviewDonut"></div>
       <div class="ts-overview-daily" id="tsOverviewDaily"></div>
     </div>
@@ -16369,12 +16369,12 @@ function aggregateDailyHours(entries, year, month) {
   return map;
 }
 
-function renderOverviewDonut(entries, year) {
+function renderOverviewDonut(entries, year, month) {
   const el = document.getElementById('tsOverviewDonut');
   if (!el) return;
   const totalMs = entries.reduce((s, e) => s + (e.totalTimeMs || 0), 0);
-  // v5.33: 按所选年份的全年工时计算年度目标完成比例。
-  const targetHours = 1800;
+  // v5.34: 每月目标固定 160h，按概览月份的工时计算完成比例。
+  const targetHours = 160;
   const targetMs = targetHours * 3600000;
   const pct = targetMs > 0 ? Math.min(totalMs / targetMs, 1) : 0;
   const displayPct = targetMs > 0 ? Math.round((totalMs / targetMs) * 100) : 0;
@@ -16387,7 +16387,7 @@ function renderOverviewDonut(entries, year) {
       <div class="ts-donut-pct">${displayPct}%</div>
     </div>
   </div>
-  <div class="ts-donut-meta">${year} 年 · 全年目标 ${targetHours}h</div>`;
+  <div class="ts-donut-meta">${year} 年 ${month} 月 · 月目标 ${targetHours}h</div>`;
 }
 
 function renderOverviewDaily(entries, year, month) {
@@ -16437,13 +16437,10 @@ function renderMonthlyOverview() {
   const panel = document.getElementById('tsMonthlyOverview');
   if (!panel) return;
   panel.classList.remove('hidden');
-  const { year, month } = parseMonthKey(tsCurrentMonth || localDateStr(new Date()).slice(0, 7));
-  const entries = tsCurrentMonth
-    ? tsEntriesForMonth(tsCurrentMonth)
-    : tsFilterByBoards(collectArchiveEntries());
-  const yearEntries = tsEntriesForMonth('').filter(e =>
-    (e.completedAt || e.monthKey || '').slice(0, 4) === String(year));
-  renderOverviewDonut(yearEntries, year);
+  const monthKey = tsCurrentMonth || localDateStr(new Date()).slice(0, 7);
+  const { year, month } = parseMonthKey(monthKey);
+  const entries = tsEntriesForMonth(monthKey);
+  renderOverviewDonut(entries, year, month);
   renderOverviewDaily(entries, year, month);
 }
 
