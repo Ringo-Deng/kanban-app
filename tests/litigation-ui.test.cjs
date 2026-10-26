@@ -74,3 +74,18 @@ test('month grids include every date, align Monday to Sunday and handle leap yea
     }
   }
 });
+
+test('typed dates normalize and reject invalid days instead of silently rolling over', () => {
+  const start = html.indexOf('function normalizeLitigationDateInput(');
+  const end = html.indexOf('function readLitigationDateInput(');
+  const app = vm.createContext({});
+  vm.runInContext(html.slice(start, end), app);
+  for (const input of ['2026-2-8', '2026/02/08', '2026.2.8', '20260208', ' 2026-02-08 ']) {
+    assert.equal(app.normalizeLitigationDateInput(input), '2026-02-08');
+  }
+  assert.equal(app.normalizeLitigationDateInput('2028-02-29'), '2028-02-29');
+  assert.equal(app.normalizeLitigationDateInput(''), '');
+  for (const input of ['2026-02-29', '2026-02-30', '2026-13-01', '2026-00-10', '2026-10-00', '2026-10-32', 'abc', '2026-10', '26-10-26']) {
+    assert.equal(app.normalizeLitigationDateInput(input), null, input);
+  }
+});
