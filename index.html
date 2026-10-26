@@ -6940,41 +6940,31 @@ body[data-view="litigation"] #vaultBtn { display: none; }
 .lit-bell { position:relative; width:26px; height:26px; border:1px solid var(--border); border-radius:50%; background:transparent; color:var(--muted); cursor:pointer; padding:0; font-size:12px; line-height:1; display:flex; align-items:center; justify-content:center; }
 .lit-bell:hover { color:var(--accent); border-color:var(--accent); }
 .lit-bell .lit-bell-dot { display:none; }
-/* v3.1: 诉讼提醒 popover — 紧邻铃铛的小日历 */
-.lit-reminder-modal { position:fixed; z-index:11000; width:min(350px, calc(100vw - 20px)); }
-.lit-reminder-content { background:var(--card-bg-solid); border:1px solid var(--border); border-radius:14px; padding:14px; width:100%; max-height:calc(100vh - 20px); overflow:auto; box-shadow:0 18px 50px rgba(0,0,0,.18); }
-.lit-cal-top { display:flex; align-items:center; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
-.lit-cal-time { font-size:13px; font-weight:800; color:var(--text); display:flex; align-items:baseline; gap:6px; flex:1 1 auto; min-width:0; white-space:nowrap; }
-.lit-cal-time .lit-cal-count { color:var(--muted); font-weight:500; font-size:11.5px; }
-.lit-cal-event-date { flex:1 0 100%; display:block; margin-top:2px; color:var(--muted); font-size:11px; font-weight:600; }
-.lit-cal-prev7, .lit-cal-prev3, .lit-cal-prev1 { flex:0 0 auto; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:7px; padding:5px 9px; font-size:11.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
-.lit-cal-prev7:hover, .lit-cal-prev3:hover, .lit-cal-prev1:hover { border-color:var(--accent); color:var(--accent); }
-.lit-cal-prev7.active, .lit-cal-prev3.active, .lit-cal-prev1.active { border-color:var(--accent); background:var(--accent); color:#fff; }
-@media (max-width: 480px) {
-  /* 极窄屏: 隐藏事项日期,只留 '设置提醒' + 3 个按钮 */
-  .lit-cal-event-date { display:none; }
+/* 诉讼日历直接复用全局 date-popover 的表面、按钮与日期格。 */
+.date-popover.lit-calendar-popover { z-index:11000; width:min(320px, calc(100vw - 16px)); max-height:calc(100dvh - 16px); overflow:auto; }
+.lit-calendar-popover .date-popover-header { grid-template-columns:28px 1fr 28px; }
+.lit-calendar-popover .date-popover-day { position:relative; }
+.lit-calendar-popover .date-popover-day.event-date { box-shadow:inset 0 0 0 1px var(--accent); }
+.lit-calendar-popover .date-popover-quick-top button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#fff; }
+.lit-calendar-caption { color:var(--muted); font-size:11px; line-height:1.5; }
+.lit-calendar-popover button:focus-visible, .lit-case-toggle:focus-visible, .lit-case-edit:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.lit-tl-date { cursor:pointer; text-align:left; font-variant-numeric:tabular-nums; }
+.lit-tl-date:hover { background:var(--task-bg); color:var(--accent); }
+.lit-case-name-row { display:flex; align-items:flex-start; gap:6px; }
+.lit-case-toggle { display:flex; align-items:baseline; gap:7px; flex:1; min-width:0; border:0; padding:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+.lit-case-toggle:hover { color:var(--accent); }
+.lit-case-chevron { display:inline-block; flex:0 0 auto; color:var(--muted); transition:transform .15s; }
+.lit-case-toggle[aria-expanded="false"] .lit-case-chevron { transform:rotate(-90deg); }
+.lit-case-edit { flex:0 0 auto; border:0; border-radius:6px; background:transparent; color:var(--muted); padding:3px 5px; cursor:pointer; font:inherit; font-size:11px; }
+.lit-case-edit:hover { background:var(--task-bg); color:var(--accent); }
+.lit-timeline-tr[hidden], #litigationMobileList[hidden] { display:none !important; }
+@media (max-width:767px) {
+  .lit-calendar-popover .date-popover-header > button,
+  .lit-calendar-popover .date-popover-quick-top button { min-height:36px; }
+  .lit-mob-card { position:relative; }
+  .lit-mob-card .lit-mob-card-title { padding-right:100px !important; }
+  .lit-mob-card > .lit-case-edit { position:absolute; top:8px; right:32px; min-height:36px; }
 }
-.lit-cal { user-select:none; }
-.lit-cal-header { display:flex; align-items:center; justify-content:space-between; padding:4px 4px 8px; font-weight:700; font-size:13px; }
-.lit-cal-header button { border:0; background:transparent; color:var(--muted); cursor:pointer; font-size:16px; width:24px; height:24px; border-radius:6px; padding:0; }
-.lit-cal-header button:hover { background:var(--bg); color:var(--text); }
-.lit-cal-grid { display:grid; grid-template-columns:repeat(7, 1fr); gap:2px; }
-.lit-cal-daylabel { text-align:center; font-size:10.5px; color:var(--muted); font-weight:600; padding:4px 0; }
-.lit-cal-cell { position:relative; border:0; background:transparent; color:var(--text); border-radius:7px; padding:7px 0; font:inherit; font-size:12.5px; cursor:pointer; aspect-ratio:1 / 1; display:flex; align-items:center; justify-content:center; }
-.lit-cal-cell:hover { background:var(--bg); }
-.lit-cal-cell.empty { cursor:default; }
-.lit-cal-cell.empty:hover { background:transparent; }
-.lit-cal-cell.other-month { color:var(--muted); opacity:.4; }
-.lit-cal-cell.today { font-weight:700; box-shadow:inset 0 0 0 1px var(--accent); }
-.lit-cal-cell.row-date { background:color-mix(in srgb, var(--accent) 18%, transparent); font-weight:700; }
-.lit-cal-cell.has-reminder::after { content:""; position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--accent); }
-.lit-cal-cell.selected { background:var(--accent); color:#fff; }
-.lit-cal-cell.selected.has-reminder::after { background:#fff; }
-.lit-cal-footer { display:none; }
-.lit-reminder-form-hint { font-size:11px; color:var(--muted); padding:2px 4px; }
-.lit-reminder-form-hint b { color:var(--text); font-weight:600; }
-.lit-reminder-form-default { display:flex; padding-bottom:4px; }
-.lit-reminder-form-default .btn { flex:1; padding:8px 10px; font-weight:600; }
 .lit-tl-add { width:26px; height:26px; border:1px solid var(--border); border-radius:50%; background:var(--card-bg-solid); color:var(--text); cursor:pointer; font-size:17px !important; line-height:22px; }
 .lit-tl-add:hover { border-color:var(--accent); color:var(--accent); }
 .lit-inline-add { display:block; width:22px; height:22px; margin-top:5px; font-size:15px !important; line-height:18px; color:var(--muted); }
@@ -7951,13 +7941,6 @@ input, select, textarea, button, [contenteditable] {
     background: color-mix(in srgb, var(--red) 12%, transparent);
     border-color: color-mix(in srgb, var(--red) 40%, transparent);
     color: var(--red);
-  }
-  .lit-mob-line-date-input {
-    position: absolute;
-    opacity: 0;
-    width: 1px;
-    height: 1px;
-    pointer-events: none;
   }
   .lit-mob-todos {
     display: flex;
@@ -23732,7 +23715,7 @@ function positionDatePopover(popover, buttonEl) {
 }
 
 function closeDatePopover() {
-  document.querySelectorAll('.date-popover').forEach(p => p.remove());
+  document.querySelectorAll('.date-popover').forEach(p => { p._cleanup?.(); p.remove(); });
   document.removeEventListener('mousedown', closeDatePopoverOnOutside, true);
   document.removeEventListener('keydown', closeDatePopoverOnEsc, true);
 }
@@ -23869,6 +23852,8 @@ function renderLitigation() {
   if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
     return renderLitigationMobile();
   }
+  const mobileList = document.getElementById('litigationMobileList');
+  if (mobileList) mobileList.hidden = true;
   const body = document.getElementById('litigationTableBody');
   const empty = document.getElementById('litigationEmpty');
   if (!body) return;
@@ -23890,14 +23875,17 @@ function renderLitigation() {
       // v5.175: 顺序 × · 手柄 · 铃铛 · 日期 · 事件 · 加号 · 待办(日期标签/勾选/内容)
       const bellInfo = bellBadgeMap.get(line.id) || { count: 0, hasActive: false };
       const bellBtn = `<button class="lit-bell" type="button" data-action="lit-bell" title="设置提醒${bellInfo.count > 0 ? ` · 已设 ${bellInfo.count} 条` : ''}" aria-label="设置提醒">🔔</button>`;
-      return `<div class="lit-timeline-item" data-timeline-id="${escapeHtml(line.id)}"><div class="lit-line-leading"><button class="lit-tl-remove" type="button" title="删除时间线">×</button><button class="lit-drag-handle" type="button" title="拖动排序" aria-label="拖动时间线排序">⠿</button>${bellBtn}</div><div class="lit-progress-side"><input class="lit-tl-date" type="date" value="${escapeHtml(line.date || '')}" aria-label="时间线日期"><textarea class="lit-tl-text" rows="1" placeholder="诉讼进展" aria-label="诉讼进展">${escapeHtml(line.text || '')}</textarea></div><button class="lit-todo-add" type="button" title="添加待办" aria-label="添加待办">+</button><div class="lit-todos-box"><div class="lit-todo-list">${todos}</div></div></div>`;
+      return `<div class="lit-timeline-item" data-timeline-id="${escapeHtml(line.id)}"><div class="lit-line-leading"><button class="lit-tl-remove" type="button" title="删除时间线">×</button><button class="lit-drag-handle" type="button" title="拖动排序" aria-label="拖动时间线排序">⠿</button>${bellBtn}</div><div class="lit-progress-side"><button class="lit-tl-date" type="button" data-action="lit-line-date" aria-label="事项日期：${escapeHtml(line.date || '未设置')}" aria-haspopup="dialog">${escapeHtml(line.date || '设置日期')}</button><textarea class="lit-tl-text" rows="1" placeholder="诉讼进展" aria-label="诉讼进展">${escapeHtml(line.text || '')}</textarea></div><button class="lit-todo-add" type="button" title="添加待办" aria-label="添加待办">+</button><div class="lit-todos-box"><div class="lit-todo-list">${todos}</div></div></div>`;
     }).join('');
     const mainRow = `<tr class="lit-case-main" data-record-id="${escapeHtml(record.id)}">${LIT_FIELDS.map(([field,label,cls]) => {
     const value = String(record[field] || '');
     const timelineTools = field === 'caseName' ? '<div class="lit-case-timeline-tools"><button class="lit-tl-add lit-inline-add" type="button" title="新增时间线" aria-label="新增时间线">+</button><button class="lit-timeline-sort" type="button" data-action="lit-sort-timeline" title="将当前案件的时间线按日期从早到晚排列" aria-label="按日期从早到晚整理时间线"><span aria-hidden="true">⇅</span> 一键整理</button></div>' : '';
-    return `<td class="${cls}" data-field="${field}" data-label="${label}" tabindex="0">${value ? escapeHtml(value) : '<span class="lit-cell-empty">点击填写</span>'}${timelineTools}</td>`;
+    const content = field === 'caseName'
+      ? `<div class="lit-case-name-row"><button type="button" class="lit-case-toggle" data-action="lit-case-toggle" aria-expanded="${isLitCaseExpanded(record.id)}" aria-controls="lit-timeline-${escapeHtml(record.id)}"><span class="lit-case-chevron" aria-hidden="true">▾</span><span>${escapeHtml(value || '未命名案件')}</span></button><button class="lit-case-edit" type="button" data-action="lit-case-edit" aria-label="编辑案件名称">编辑</button></div>`
+      : (value ? escapeHtml(value) : '<span class="lit-cell-empty">点击填写</span>');
+    return `<td class="${cls}" data-field="${field}" data-label="${label}"${field === 'caseName' ? '' : ' tabindex="0"'}>${content}${timelineTools}</td>`;
   }).join('')}<td class="lit-actions" data-label="操作"><div class="lit-case-actions"><button class="lit-case-drag" type="button" title="拖动调整案件顺序" aria-label="拖动调整案件顺序">⠿</button><button class="lit-delete" type="button" data-delete-lit="${escapeHtml(record.id)}" title="删除记录" aria-label="删除记录">×</button></div></td></tr>`;
-    const timelineRow = `<tr class="lit-timeline-tr" data-record-id="${escapeHtml(record.id)}"><td class="lit-timeline-row" colspan="6"><div class="lit-timeline-wrap"><div class="lit-timeline-list">${timeline || ''}</div></div></td></tr>`;
+    const timelineRow = `<tr class="lit-timeline-tr" id="lit-timeline-${escapeHtml(record.id)}" data-record-id="${escapeHtml(record.id)}" ${isLitCaseExpanded(record.id) ? '' : 'hidden'}><td class="lit-timeline-row" colspan="6"><div class="lit-timeline-wrap"><div class="lit-timeline-list">${timeline || ''}</div></div></td></tr>`;
     return mainRow + timelineRow + '<tr class="lit-case-spacer" aria-hidden="true"><td colspan="6"></td></tr>';
   }).join('');
   // v3.0: 渲染完后让所有诉讼 textarea 撑高到内容高度
@@ -23951,8 +23939,8 @@ function renderLitMobileCard(record, bellBadgeMap) {
     : '';
 
   const head = `
-    <button class="lit-mob-card-head" type="button" data-action="lit-mob-toggle" data-record-id="${escapeHtml(record.id)}" aria-expanded="false">
-      <div class="lit-mob-card-title">${record.caseName ? escapeHtml(record.caseName) : '<em>未命名案件（点击编辑）</em>'}</div>
+    <button class="lit-mob-card-head" type="button" data-action="lit-mob-toggle" data-record-id="${escapeHtml(record.id)}" aria-expanded="${isLitCaseExpanded(record.id)}">
+      <div class="lit-mob-card-title">${record.caseName ? escapeHtml(record.caseName) : '<em>未命名案件</em>'}</div>
       <div class="lit-mob-card-meta">
         ${record.caseNumber ? `<span>📋 ${escapeHtml(record.caseNumber)}</span>` : ''}
         ${record.court ? `<span>🏛 ${escapeHtml(record.court)}</span>` : ''}
@@ -24002,7 +23990,7 @@ function renderLitMobileCard(record, bellBadgeMap) {
   `;
 
   const detail = `
-    <div class="lit-mob-card-detail" data-detail-for="${escapeHtml(record.id)}" hidden>
+    <div class="lit-mob-card-detail" data-detail-for="${escapeHtml(record.id)}" ${isLitCaseExpanded(record.id) ? '' : 'hidden'}>
       ${fieldsHtml}
       <div class="lit-mob-section-title">
         <span>时间线</span>
@@ -24021,7 +24009,17 @@ function renderLitMobileCard(record, bellBadgeMap) {
     </div>
   `;
 
-  return `<div class="lit-mob-card" data-record-id="${escapeHtml(record.id)}">${head}${detail}</div>`;
+  return `<div class="lit-mob-card ${isLitCaseExpanded(record.id) ? 'expanded' : ''}" data-record-id="${escapeHtml(record.id)}">${head}<button class="lit-case-edit" type="button" data-action="lit-mob-edit-name" data-record-id="${escapeHtml(record.id)}">编辑名称</button>${detail}</div>`;
+}
+
+// 刷新折叠摘要，不重建正在交互的日期按钮或输入框。
+function refreshLitMobileSummary(record) {
+  const card = document.querySelector(`#litigationMobileList [data-record-id="${CSS.escape(record.id)}"]`);
+  const head = card?.querySelector('.lit-mob-card-head');
+  if (!head) return;
+  const template = document.createElement('template');
+  template.innerHTML = renderLitMobileCard(record, computeLitigationBellBadges());
+  head.replaceWith(template.content.querySelector('.lit-mob-card-head'));
 }
 
 function renderLitMobileLine(record, line, bellBadgeMap) {
@@ -24050,8 +24048,7 @@ function renderLitMobileLine(record, line, bellBadgeMap) {
     <div class="lit-mob-timeline-item" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}">
       <div class="lit-mob-progress-row">
         <textarea class="lit-mob-line-text" rows="1" placeholder="案件进程" data-line-id="${escapeHtml(line.id)}" data-field="text" aria-label="案件进程">${escapeHtml(line.text || '')}</textarea>
-        <button type="button" class="lit-mob-cal-btn ${hasLineDate ? 'has-date' : ''}" data-action="lit-mob-line-date" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}" title="${escapeHtml(line.date || '设置日期')}" aria-label="设置进程日期">${calSvg}</button>
-        <input class="lit-mob-line-date-input" type="date" value="${escapeHtml(line.date || '')}" data-line-id="${escapeHtml(line.id)}" data-field="date" aria-label="进展日期" tabindex="-1">
+        <button type="button" class="lit-mob-cal-btn ${hasLineDate ? 'has-date' : ''}" data-action="lit-mob-line-date" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}" title="${escapeHtml(line.date || '设置日期')}" aria-label="事项日期：${escapeHtml(line.date || '未设置')}" aria-haspopup="dialog">${calSvg}</button>
         <button class="lit-mob-bell-btn ${bellInfo.count > 0 ? 'has-reminders' : ''}" type="button" data-action="lit-mob-bell" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}" title="设置提醒${bellInfo.count > 0 ? ' · 已设 ' + bellInfo.count + ' 条' : ''}" aria-label="设置提醒">🔔${bellInfo.count > 0 ? ' ' + bellInfo.count : ''}</button>
       </div>
       <div class="lit-mob-todos">${todosHtml}</div>
@@ -24061,17 +24058,64 @@ function renderLitMobileLine(record, line, bellBadgeMap) {
 }
 
 // 3.1.1 移动端诉讼事件委托 + 工具函数
-const LIT_MOB_EXPANDED_KEY = 'kanban_lit_mob_expanded_v31';
-function getLitMobExpandedIds() {
+const LIT_CASE_EXPANSION_KEY = 'kanban_lit_case_expansion_v1';
+let litCaseExpansion = null;
+function getLitCaseExpansion() {
+  if (litCaseExpansion) return litCaseExpansion;
+  litCaseExpansion = Object.create(null);
   try {
-    const raw = localStorage.getItem(LIT_MOB_EXPANDED_KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    return new Set(Array.isArray(arr) ? arr : []);
-  } catch { return new Set(); }
+    const saved = JSON.parse(localStorage.getItem(LIT_CASE_EXPANSION_KEY) || 'null');
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      for (const [id, expanded] of Object.entries(saved)) {
+        if (typeof expanded === 'boolean') litCaseExpansion[id] = expanded;
+      }
+    } else {
+      // 保留旧手机端已记录的展开/折叠选择，不修改业务数据。
+      const legacy = JSON.parse(localStorage.getItem('kanban_lit_mob_expanded_v31') || 'null');
+      if (Array.isArray(legacy)) {
+        for (const record of store.litigationRecords || []) litCaseExpansion[record.id] = legacy.includes(record.id);
+        localStorage.setItem(LIT_CASE_EXPANSION_KEY, JSON.stringify(litCaseExpansion));
+      }
+    }
+  } catch {}
+  return litCaseExpansion;
 }
-function setLitMobExpandedIds(set) {
-  try { localStorage.setItem(LIT_MOB_EXPANDED_KEY, JSON.stringify(Array.from(set))); } catch {}
+function isLitCaseExpanded(id) {
+  const states = getLitCaseExpansion();
+  return typeof states[id] === 'boolean' ? states[id] : !window.matchMedia('(max-width: 767px)').matches;
 }
+function setLitCaseExpanded(id, expanded) {
+  getLitCaseExpansion()[id] = expanded;
+  try { localStorage.setItem(LIT_CASE_EXPANSION_KEY, JSON.stringify(litCaseExpansion)); } catch {}
+}
+function syncLitCaseExpansion() {
+  document.querySelectorAll('.lit-case-toggle').forEach(button => {
+    const id = button.closest('[data-record-id]').dataset.recordId;
+    const expanded = isLitCaseExpanded(id);
+    button.setAttribute('aria-expanded', String(expanded));
+    const detail = document.getElementById(button.getAttribute('aria-controls'));
+    if (detail) detail.hidden = !expanded;
+  });
+  document.querySelectorAll('.lit-mob-card').forEach(card => {
+    const expanded = isLitCaseExpanded(card.dataset.recordId);
+    card.classList.toggle('expanded', expanded);
+    card.querySelector('.lit-mob-card-head')?.setAttribute('aria-expanded', String(expanded));
+    const detail = card.querySelector('.lit-mob-card-detail');
+    if (detail) detail.hidden = !expanded;
+  });
+  document.querySelectorAll('.lit-tl-text, .lit-todo-text, .lit-mob-line-text, .lit-mob-todo-text').forEach(el => {
+    if (el.getClientRects().length) autoGrowTextarea(el);
+  });
+}
+window.addEventListener('storage', e => {
+  if (e.key === LIT_CASE_EXPANSION_KEY || e.key === null) {
+    litCaseExpansion = null;
+    syncLitCaseExpansion();
+  }
+});
+window.matchMedia('(max-width: 767px)').addEventListener('change', () => {
+  if (currentView === 'litigation') { closeDatePopover(); renderLitigation(); }
+});
 
 // 3.1.1: 计时器面板"小闹钟"按钮 — 按了直接开始正向计时
 // 关联到计时器面板里已选的任务;未选任务时, 弹 toast 提示
@@ -24151,26 +24195,6 @@ function bindLitigationMobileEvents() {
   const root = document.getElementById('litigationMobileList');
   if (!root) return;
 
-  // 进入诉讼视图时, 恢复折叠状态
-  function syncExpandedStates() {
-    const expanded = getLitMobExpandedIds();
-    root.querySelectorAll('.lit-mob-card').forEach(card => {
-      const id = card.dataset.recordId;
-      const detail = card.querySelector('.lit-mob-card-detail');
-      const head = card.querySelector('.lit-mob-card-head');
-      if (!detail || !head) return;
-      const isExp = expanded.has(id);
-      detail.hidden = !isExp;
-      card.classList.toggle('expanded', isExp);
-      head.setAttribute('aria-expanded', isExp ? 'true' : 'false');
-    });
-  }
-
-  // 每次渲染后恢复
-  const observer = new MutationObserver(() => syncExpandedStates());
-  observer.observe(root, { childList: true, subtree: true });
-  syncExpandedStates();
-
   // 事件委托
   root.addEventListener('click', e => {
     const actionEl = e.target.closest('[data-action]');
@@ -24192,16 +24216,19 @@ function bindLitigationMobileEvents() {
         break;
       }
       case 'lit-mob-toggle': {
-        const expanded = getLitMobExpandedIds();
+        setLitCaseExpanded(recordId, !isLitCaseExpanded(recordId));
+        syncLitCaseExpansion();
+        break;
+      }
+      case 'lit-mob-edit-name': {
+        setLitCaseExpanded(recordId, true);
+        syncLitCaseExpansion();
         const card = actionEl.closest('.lit-mob-card');
-        const detail = card?.querySelector('.lit-mob-card-detail');
-        if (!card || !detail) return;
-        const isExp = !expanded.has(recordId);
-        if (isExp) expanded.add(recordId); else expanded.delete(recordId);
-        setLitMobExpandedIds(expanded);
-        detail.hidden = !isExp;
-        card.classList.toggle('expanded', isExp);
-        actionEl.setAttribute('aria-expanded', isExp ? 'true' : 'false');
+        const fields = card.querySelector('.lit-mob-fields-toggle');
+        fields.classList.add('expanded');
+        fields.querySelector('.lit-mob-fields-body').hidden = false;
+        fields.querySelector('.lit-mob-fields-trigger').setAttribute('aria-expanded', 'true');
+        card.querySelector('input[data-field="caseName"]').focus();
         break;
       }
       case 'lit-mob-add-line': {
@@ -24244,18 +24271,7 @@ function bindLitigationMobileEvents() {
         break;
       }
       case 'lit-mob-line-date': {
-        // 点日历图标 → 打开隐藏的 date input
-        const item = actionEl.closest('.lit-mob-timeline-item');
-        const dateInput = item?.querySelector('.lit-mob-line-date-input');
-        if (dateInput) {
-          try {
-            if (typeof dateInput.showPicker === 'function') dateInput.showPicker();
-            else { dateInput.style.pointerEvents = 'auto'; dateInput.focus(); dateInput.click(); }
-          } catch (_) {
-            dateInput.style.pointerEvents = 'auto';
-            dateInput.click();
-          }
-        }
+        openLitigationDatePopover(lineId, actionEl);
         break;
       }
       case 'lit-mob-todo-date': {
@@ -24303,9 +24319,6 @@ function bindLitigationMobileEvents() {
         if (Array.isArray(store.litigationReminders)) {
           store.litigationReminders = store.litigationReminders.filter(r => r.recordId !== recordId);
         }
-        const expanded = getLitMobExpandedIds();
-        expanded.delete(recordId);
-        setLitMobExpandedIds(expanded);
         save({ immediate: true });
         renderLitigation();
         break;
@@ -24320,6 +24333,10 @@ function bindLitigationMobileEvents() {
         break;
       }
     }
+  });
+
+  root.addEventListener('change', e => {
+    if (e.target.matches('input[data-field="caseName"]')) save({ immediate:true });
   });
 
   // 字段输入(input/textarea/select) - 实时保存
@@ -24345,7 +24362,7 @@ function bindLitigationMobileEvents() {
           const metaEl = card?.querySelector('.lit-mob-card-meta');
           if (titleEl && field === 'caseName') {
             titleEl.textContent = el.value || '';
-            if (!el.value) titleEl.innerHTML = '<em>未命名案件（点击编辑）</em>';
+            if (!el.value) titleEl.innerHTML = '<em>未命名案件</em>';
           }
           if (metaEl && (field === 'caseNumber' || field === 'court')) {
             // 重建 meta
@@ -24540,147 +24557,146 @@ function showLitigationReminderNotice(reminder) {
   host.appendChild(notice);
 }
 
-// v3.0: 打开/关闭诉讼提醒 modal
-// v3.0: 小日历 — 渲染一个月的日期网格,row-date 高亮,有提醒的日期加小点
-function buildLitMiniCalendar(viewDate, rowDateStr, reminderDateSet) {
-  const year = viewDate.getFullYear();
-  const month = viewDate.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const startDayOfWeek = firstDay.getDay(); // 0=Sun
-  // 用 周一开头
-  const offset = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const prevMonthDays = new Date(year, month, 0).getDate();
-  const todayStr = localDateStr(new Date());
-  const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  const dayLabels = ['一','二','三','四','五','六','日'];
-  let cells = '';
-  // 上月末尾几天
-  for (let i = offset; i > 0; i--) {
-    const d = prevMonthDays - i + 1;
-    cells += `<button class="lit-cal-cell other-month" type="button" data-cal-date="${localDateStr(new Date(year, month - 1, d))}">${d}</button>`;
-  }
-  // 本月
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day);
-    const dateStr = localDateStr(date);
-    const classes = ['lit-cal-cell'];
-    if (dateStr === todayStr) classes.push('today');
-    if (dateStr === rowDateStr) classes.push('row-date');
-    if (reminderDateSet && reminderDateSet.has(dateStr)) classes.push('has-reminder', 'selected');
-    cells += `<button class="${classes.join(' ')}" type="button" data-cal-date="${dateStr}">${day}</button>`;
-  }
-  // 下月开头几天凑满 6 行(42 格)或 5 行(35 格)
-  const totalCells = offset + daysInMonth;
-  const rows = totalCells <= 35 ? 35 : 42;
-  let nextDay = 1;
-  for (let i = totalCells; i < rows; i++) {
-    cells += `<button class="lit-cal-cell other-month" type="button" data-cal-date="${localDateStr(new Date(year, month + 1, nextDay))}">${nextDay}</button>`;
-    nextDay++;
-  }
-  return `
-    <div class="lit-cal-header">
-      <button type="button" data-cal-nav="prev" aria-label="上个月">‹</button>
-      <span>${year} 年 ${monthNames[month]}</span>
-      <button type="button" data-cal-nav="next" aria-label="下个月">›</button>
-    </div>
-    <div class="lit-cal-grid">
-      ${dayLabels.map(d => `<div class="lit-cal-daylabel">${d}</div>`).join('')}
-      ${cells}
-    </div>
-  `;
+// 单日期与多提醒共用全局日历样式，日期计算始终使用本地年月日。
+function litigationCalendarDates(year, month) {
+  const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+  const count = Math.ceil((offset + new Date(year, month + 1, 0).getDate()) / 7) * 7;
+  return Array.from({ length:count }, (_, i) => new Date(year, month, i - offset + 1));
 }
-
-function openLitigationReminderModal(timelineId, anchorEl) {
-  closeLitigationReminderModal();
-  const found = findLitigationTimelineById(timelineId);
-  const line = found?.line;
-  const record = found?.record;
-  const rowDateStr = String(line?.date || '').slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(rowDateStr)) {
-    showToast('请先填写这一行最左侧的事项日期');
-    return;
-  }
-  const rowDate = new Date(rowDateStr + 'T00:00:00');
-  const defaultMessage = (line?.text || '').trim() || (record?.caseName || '诉讼提醒');
-  // 已有提醒(用于显示小点)
-  const existing = (store.litigationReminders || []).filter(r => r.timelineId === timelineId && !r.dismissedAt);
-  const reminderDateSet = new Set(existing.map(r => (r.targetDate || '').slice(0, 10)));
-  const initialView = rowDate;
-  const prev7 = new Date(rowDate); prev7.setDate(prev7.getDate() - 7);
-  const prev3 = new Date(rowDate); prev3.setDate(prev3.getDate() - 3);
-  const prev1 = new Date(rowDate); prev1.setDate(prev1.getDate() - 1);
-  const prev7Str = localDateStr(prev7);
-  const prev3Str = localDateStr(prev3);
-  const prev1Str = localDateStr(prev1);
-  const modal = document.createElement('div');
-  modal.className = 'lit-reminder-modal';
-  modal.innerHTML = `
-    <div class="lit-reminder-content">
-      <div class="lit-cal-top">
-        <div class="lit-cal-time">设置提醒<span class="lit-cal-count">${existing.length > 0 ? `· 已设 ${existing.length} 个日期` : ''}</span></div>
-        <button class="lit-cal-prev7 ${reminderDateSet.has(prev7Str) ? 'active' : ''}" type="button" data-cal-date-toggle="${prev7Str}" title="在 ${prev7Str} 提醒">前一周</button>
-        <button class="lit-cal-prev3 ${reminderDateSet.has(prev3Str) ? 'active' : ''}" type="button" data-cal-date-toggle="${prev3Str}" title="在 ${prev3Str} 提醒">前三天</button>
-        <button class="lit-cal-prev1 ${reminderDateSet.has(prev1Str) ? 'active' : ''}" type="button" data-cal-date-toggle="${prev1Str}" title="在 ${prev1Str} 提醒">前一天</button>
-        <div class="lit-cal-event-date">事项日期：${escapeHtml(rowDateStr)}</div>
-      </div>
-      <div class="lit-cal" data-row-date="${escapeHtml(rowDateStr)}" data-view-date="${escapeHtml(localDateStr(initialView))}">
-        ${buildLitMiniCalendar(initialView, rowDateStr, reminderDateSet)}
-      </div>
+function openLitigationCalendar({ anchorEl, title, initialDate, selectedDates, eventDate = '', shortcuts, onPick, multiple = false }) {
+  closeDatePopover();
+  const initial = new Date((initialDate || today()) + 'T00:00:00');
+  let view = new Date(initial.getFullYear(), initial.getMonth(), 1);
+  const popover = document.createElement('div');
+  popover.className = 'date-popover lit-calendar-popover' + (multiple ? ' lit-reminder-modal' : '');
+  popover.setAttribute('role', 'dialog');
+  popover.setAttribute('aria-label', title);
+  popover.innerHTML = `
+    <div class="date-popover-panel-title">${escapeHtml(title)}</div>
+    <div class="date-popover-quick-top">${shortcuts.map((item, i) => `<button type="button" data-shortcut="${i}"${item.date === '' ? ' data-action="lit-clear"' : ''}>${escapeHtml(item.label)}</button>`).join('')}</div>
+    <div class="date-popover-header">
+      <button type="button" data-month="-1" aria-label="上个月">‹</button>
+      <span class="month-label" aria-live="polite"></span>
+      <button type="button" data-month="1" aria-label="下个月">›</button>
     </div>
+    <div class="date-popover-weekdays">${['一','二','三','四','五','六','日'].map(day => `<div>${day}</div>`).join('')}</div>
+    <div class="date-popover-days"></div>
+    ${multiple ? `<div class="lit-calendar-caption" aria-live="polite"></div>` : ''}
   `;
-  document.body.appendChild(modal);
-  positionLitigationReminderPopover(modal, anchorEl);
-  const outsideHandler = e => {
-    if (!modal.contains(e.target) && !anchorEl?.contains(e.target)) closeLitigationReminderModal();
-  };
-  modal._outsideHandler = outsideHandler;
-  setTimeout(() => document.addEventListener('pointerdown', outsideHandler), 0);
-  // 整个 lit-cal 区域事件代理
-  const calEl = modal.querySelector('.lit-cal');
-  calEl.addEventListener('click', e => {
-    // 月份导航
-    const navBtn = e.target.closest('[data-cal-nav]');
-    if (navBtn) {
-      const viewStr = calEl.dataset.viewDate;
-      const view = new Date(viewStr + 'T00:00:00');
-      view.setMonth(view.getMonth() + (navBtn.dataset.calNav === 'prev' ? -1 : 1));
-      calEl.dataset.viewDate = localDateStr(view);
-      calEl.innerHTML = buildLitMiniCalendar(view, calEl.dataset.rowDate, reminderDateSet);
-      return;
+  const days = popover.querySelector('.date-popover-days');
+  function renderDays() {
+    popover.querySelector('.month-label').textContent = `${view.getFullYear()} 年 ${view.getMonth() + 1} 月`;
+    days.innerHTML = litigationCalendarDates(view.getFullYear(), view.getMonth()).map(date => {
+      const value = localDateStr(date);
+      const selected = selectedDates.has(value);
+      return `<button type="button" class="date-popover-day${date.getMonth() !== view.getMonth() ? ' other-month' : ''}${value === today() ? ' today' : ''}${value === eventDate ? ' event-date' : ''}${selected ? ' selected' : ''}" data-date="${value}" aria-label="${value}${value === eventDate ? '，事项日期' : ''}" aria-pressed="${selected}"${value === today() ? ' aria-current="date"' : ''}>${date.getDate()}</button>`;
+    }).join('');
+    if (multiple) {
+      popover.querySelector('.lit-calendar-caption').textContent = `事项日期：${eventDate} · 已选 ${selectedDates.size} 个提醒日期。再次点击可取消。`;
+      popover.querySelectorAll('[data-shortcut]').forEach(button => {
+        button.setAttribute('aria-pressed', String(selectedDates.has(shortcuts[Number(button.dataset.shortcut)].date)));
+      });
     }
-    // 选中日期
-    const cell = e.target.closest('.lit-cal-cell');
-    if (!cell || cell.classList.contains('empty')) return;
-    const dateStr = cell.dataset.calDate;
-    if (!dateStr) return;
-    toggleLitigationReminder(timelineId, dateStr, defaultMessage, rowDateStr);
-    openLitigationReminderModal(timelineId, anchorEl);
+  }
+  function reposition() {
+    if (!anchorEl.isConnected || !anchorEl.getClientRects().length) { closeDatePopover(); return; }
+    positionDatePopover(popover, anchorEl);
+  }
+  function pick(value) {
+    onPick(value);
+    if (!multiple) { closeDatePopover(); anchorEl.focus({ preventScroll:true }); return; }
+    if (selectedDates.has(value)) selectedDates.delete(value); else selectedDates.add(value);
+    renderDays();
+    reposition();
+    days.querySelector(`[data-date="${value}"]`)?.focus({ preventScroll:true });
+  }
+  popover.addEventListener('click', e => {
+    const button = e.target.closest('button');
+    if (!button) return;
+    e.stopPropagation();
+    if (button.dataset.month) {
+      // 从月初计算，避免 1 月 31 日 + 一个月滚入 3 月。
+      view = new Date(view.getFullYear(), view.getMonth() + Number(button.dataset.month), 1);
+      renderDays(); reposition();
+    } else if (button.dataset.date) pick(button.dataset.date);
+    else if (button.dataset.shortcut !== undefined) pick(shortcuts[Number(button.dataset.shortcut)].date);
   });
-  // 前一周 / 前三天 / 前一天
-  modal.querySelectorAll('[data-cal-date-toggle]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      toggleLitigationReminder(timelineId, btn.dataset.calDateToggle, defaultMessage, rowDateStr);
-      openLitigationReminderModal(timelineId, anchorEl);
-    });
+  const outside = e => { if (!popover.contains(e.target) && !anchorEl.contains(e.target)) closeDatePopover(); };
+  const keydown = e => {
+    if (e.key === 'Escape') {
+      e.preventDefault(); e.stopPropagation();
+      closeDatePopover(); anchorEl.focus({ preventScroll:true });
+    }
+  };
+  const scroll = e => { if (!popover.contains(e.target)) reposition(); };
+  popover._cleanup = () => {
+    document.removeEventListener('pointerdown', outside, true);
+    document.removeEventListener('keydown', keydown, true);
+    window.removeEventListener('resize', reposition);
+    document.removeEventListener('scroll', scroll, true);
+    window.visualViewport?.removeEventListener('resize', reposition);
+    anchorEl.setAttribute('aria-expanded', 'false');
+  };
+  renderDays();
+  document.body.appendChild(popover);
+  anchorEl.setAttribute('aria-expanded', 'true');
+  reposition();
+  document.addEventListener('pointerdown', outside, true);
+  document.addEventListener('keydown', keydown, true);
+  window.addEventListener('resize', reposition);
+  document.addEventListener('scroll', scroll, true);
+  window.visualViewport?.addEventListener('resize', reposition);
+  (days.querySelector('.selected') || days.querySelector('.today') || days.querySelector('button:not(.other-month)'))?.focus({ preventScroll:true });
+}
+function openLitigationDatePopover(timelineId, anchorEl) {
+  const found = findLitigationTimelineById(timelineId);
+  if (!found) return;
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  openLitigationCalendar({
+    anchorEl, title:'事项日期', initialDate:found.line.date,
+    selectedDates:new Set(found.line.date ? [found.line.date] : []),
+    shortcuts:[{ label:'今天', date:today() }, { label:'明天', date:localDateStr(tomorrow) }, { label:'清除', date:'' }],
+    onPick: value => {
+      if (value !== (found.line.date || '')) {
+        pushHistory(); found.line.date = value; found.record.updatedAt = Date.now(); save({ immediate:true });
+      }
+      anchorEl.setAttribute('aria-label', '事项日期：' + (value || '未设置'));
+      anchorEl.title = value || '设置日期';
+      if (anchorEl.classList.contains('lit-tl-date')) anchorEl.textContent = value || '设置日期';
+      else { anchorEl.classList.toggle('has-date', !!value); refreshLitMobileSummary(found.record); }
+    }
+  });
+}
+function openLitigationReminderModal(timelineId, anchorEl) {
+  const found = findLitigationTimelineById(timelineId);
+  const rowDateStr = String(found?.line?.date || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(rowDateStr)) { showToast('请先设置事项日期'); return; }
+  const existing = (store.litigationReminders || []).filter(r => r.timelineId === timelineId && !r.dismissedAt);
+  const message = (found.line.text || '').trim() || found.record.caseName || '诉讼提醒';
+  openLitigationCalendar({
+    anchorEl, title:'设置提醒', initialDate:rowDateStr, eventDate:rowDateStr, multiple:true,
+    selectedDates:new Set(existing.map(r => String(r.targetDate).slice(0, 10))),
+    shortcuts:[['前一周', 7], ['前三天', 3], ['前一天', 1]].map(([label, offset]) => {
+      const date = new Date(rowDateStr + 'T00:00:00'); date.setDate(date.getDate() - offset);
+      return { label, date:localDateStr(date) };
+    }),
+    onPick: value => {
+      toggleLitigationReminder(timelineId, value, message, rowDateStr);
+      const count = (store.litigationReminders || []).filter(r => r.timelineId === timelineId && !r.dismissedAt).length;
+      anchorEl.title = '设置提醒' + (count ? ` · 已设 ${count} 条` : '');
+      if (anchorEl.classList.contains('lit-mob-bell-btn')) {
+        anchorEl.classList.toggle('has-reminders', count > 0);
+        anchorEl.textContent = '🔔' + (count ? ' ' + count : '');
+        refreshLitMobileSummary(found.record);
+      }
+    }
   });
 }
 function closeLitigationReminderModal() {
   const modal = document.querySelector('.lit-reminder-modal');
-  if (!modal) return;
-  if (modal._outsideHandler) document.removeEventListener('pointerdown', modal._outsideHandler);
-  modal.remove();
+  if (modal) { modal._cleanup?.(); modal.remove(); }
 }
-function positionLitigationReminderPopover(modal, anchorEl) {
-  const anchor = anchorEl?.getBoundingClientRect();
-  if (!anchor) { modal.style.left = '10px'; modal.style.top = '10px'; return; }
-  const gap = 8;
-  const width = Math.min(350, window.innerWidth - 20);
-  let left = Math.min(window.innerWidth - width - 10, Math.max(10, anchor.right - width));
-  modal.style.left = `${left}px`;
-  modal.style.top = `${Math.min(window.innerHeight - modal.offsetHeight - 10, anchor.bottom + gap)}px`;
-  if (parseFloat(modal.style.top) < 10) modal.style.top = '10px';
-}
+
 function findLitigationTimelineById(timelineId) {
   if (!Array.isArray(store.litigationRecords)) return null;
   for (const r of store.litigationRecords) {
@@ -24847,6 +24863,17 @@ function beginLitigationEdit(cell) {
   cell.addEventListener('keydown', onKey);
 }
 document.getElementById('litigationTableBody')?.addEventListener('click', e => {
+  const caseToggle = e.target.closest('[data-action="lit-case-toggle"]');
+  if (caseToggle) {
+    const id = caseToggle.closest('[data-record-id]').dataset.recordId;
+    setLitCaseExpanded(id, !isLitCaseExpanded(id));
+    syncLitCaseExpansion();
+    return;
+  }
+  const caseEdit = e.target.closest('[data-action="lit-case-edit"]');
+  if (caseEdit) { beginLitigationEdit(caseEdit.closest('td[data-field]')); return; }
+  const lineDate = e.target.closest('[data-action="lit-line-date"]');
+  if (lineDate) { openLitigationDatePopover(lineDate.closest('[data-timeline-id]').dataset.timelineId, lineDate); return; }
   // v3.0: 铃铛点击 → 打开提醒 modal
   if (handleLitigationBellClick(e)) return;
   const timelineSort = e.target.closest('[data-action="lit-sort-timeline"]');
@@ -24863,6 +24890,7 @@ document.getElementById('litigationTableBody')?.addEventListener('click', e => {
       if (!Array.isArray(record.timeline)) record.timeline = [];
       pushHistory();
       record.timeline.push({ id:'tle_' + uid(), date:today(), text:'', todos:[] });
+      setLitCaseExpanded(record.id, true);
       record.updatedAt = Date.now(); save({ immediate:true }); renderLitigation();
       const inputs = document.querySelectorAll(`#litigationTableBody tr[data-record-id="${record.id}"] .lit-tl-text`);
       if (inputs.length) inputs[inputs.length - 1].focus();
@@ -24944,7 +24972,9 @@ document.getElementById('litigationTableBody')?.addEventListener('click', e => {
   }
   // 点到按钮/工具条时不进入字段编辑
   if (e.target.closest('button, a, input, textarea, select, .lit-case-timeline-tools, .lit-case-actions')) return;
-  beginLitigationEdit(e.target.closest('td[data-field]'));
+  const cell = e.target.closest('td[data-field]');
+  if (cell?.dataset.field === 'caseName' && !cell.isContentEditable) { cell.querySelector('.lit-case-toggle')?.click(); return; }
+  beginLitigationEdit(cell);
 });
 // v3.0: 诉讼 textarea 自动撑高(lit-tl-text / lit-todo-text)
 function autoGrowTextarea(el) {
@@ -24957,15 +24987,14 @@ document.getElementById('litigationTableBody')?.addEventListener('input', e => {
 });
 
 document.getElementById('litigationTableBody')?.addEventListener('change', e => {
-  if (!e.target.matches('.lit-tl-date, .lit-tl-text, .lit-todo-text, .lit-todo-check')) return;
+  if (!e.target.matches('.lit-tl-text, .lit-todo-text, .lit-todo-check')) return;
   const row = e.target.closest('[data-record-id]');
   const itemEl = e.target.closest('[data-timeline-id]');
   const record = litigationRecord(row?.dataset.recordId);
   const line = (record?.timeline || []).find(x => x.id === itemEl?.dataset.timelineId);
   if (!line) return;
   pushHistory();
-  if (e.target.classList.contains('lit-tl-date')) line.date = e.target.value;
-  else if (e.target.classList.contains('lit-tl-text')) line.text = e.target.value.trim();
+  if (e.target.classList.contains('lit-tl-text')) line.text = e.target.value.trim();
   else {
     const todoEl = e.target.closest('[data-todo-id]');
     const todo = (line.todos || []).find(x => x.id === todoEl?.dataset.todoId);
@@ -25101,14 +25130,13 @@ document.getElementById('litigationAdd')?.addEventListener('click', () => {
   store.litigationRecords.unshift(record); save({ immediate:true });
   // 3.1.1 移动端: 新建后默认展开, 滚动到新卡片, 让用户直接编辑案件名
   if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
-    const expanded = getLitMobExpandedIds();
-    expanded.add(record.id);
-    setLitMobExpandedIds(expanded);
+    setLitCaseExpanded(record.id, true);
     renderLitigation();
     setTimeout(() => {
       const card = document.querySelector(`#litigationMobileList .lit-mob-card[data-record-id="${record.id}"]`);
       if (card) {
         card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        card.querySelector('[data-action="lit-mob-edit-name"]')?.click();
         const nameInput = card.querySelector('input[data-field="caseName"]');
         if (nameInput) nameInput.focus();
       }
