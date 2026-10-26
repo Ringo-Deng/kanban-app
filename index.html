@@ -29873,68 +29873,12 @@ ${details.join('\n')}`;
     document.head.appendChild(link);
   }
 
-  // ---- 2) Service Worker(内联,Blob 注册) ----
-  // 3.1.1 修复 PWA 缓存旧 HTML 看不到更新的问题:
-  //  - SW_VERSION 每次部署都变(用 BUILD_HASH),触发旧缓存清理
-  //  - HTML/导航走 network-first(确保刷新立刻看到新版本)
-  //  - 静态资源走 cache-first(利用缓存提速)
-  //  - 离线时 fallback 到缓存
-  const BUILD_HASH = (document.querySelector('meta[name="build-hash"]')?.content) || ('dev-' + Date.now());
-  const SW_VERSION = 'kanban-shell-' + BUILD_HASH;
-  const SW_SOURCE = `
-const CACHE_NAME = '${SW_VERSION}';
-self.addEventListener('install', e => {
-  self.skipWaiting();
-});
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
-});
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  // 只处理同源 GET
-  if (url.origin !== self.location.origin) return;
-  // HTML / 导航请求: network-first(确保新版本立刻生效),离线 fallback 到缓存
-  const isHTML = req.mode === 'navigate' || req.destination === 'document' || (req.headers.get('accept') || '').includes('text/html');
-  if (isHTML) {
-    e.respondWith(
-      fetch(req).then(resp => {
-        if (resp && resp.status === 200) {
-          const copy = resp.clone();
-          caches.open(CACHE_NAME).then(c => c.put(req, copy));
-        }
-        return resp;
-      }).catch(() => caches.match(req).then(c => c || new Response('Offline', { status: 503 })))
-    );
-    return;
-  }
-  // 静态资源: cache-first(提速),失败走网络
-  e.respondWith(
-    caches.match(req).then(cached => {
-      if (cached) return cached;
-      return fetch(req).then(resp => {
-        if (resp && resp.status === 200) {
-          const copy = resp.clone();
-          caches.open(CACHE_NAME).then(c => c.put(req, copy));
-        }
-        return resp;
-      });
-    })
-  );
-});
-`;
+  // ---- 2) 使用可更新的同源 Service Worker；兼容旧版已注册的 ./sw.js ----
   let newSWWaiting = null;
   function registerSW() {
     if (!('serviceWorker' in navigator)) return;
     try {
-      const swBlob = new Blob([SW_SOURCE], { type: 'application/javascript' });
-      const swUrl = URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swUrl, { scope: './' })
+      navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' })
         .then(reg => {
           reg.addEventListener('updatefound', () => {
             const sw = reg.installing;
