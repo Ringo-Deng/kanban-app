@@ -6948,7 +6948,14 @@ body[data-view="litigation"] #vaultBtn { display: none; }
 .lit-calendar-popover .date-popover-quick-top button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#fff; }
 .lit-calendar-caption { color:var(--muted); font-size:11px; line-height:1.5; }
 .lit-calendar-popover button:focus-visible, .lit-case-toggle:focus-visible, .lit-case-edit:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-.lit-tl-date { cursor:pointer; text-align:left; font-variant-numeric:tabular-nums; }
+.lit-date-field { display:flex; align-items:center; gap:3px; min-width:0; }
+.lit-date-field .lit-tl-date { width:100%; min-width:0; cursor:text; text-align:left; font-variant-numeric:tabular-nums; }
+.lit-date-open { flex:0 0 22px; height:30px; padding:0; border:0; border-radius:6px; background:transparent; color:var(--muted); cursor:pointer; }
+.lit-date-open:hover { color:var(--accent); background:var(--task-bg); }
+.lit-calendar-input { display:flex; gap:6px; margin:0; }
+.lit-calendar-input input { flex:1; min-width:0; padding:6px 8px; border:1px solid var(--border); border-radius:7px; background:var(--card-bg); color:var(--text); font:inherit; font-size:16px; }
+.lit-calendar-input button { padding:6px 10px; border:1px solid var(--border); border-radius:7px; background:var(--card-bg); color:var(--text); font:inherit; cursor:pointer; }
+.lit-tl-date[aria-invalid="true"], .lit-calendar-input input:invalid { border-color:var(--red); }
 .lit-tl-date:hover { background:var(--task-bg); color:var(--accent); }
 .lit-case-name-row { display:flex; align-items:flex-start; gap:6px; }
 .lit-case-toggle { display:flex; align-items:baseline; gap:7px; flex:1; min-width:0; border:0; padding:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
@@ -23875,7 +23882,7 @@ function renderLitigation() {
       // v5.175: 顺序 × · 手柄 · 铃铛 · 日期 · 事件 · 加号 · 待办(日期标签/勾选/内容)
       const bellInfo = bellBadgeMap.get(line.id) || { count: 0, hasActive: false };
       const bellBtn = `<button class="lit-bell" type="button" data-action="lit-bell" title="设置提醒${bellInfo.count > 0 ? ` · 已设 ${bellInfo.count} 条` : ''}" aria-label="设置提醒">🔔</button>`;
-      return `<div class="lit-timeline-item" data-timeline-id="${escapeHtml(line.id)}"><div class="lit-line-leading"><button class="lit-tl-remove" type="button" title="删除时间线">×</button><button class="lit-drag-handle" type="button" title="拖动排序" aria-label="拖动时间线排序">⠿</button>${bellBtn}</div><div class="lit-progress-side"><button class="lit-tl-date" type="button" data-action="lit-line-date" aria-label="事项日期：${escapeHtml(line.date || '未设置')}" aria-haspopup="dialog">${escapeHtml(line.date || '设置日期')}</button><textarea class="lit-tl-text" rows="1" placeholder="诉讼进展" aria-label="诉讼进展">${escapeHtml(line.text || '')}</textarea></div><button class="lit-todo-add" type="button" title="添加待办" aria-label="添加待办">+</button><div class="lit-todos-box"><div class="lit-todo-list">${todos}</div></div></div>`;
+      return `<div class="lit-timeline-item" data-timeline-id="${escapeHtml(line.id)}"><div class="lit-line-leading"><button class="lit-tl-remove" type="button" title="删除时间线">×</button><button class="lit-drag-handle" type="button" title="拖动排序" aria-label="拖动时间线排序">⠿</button>${bellBtn}</div><div class="lit-progress-side"><span class="lit-date-field"><input class="lit-tl-date" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" aria-label="事项日期" value="${escapeHtml(line.date || '')}" title="直接输入日期，按回车或移开焦点保存"><button class="lit-date-open" type="button" data-action="lit-line-date" aria-label="打开事项日历" aria-haspopup="dialog"><span aria-hidden="true">▦</span></button></span><textarea class="lit-tl-text" rows="1" placeholder="诉讼进展" aria-label="诉讼进展">${escapeHtml(line.text || '')}</textarea></div><button class="lit-todo-add" type="button" title="添加待办" aria-label="添加待办">+</button><div class="lit-todos-box"><div class="lit-todo-list">${todos}</div></div></div>`;
     }).join('');
     const mainRow = `<tr class="lit-case-main" data-record-id="${escapeHtml(record.id)}">${LIT_FIELDS.map(([field,label,cls]) => {
     const value = String(record[field] || '');
@@ -24558,6 +24565,40 @@ function showLitigationReminderNotice(reminder) {
 }
 
 // 单日期与多提醒共用全局日历样式，日期计算始终使用本地年月日。
+function normalizeLitigationDateInput(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  const parts = text.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/) || text.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (!parts) return null;
+  const [, year, month, day] = parts;
+  const iso = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  const date = new Date(iso + 'T00:00:00');
+  if (+year < 100 || date.getFullYear() !== +year || date.getMonth() + 1 !== +month || date.getDate() !== +day) return null;
+  return iso;
+}
+function readLitigationDateInput(input) {
+  const value = normalizeLitigationDateInput(input.value);
+  input.setCustomValidity(value === null ? '请输入有效日期，例如 2026-10-26' : '');
+  input.setAttribute('aria-invalid', String(value === null));
+  if (value === null) input.reportValidity();
+  return value;
+}
+function saveLitigationDate(timelineId, value) {
+  const found = findLitigationTimelineById(timelineId);
+  if (!found) return;
+  if (value !== (found.line.date || '')) {
+    pushHistory(); found.line.date = value; found.record.updatedAt = Date.now(); save({ immediate:true });
+    refreshLitMobileSummary(found.record);
+  }
+}
+function commitLitigationDateInput(input) {
+  const value = readLitigationDateInput(input);
+  if (value === null) return false;
+  saveLitigationDate(input.closest('[data-timeline-id]').dataset.timelineId, value);
+  input.value = value;
+  return true;
+}
+
 function litigationCalendarDates(year, month) {
   const offset = (new Date(year, month, 1).getDay() + 6) % 7;
   const count = Math.ceil((offset + new Date(year, month + 1, 0).getDate()) / 7) * 7;
@@ -24573,6 +24614,7 @@ function openLitigationCalendar({ anchorEl, title, initialDate, selectedDates, e
   popover.setAttribute('aria-label', title);
   popover.innerHTML = `
     <div class="date-popover-panel-title">${escapeHtml(title)}</div>
+    ${!multiple ? `<form class="lit-calendar-input" novalidate><input type="text" inputmode="numeric" autocomplete="off" aria-label="输入事项日期" placeholder="YYYY-MM-DD" value="${escapeHtml(initialDate || '')}"><button type="submit">确定</button></form>` : ''}
     <div class="date-popover-quick-top">${shortcuts.map((item, i) => `<button type="button" data-shortcut="${i}"${item.date === '' ? ' data-action="lit-clear"' : ''}>${escapeHtml(item.label)}</button>`).join('')}</div>
     <div class="date-popover-header">
       <button type="button" data-month="-1" aria-label="上个月">‹</button>
@@ -24583,6 +24625,15 @@ function openLitigationCalendar({ anchorEl, title, initialDate, selectedDates, e
     <div class="date-popover-days"></div>
     ${multiple ? `<div class="lit-calendar-caption" aria-live="polite"></div>` : ''}
   `;
+  const entryForm = popover.querySelector('.lit-calendar-input');
+  entryForm?.addEventListener('submit', e => {
+    e.preventDefault();
+    const value = readLitigationDateInput(entryForm.querySelector('input'));
+    if (value !== null) pick(value);
+  });
+  entryForm?.addEventListener('input', e => {
+    e.target.setCustomValidity(''); e.target.removeAttribute('aria-invalid');
+  });
   const days = popover.querySelector('.date-popover-days');
   function renderDays() {
     popover.querySelector('.month-label').textContent = `${view.getFullYear()} 年 ${view.getMonth() + 1} 月`;
@@ -24657,13 +24708,15 @@ function openLitigationDatePopover(timelineId, anchorEl) {
     selectedDates:new Set(found.line.date ? [found.line.date] : []),
     shortcuts:[{ label:'今天', date:today() }, { label:'明天', date:localDateStr(tomorrow) }, { label:'清除', date:'' }],
     onPick: value => {
-      if (value !== (found.line.date || '')) {
-        pushHistory(); found.line.date = value; found.record.updatedAt = Date.now(); save({ immediate:true });
+      saveLitigationDate(timelineId, value);
+      const input = anchorEl.closest('.lit-date-field')?.querySelector('.lit-tl-date');
+      if (input) {
+        input.value = value; input.setCustomValidity(''); input.removeAttribute('aria-invalid');
+      } else {
+        anchorEl.setAttribute('aria-label', '事项日期：' + (value || '未设置'));
+        anchorEl.title = value || '设置日期';
+        anchorEl.classList.toggle('has-date', !!value);
       }
-      anchorEl.setAttribute('aria-label', '事项日期：' + (value || '未设置'));
-      anchorEl.title = value || '设置日期';
-      if (anchorEl.classList.contains('lit-tl-date')) anchorEl.textContent = value || '设置日期';
-      else { anchorEl.classList.toggle('has-date', !!value); refreshLitMobileSummary(found.record); }
     }
   });
 }
@@ -24983,10 +25036,12 @@ function autoGrowTextarea(el) {
   el.style.height = Math.min(el.scrollHeight, 200) + 'px';
 }
 document.getElementById('litigationTableBody')?.addEventListener('input', e => {
+  if (e.target.matches('.lit-tl-date')) { e.target.setCustomValidity(''); e.target.removeAttribute('aria-invalid'); }
   if (e.target.matches('.lit-tl-text, .lit-todo-text')) autoGrowTextarea(e.target);
 });
 
 document.getElementById('litigationTableBody')?.addEventListener('change', e => {
+  if (e.target.matches('.lit-tl-date')) { commitLitigationDateInput(e.target); return; }
   if (!e.target.matches('.lit-tl-text, .lit-todo-text, .lit-todo-check')) return;
   const row = e.target.closest('[data-record-id]');
   const itemEl = e.target.closest('[data-timeline-id]');
@@ -25027,6 +25082,9 @@ document.getElementById('litigationTableBody')?.addEventListener('change', e => 
   }
 });
 document.getElementById('litigationTableBody')?.addEventListener('keydown', e => {
+  if (e.target.matches('.lit-tl-date') && e.key === 'Enter') {
+    e.preventDefault(); if (commitLitigationDateInput(e.target)) e.target.blur(); return;
+  }
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('td[data-field]')) { e.preventDefault(); beginLitigationEdit(e.target); }
 });
 let litigationPointerDrag = null;
