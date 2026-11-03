@@ -6808,6 +6808,7 @@ body[data-view="litigation"] #vaultBtn { display: none; }
 /* v5.78: 诉讼「新增案件」统一用工具栏 #viewAddRecord（与其它视图同位置），隐藏旧的 header 侧 #litigationAdd */
 #litigationAdd { display: none !important; }
 .litigation { max-width: 1500px; margin: 0 auto; }
+.litigation-tools { display:flex; justify-content:flex-end; margin-bottom:8px; }
 .litigation-table-card { background:color-mix(in srgb, var(--card-bg-solid) 76%, transparent); border:1px solid color-mix(in srgb, var(--border) 78%, rgba(255,255,255,.45)); border-radius:16px; overflow:hidden; box-shadow:0 12px 34px rgba(28,45,36,.10), inset 0 1px 0 rgba(255,255,255,.38); backdrop-filter:blur(22px) saturate(145%); -webkit-backdrop-filter:blur(22px) saturate(145%); }
 .litigation-table { width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; color:var(--text); }
 .litigation-table th { padding:14px; text-align:left; color:var(--text); font-size:13px; font-weight:800; letter-spacing:.15px; background:color-mix(in srgb, var(--card-bg-solid) 82%, var(--accent) 18%); border-bottom:2px solid color-mix(in srgb, var(--accent) 58%, var(--border)); }
@@ -6888,7 +6889,18 @@ body[data-view="litigation"] #vaultBtn { display: none; }
 .lit-todos-box { min-height:30px; padding:0; min-width:0; }
 .lit-todo-list { display:flex; flex-direction:column; gap:3px; }
 /* v5.175: 待办顺序 = 日期标签 · checkbox · 内容 */
-.lit-todo-item { display:grid; grid-template-columns:auto 18px minmax(100px,1fr); gap:6px; align-items:center; }
+.lit-todo-item { display:grid; grid-template-columns:auto 18px minmax(60px,1fr) auto; gap:6px; align-items:center; }
+.lit-todo-controls { display:flex; align-items:center; justify-content:flex-end; gap:2px; }
+.lit-todo-controls button { display:inline-flex; align-items:center; justify-content:center; width:24px; height:28px; padding:0; border:0; border-radius:5px; background:transparent; color:var(--muted); cursor:pointer; font-size:14px; }
+.lit-todo-controls button:hover { background:color-mix(in srgb, var(--accent) 10%, transparent); color:var(--accent); }
+.lit-todo-controls button:disabled { opacity:.25; cursor:default; }
+.lit-todo-controls button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+.lit-todo-controls [data-action="lit-todo-delete"]:hover { color:#d64545; }
+.lit-todo-controls .lit-todo-drag { cursor:grab; touch-action:none; user-select:none; }
+.lit-todo-controls .lit-todo-drag:active { cursor:grabbing; }
+.lit-todo-item.todo-dragging, .lit-mob-todo.todo-dragging { opacity:.45; }
+.lit-todo-item.todo-drag-before, .lit-mob-todo.todo-drag-before { box-shadow:inset 0 3px 0 var(--accent); }
+.lit-todo-item.todo-drag-after, .lit-mob-todo.todo-drag-after { box-shadow:inset 0 -3px 0 var(--accent); }
 .lit-todo-due-tag {
   font-size:11px;
   font-weight:500;
@@ -9179,7 +9191,10 @@ input, select, textarea, button, [contenteditable] {
   .lit-mob-todo {
     gap: 6px !important;
     padding: 2px 0 !important;
+    flex-wrap: wrap;
   }
+  .lit-mob-todo .lit-todo-controls { flex:0 0 100%; gap:6px; }
+  .lit-mob-todo .lit-todo-controls button { width:44px; height:44px; }
   .lit-mob-todo-text {
     font-size: 13px !important;
     min-height: 32px !important;
@@ -11837,6 +11852,7 @@ body[data-view="learning"] .title-group h1 { margin-right:0; }
     </div>
   </div>
   <section class="litigation hidden" id="litigation" aria-labelledby="pageTitle">
+    <div class="litigation-tools"><button class="btn" id="litigationUndoBtn" type="button" disabled title="没有可撤销的操作">↶ 撤销</button></div>
     <div class="litigation-table-card">
       <table class="litigation-table">
         <thead><tr><th class="lit-case">案件名称</th><th class="lit-number">案号</th><th class="lit-court">管辖法院</th><th class="lit-contact">联系方式</th><th class="lit-note">备注</th><th class="lit-actions" aria-label="操作"></th></tr></thead>
@@ -12899,7 +12915,7 @@ function resolveTaskName(taskId) {
   const task = project?.tasks.find(t => t.id === taskId);
   if (task) return task.title;
   const archived = findArchivedTask(taskId);
-  return archived ? archived.title : '(已删除)';
+  return archived ? archived.title : (store.tsDescByTaskId?.[taskId]?.title || '(已删除)');
 }
 function resolveProjectName(projectId) {
   const project = state.projects.find(p => p.id === projectId);
@@ -13255,14 +13271,15 @@ function collectTimesheetEntries() {
       const task = found?.task;
       const project = found?.project;
       const board = found?.board;
-      title = task?.title || '(进行中任务)';
-      projectId = project?.id || dayMeta.get(key)?.projectId || '';
-      projectName = project?.name || '未命名项目';
-      projectColor = project?.color || '';
-      boardKey = found?.boardKey || (board && Object.keys(store.boards || {}).find(k => store.boards[k] === board)) || '';
-      boardName = board?.name || '';
-      notes = task?.notes || '';
-      checklist = task?.checklist;
+      const savedMeta = task ? null : store.tsDescByTaskId?.[taskId];
+      title = task?.title || savedMeta?.title || '(进行中任务)';
+      projectId = project?.id || savedMeta?.projectId || dayMeta.get(key)?.projectId || '';
+      projectName = project?.name || savedMeta?.projectName || '未命名项目';
+      projectColor = project?.color || savedMeta?.projectColor || '';
+      boardKey = found?.boardKey || (board && Object.keys(store.boards || {}).find(k => store.boards[k] === board)) || savedMeta?.boardKey || '';
+      boardName = board?.name || savedMeta?.boardName || '';
+      notes = task?.notes ?? savedMeta?.notes ?? '';
+      checklist = task?.checklist ?? savedMeta?.checklist;
     }
     let tr = arch?.translations;
     if (!tr) {
@@ -13597,13 +13614,15 @@ function undo() {
 }
 
 function updateUndoBtn() {
-  const btn = document.getElementById('undoBtn');
-  if (!btn) return;
   const has = undoStack.length > 0;
-  btn.disabled = !has;
-  btn.title = has
-    ? `撤销 (${undoStack.length} 步) · ⌘Z / Ctrl+Z`
-    : '没有可撤销的操作 · ⌘Z / Ctrl+Z';
+  for (const id of ['undoBtn', 'litigationUndoBtn']) {
+    const btn = document.getElementById(id);
+    if (!btn) continue;
+    btn.disabled = !has;
+    btn.title = has
+      ? `撤销 (${undoStack.length} 步) · ⌘Z / Ctrl+Z`
+      : '没有可撤销的操作 · ⌘Z / Ctrl+Z';
+  }
 }
 
 // v1.6.18: 筛选切换函数 (setView 的同款: 立即持久化 + 重渲染)
@@ -14834,6 +14853,7 @@ function initViewPillReorder() {
 
 // v46: 撤销按钮点击
 document.getElementById('undoBtn')?.addEventListener('click', () => undo());
+document.getElementById('litigationUndoBtn')?.addEventListener('click', () => undo());
 
 // 项目颜色调色板（创建默认按 id hash；可在项目编辑中更换）
 // v5.196: 高区分度 14 色（色相拉开，避免近邻同系）
@@ -23854,6 +23874,122 @@ function litTodoRangeLabel(todo) {
   return b || '日期';
 }
 
+// Litigation todo controls.
+function reorderLitigationTodo(recordId, lineId, todoId, targetId, after = false) {
+  const record = litigationRecord(recordId);
+  const line = record?.timeline?.find(item => item.id === lineId);
+  const todos = line?.todos;
+  if (!Array.isArray(todos) || todoId === targetId) return false;
+  const from = todos.findIndex(todo => todo.id === todoId);
+  if (from < 0 || !todos.some(todo => todo.id === targetId)) return false;
+  const reordered = todos.slice();
+  const [moved] = reordered.splice(from, 1);
+  const target = reordered.findIndex(todo => todo.id === targetId);
+  reordered.splice(target + (after ? 1 : 0), 0, moved);
+  if (reordered.every((todo, index) => todo === todos[index])) return false;
+  pushHistory();
+  line.todos = reordered;
+  record.updatedAt = Date.now();
+  save({ immediate:true });
+  renderLitigation();
+  return true;
+}
+
+function deleteLitigationTodo(recordId, lineId, todoId) {
+  const record = litigationRecord(recordId);
+  const line = record?.timeline?.find(item => item.id === lineId);
+  const todo = line?.todos?.find(item => item.id === todoId);
+  if (!todo) return false;
+  // Settle this task's timer first, so undoing deletion keeps the recorded time.
+  if (todo.taskId && typeof activeTimer !== 'undefined' && activeTimer?.taskId === todo.taskId) stopActiveTimer();
+  pushHistory();
+  // Remove the active board copy, keeping completed work and time entries intact.
+  if (todo.taskId) {
+    const linked = ensureLitigationProject(record, false);
+    const found = typeof findTaskAcrossBoards === 'function' ? findTaskAcrossBoards(todo.taskId) : null;
+    const task = found?.task || linked?.project.tasks.find(item => item.id === todo.taskId);
+    const project = found?.project || linked?.project;
+    const board = found?.board || linked?.board;
+    if ((store.timeEntries || []).some(entry => entry.taskId === todo.taskId)) {
+      // Time entries reference task ids; retain their descriptions after removal.
+      if (!store.tsDescByTaskId) store.tsDescByTaskId = {};
+      const previous = store.tsDescByTaskId[todo.taskId] || {};
+      store.tsDescByTaskId[todo.taskId] = {
+        ...previous,
+        title: task?.title || todo.text || previous.title || '(已删除)',
+        projectId: project?.id || previous.projectId || record.projectId || '',
+        projectName: project?.name || previous.projectName || record.caseName || '',
+        projectColor: project?.color || previous.projectColor || '',
+        boardKey: found?.boardKey || linked?.key || previous.boardKey || '',
+        boardName: board?.name || previous.boardName || '',
+        notes: task?.notes ?? previous.notes ?? '',
+        checklist: JSON.parse(JSON.stringify(task?.checklist ?? previous.checklist ?? [])),
+        translations: JSON.parse(JSON.stringify({ ...previous.translations, ...task?.translations })),
+      };
+    }
+    if (linked) linked.project.tasks = linked.project.tasks.filter(task => task.id !== todo.taskId);
+    if (found) found.project.tasks = found.project.tasks.filter(task => task.id !== todo.taskId);
+  }
+  line.todos = line.todos.filter(item => item.id !== todoId);
+  record.updatedAt = Date.now();
+  save({ immediate:true });
+  renderLitigation();
+  return true;
+}
+// End litigation todo controls.
+
+function renderLitigationTodoControls(index, count) {
+  return `<div class="lit-todo-controls" role="group" aria-label="子任务操作"><button type="button" class="lit-todo-drag" title="拖动调整子任务顺序" aria-label="拖动调整子任务顺序">⠿</button><button type="button" data-action="lit-todo-up" title="上移子任务" aria-label="上移子任务" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" data-action="lit-todo-down" title="下移子任务" aria-label="下移子任务" ${index === count - 1 ? 'disabled' : ''}>↓</button><button type="button" data-action="lit-todo-delete" title="删除子任务" aria-label="删除子任务">×</button></div>`;
+}
+
+function litigationTodoElementContext(element) {
+  const item = element?.closest('.lit-todo-item, .lit-mob-todo');
+  const line = item?.closest('.lit-timeline-item, .lit-mob-timeline-item');
+  return {
+    item,
+    recordId: item?.closest('[data-record-id]')?.dataset.recordId,
+    lineId: line?.dataset.timelineId || line?.dataset.lineId,
+    todoId: item?.dataset.todoId,
+  };
+}
+
+function focusLitigationTodoControl(recordId, lineId, todoId, action) {
+  const root = window.matchMedia('(max-width: 767px)').matches
+    ? document.getElementById('litigationMobileList') : document.getElementById('litigationTableBody');
+  const item = Array.from(root?.querySelectorAll('.lit-todo-item, .lit-mob-todo') || []).find(element => {
+    const context = litigationTodoElementContext(element);
+    return context.recordId === recordId && context.lineId === lineId && context.todoId === todoId;
+  });
+  const button = item?.querySelector(`[data-action="${action}"]:not(:disabled)`) || item?.querySelector('.lit-todo-drag');
+  button?.focus({ preventScroll:true });
+}
+
+function handleLitigationTodoAction(event) {
+  const button = event.target.closest('[data-action="lit-todo-up"], [data-action="lit-todo-down"], [data-action="lit-todo-delete"]');
+  if (!button) return false;
+  event.preventDefault();
+  event.stopPropagation();
+  const { recordId, lineId, todoId } = litigationTodoElementContext(button);
+  const line = litigationRecord(recordId)?.timeline?.find(item => item.id === lineId);
+  const index = line?.todos?.findIndex(todo => todo.id === todoId) ?? -1;
+  if (index < 0) return true;
+  const action = button.dataset.action;
+  if (action === 'lit-todo-delete') {
+    const neighbor = line.todos[index + 1] || line.todos[index - 1];
+    if (deleteLitigationTodo(recordId, lineId, todoId)) {
+      showToast('已删除子任务，可点击撤销恢复');
+      if (neighbor) focusLitigationTodoControl(recordId, lineId, neighbor.id, action);
+    }
+  } else {
+    const down = action === 'lit-todo-down';
+    const target = line.todos[index + (down ? 1 : -1)];
+    if (target && reorderLitigationTodo(recordId, lineId, todoId, target.id, down)) {
+      focusLitigationTodoControl(recordId, lineId, todoId, action);
+    }
+  }
+  return true;
+}
+
 function renderLitigation() {
   // 3.1.1 移动端: 检测 viewport, 走专门的折叠卡 + 纵向时间轴渲染
   if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
@@ -23874,10 +24010,10 @@ function renderLitigation() {
     const timeline = record.timeline.map(line => {
       if (!Array.isArray(line.todos)) line.todos = [];
       // v5.178: 不自动塞空待办；只有点圆形 + 才新增
-      const todos = line.todos.map(todo => {
+      const todos = line.todos.map((todo, index) => {
         const rangeLabel = litTodoRangeLabel(todo);
         const rangeEmpty = !(todo.startDate || todo.due);
-        return `<div class="lit-todo-item ${todo.status === '已完成' ? 'is-done' : ''}" data-todo-id="${escapeHtml(todo.id)}"><button type="button" class="lit-todo-due-tag ${rangeEmpty ? 'is-empty' : ''}" data-action="lit-todo-date-range" title="设置开始与截止日期">${escapeHtml(rangeLabel)}</button><input class="lit-todo-check" type="checkbox" ${todo.status === '已完成' ? 'checked' : ''} aria-label="标记待办完成"><textarea class="lit-todo-text" rows="1" placeholder="待办事项" aria-label="待办事项">${escapeHtml(todo.text || '')}</textarea></div>`;
+        return `<div class="lit-todo-item ${todo.status === '已完成' ? 'is-done' : ''}" data-todo-id="${escapeHtml(todo.id)}"><button type="button" class="lit-todo-due-tag ${rangeEmpty ? 'is-empty' : ''}" data-action="lit-todo-date-range" title="设置开始与截止日期">${escapeHtml(rangeLabel)}</button><input class="lit-todo-check" type="checkbox" ${todo.status === '已完成' ? 'checked' : ''} aria-label="标记待办完成"><textarea class="lit-todo-text" rows="1" placeholder="待办事项" aria-label="待办事项">${escapeHtml(todo.text || '')}</textarea>${renderLitigationTodoControls(index, line.todos.length)}</div>`;
       }).join('');
       // v5.175: 顺序 × · 手柄 · 铃铛 · 日期 · 事件 · 加号 · 待办(日期标签/勾选/内容)
       const bellInfo = bellBadgeMap.get(line.id) || { count: 0, hasActive: false };
@@ -24043,6 +24179,7 @@ function renderLitMobileLine(record, line, bellBadgeMap) {
       <textarea class="lit-mob-todo-text" rows="1" placeholder="待办事项" data-line-id="${escapeHtml(line.id)}" data-todo-id="${escapeHtml(todo.id)}" aria-label="待办事项">${escapeHtml(todo.text || '')}</textarea>
       <button type="button" class="lit-mob-cal-btn lit-mob-todo-cal ${hasDate ? 'has-date' : ''}" data-action="lit-mob-todo-date" data-line-id="${escapeHtml(line.id)}" data-todo-id="${escapeHtml(todo.id)}" data-record-id="${escapeHtml(record.id)}" title="${escapeHtml(rangeTip)}" aria-label="设置待办日期">${calSvg}</button>
       ${isLast ? `<button type="button" class="lit-mob-todo-add-btn" data-action="lit-mob-add-todo" data-line-id="${escapeHtml(line.id)}" data-record-id="${escapeHtml(record.id)}" title="新建待办" aria-label="新建待办">+</button>` : `<span style="width:32px;flex-shrink:0" aria-hidden="true"></span>`}
+      ${renderLitigationTodoControls(idx, line.todos.length)}
     </div>`;
   }).join('');
 
@@ -24204,6 +24341,7 @@ function bindLitigationMobileEvents() {
 
   // 事件委托
   root.addEventListener('click', e => {
+    if (handleLitigationTodoAction(e)) return;
     const actionEl = e.target.closest('[data-action]');
     if (!actionEl) return;
     const action = actionEl.dataset.action;
@@ -24303,12 +24441,7 @@ function bindLitigationMobileEvents() {
         break;
       }
       case 'lit-mob-todo-del': {
-        const found = findLitTimelineByIdLocal(lineId);
-        if (!found) return;
-        found.line.todos = found.line.todos.filter(t => t.id !== todoId);
-        found.record.updatedAt = Date.now();
-        save({ immediate: true });
-        renderLitigation();
+        deleteLitigationTodo(recordId, lineId, todoId);
         break;
       }
       case 'lit-mob-sort': {
@@ -24464,6 +24597,7 @@ function bindLitigationMobileEvents() {
       } else {
         const fieldKey = el.type === 'date' ? 'due' : 'text';
         todo[fieldKey] = el.value;
+        syncLitigationTodo(found.record, found.line, todo, true);
       }
       // 已完成 → 划线
       const todoEl = el.closest('.lit-mob-todo');
@@ -24916,6 +25050,7 @@ function beginLitigationEdit(cell) {
   cell.addEventListener('keydown', onKey);
 }
 document.getElementById('litigationTableBody')?.addEventListener('click', e => {
+  if (handleLitigationTodoAction(e)) return;
   const caseToggle = e.target.closest('[data-action="lit-case-toggle"]');
   if (caseToggle) {
     const id = caseToggle.closest('[data-record-id]').dataset.recordId;
@@ -25087,6 +25222,56 @@ document.getElementById('litigationTableBody')?.addEventListener('keydown', e =>
   }
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('td[data-field]')) { e.preventDefault(); beginLitigationEdit(e.target); }
 });
+let litigationTodoPointerDrag = null;
+function clearLitigationTodoDragVisuals() {
+  document.querySelectorAll('.todo-dragging, .todo-drag-before, .todo-drag-after').forEach(element => element.classList.remove('todo-dragging', 'todo-drag-before', 'todo-drag-after'));
+}
+document.addEventListener('pointerdown', event => {
+  const handle = event.target.closest('.lit-todo-drag');
+  if (!handle || event.button !== 0) return;
+  // Desktop text commits on blur; commit before preventDefault or a redraw.
+  const editor = document.activeElement;
+  if (editor?.matches('.lit-todo-text, .lit-tl-text, .lit-tl-date, .lit-mob-todo-text, .lit-mob-line-text')) editor.blur();
+  if (!handle.isConnected) return;
+  const context = litigationTodoElementContext(handle);
+  if (!context.item || !context.recordId || !context.lineId) return;
+  litigationTodoPointerDrag = { ...context, pointerId:event.pointerId, startX:event.clientX, startY:event.clientY, target:null, after:false, active:false };
+  handle.setPointerCapture?.(event.pointerId);
+  event.preventDefault();
+});
+document.addEventListener('pointermove', event => {
+  const drag = litigationTodoPointerDrag;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+  if (!drag.active && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 5) return;
+  drag.active = true;
+  clearLitigationTodoDragVisuals();
+  drag.item.classList.add('todo-dragging');
+  const target = litigationTodoElementContext(document.elementFromPoint(event.clientX, event.clientY));
+  if (!target.item || target.item === drag.item || target.recordId !== drag.recordId || target.lineId !== drag.lineId) {
+    drag.target = null;
+    return;
+  }
+  const rect = target.item.getBoundingClientRect();
+  drag.after = event.clientY >= rect.top + rect.height / 2;
+  drag.target = target.todoId;
+  target.item.classList.add(drag.after ? 'todo-drag-after' : 'todo-drag-before');
+  event.preventDefault();
+}, { passive:false });
+document.addEventListener('pointerup', event => {
+  const drag = litigationTodoPointerDrag;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+  litigationTodoPointerDrag = null;
+  clearLitigationTodoDragVisuals();
+  if (drag.active && drag.target && reorderLitigationTodo(drag.recordId, drag.lineId, drag.todoId, drag.target, drag.after)) {
+    focusLitigationTodoControl(drag.recordId, drag.lineId, drag.todoId, 'drag');
+  }
+});
+document.addEventListener('pointercancel', event => {
+  if (litigationTodoPointerDrag?.pointerId !== event.pointerId) return;
+  litigationTodoPointerDrag = null;
+  clearLitigationTodoDragVisuals();
+});
+
 let litigationPointerDrag = null;
 function clearLitigationDragVisuals() {
   document.querySelectorAll('.lit-timeline-item.dragging, .lit-timeline-item.drag-before, .lit-timeline-item.drag-after').forEach(el => el.classList.remove('dragging','drag-before','drag-after'));
