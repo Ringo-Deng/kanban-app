@@ -4773,9 +4773,11 @@ button.card-add-due svg {
   cursor: pointer;
 }
 
+.cal-month-scroll { flex:1; display:flex; flex-direction:column; min-height:0; min-width:0; overflow-x:auto; }
 .cal-weekdays {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: minmax(140px, 1.15fr) repeat(7, minmax(0, 1fr));
+  gap:4px;
   margin-bottom: 6px;
   font-size: 11.5px;
   color: var(--muted);
@@ -4785,8 +4787,15 @@ button.card-add-due svg {
   flex-shrink: 0;
 }
 .cal-weekdays > div { padding: 4px 0; }
-.cal-weekdays > div:nth-child(6),
-.cal-weekdays > div:nth-child(7) { color: var(--red); opacity: 0.8; }
+.cal-weekdays > div:nth-child(7),
+.cal-weekdays > div:nth-child(8) { color: var(--red); opacity: 0.8; }
+.cal-week-note { min-width:0; min-height:0; display:flex; flex-direction:column; gap:4px; padding:7px; border:1px solid var(--card-border); border-radius:8px; background:color-mix(in srgb, var(--accent) 6%, var(--cell-bg)); overflow:hidden; }
+.cal-week-note:focus-within { border-color:var(--accent); }
+.cal-week-note-label { font-size:11px; color:var(--muted); line-height:1.3; font-variant-numeric:tabular-nums; }
+.cal-week-note-input { display:block; flex:1; width:100%; min-width:0; min-height:44px; padding:2px 0; border:0; border-radius:0; background:transparent; color:var(--text); font:inherit; font-size:13px; line-height:1.5; resize:none; overflow:auto; }
+.cal-week-note-input:focus { outline:none; }
+.cal-week-note-input::placeholder { color:var(--muted); opacity:.75; }
+.cal-week-note-status { min-height:12px; font-size:10px; line-height:1.2; color:var(--muted); }
 
 /* ====== 未排期 strip ====== */
 .cal-unscheduled {
@@ -4905,7 +4914,7 @@ button.card-add-due svg {
 }
 .cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: minmax(140px, 1.15fr) repeat(7, minmax(0, 1fr));
   grid-template-rows: repeat(6, 1fr);  /* 6 行等分剩余空间，整张月历铺满 */
   gap: 4px;
   flex: 1;
@@ -8430,7 +8439,13 @@ input, select, textarea, button, [contenteditable] {
     font-weight: 500 !important;
     color: var(--muted) !important;
     letter-spacing: 0 !important;
+    gap:0;
   }
+  body[data-view="calendar"] .cal-month-scroll { overscroll-behavior-x:contain; }
+  body[data-view="calendar"] .cal-weekdays,
+  body[data-view="calendar"] .cal-grid { min-width:560px; grid-template-columns:112px repeat(7, minmax(64px, 1fr)); }
+  body[data-view="calendar"] .cal-week-note { border-radius:0; padding:5px 6px; border:0; border-top:1px solid var(--border); border-right:1px solid var(--border); }
+  body[data-view="calendar"] .cal-week-note-input { font-size:16px; }
   body[data-view="calendar"] .cal-weekdays > div {
     padding: 6px 0 8px !important;
   }
@@ -12189,6 +12204,7 @@ function storedKanbanDataWeight(data) {
   weight += (Array.isArray(data.litigationRecords) ? data.litigationRecords.length : 0) * 100;
   weight += (Array.isArray(data.litigationReminders) ? data.litigationReminders.length : 0) * 20;
   weight += (Array.isArray(data.learningCards) ? data.learningCards.length : 0) * 20;
+  weight += Object.values(data.calendarWeekNotes || {}).filter(note => typeof note === 'string' && note.trim()).length * 20;
   weight += data.habitLog && typeof data.habitLog === 'object' ? Object.keys(data.habitLog).length : 0;
   return weight;
 }
@@ -12346,6 +12362,7 @@ const BLANK_SEED_DATA = {
   archive: {},
   litigationRecords: [],
   litigationReminders: [],
+  calendarWeekNotes: {},
   habitLog: {},
   learningCards: [],
   prefs: {
@@ -12372,7 +12389,7 @@ function isStoreEffectivelyEmpty(s) {
     if (Array.isArray(s.habits?.items) && s.habits.items.length > 0) return false;
     if (s.habits?.logs && Object.keys(s.habits.logs).length > 0) return false;
     if (Array.isArray(s.litigationReminders) && s.litigationReminders.length > 0) return false;
-    for (const key of ['timesheetDayNotes', 'tsDescByTaskId', 'termLibraries']) {
+    for (const key of ['calendarWeekNotes', 'timesheetDayNotes', 'tsDescByTaskId', 'termLibraries']) {
       if (s[key] && typeof s[key] === 'object' && Object.keys(s[key]).length > 0) return false;
     }
     return true;
@@ -12491,6 +12508,7 @@ if (litigationTodosMigrated) try { localStorage.setItem(STORAGE_KEY, JSON.string
   if (!store.archive || typeof store.archive !== 'object') { store.archive = {}; changed = true; }
   // v5.262: 工时单按日期备注/批注
   if (!store.timesheetDayNotes || typeof store.timesheetDayNotes !== 'object') { store.timesheetDayNotes = {}; changed = true; }
+  if (!store.calendarWeekNotes || typeof store.calendarWeekNotes !== 'object' || Array.isArray(store.calendarWeekNotes)) { store.calendarWeekNotes = {}; changed = true; }
   // 迁移结果立即写回 localStorage(不依赖后续 save)
   if (changed) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch {}
@@ -20663,6 +20681,55 @@ function mergeLitigationIntoTasksByDate(tasksByDate) {
   return tasksByDate;
 }
 
+// Calendar week notes use the local Monday as a stable cross-month key.
+function calendarWeekKey(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+  const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+  monday.setDate(monday.getDate() - (monday.getDay() + 6) % 7);
+  return localDateStr(monday);
+}
+
+function getCalendarWeekNote(key) {
+  const value = store.calendarWeekNotes?.[key];
+  return typeof value === 'string' ? value : '';
+}
+
+function setCalendarWeekNote(key, value) {
+  if (typeof key !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(key) || calendarWeekKey(new Date(key + 'T12:00:00')) !== key || typeof value !== 'string') return false;
+  const note = value.trim() ? value : '';
+  if (getCalendarWeekNote(key) === note) return false;
+  if (!store.calendarWeekNotes || typeof store.calendarWeekNotes !== 'object' || Array.isArray(store.calendarWeekNotes)) store.calendarWeekNotes = {};
+  if (note) store.calendarWeekNotes[key] = note;
+  else delete store.calendarWeekNotes[key];
+  save({ immediate:true });
+  return true;
+}
+
+function renderCalendarWeekNote(date) {
+  const key = calendarWeekKey(date);
+  const monday = new Date(key + 'T12:00:00');
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+  const range = `${monday.getMonth() + 1}/${monday.getDate()}–${sunday.getMonth() + 1}/${sunday.getDate()}`;
+  return `<div class="cal-week-note"><label class="cal-week-note-label" for="cal-week-note-${key}">${range}</label><textarea id="cal-week-note-${key}" class="cal-week-note-input" data-week-note="${key}" rows="2" placeholder="记录本周待办…" aria-label="${key} 至 ${localDateStr(sunday)} 本周笔记">${escapeHtml(getCalendarWeekNote(key))}</textarea><span class="cal-week-note-status" aria-live="polite"></span></div>`;
+}
+
+document.getElementById('calendar')?.addEventListener('input', event => {
+  const input = event.target.closest('textarea[data-week-note]');
+  if (!input) return;
+  if (getCalendarWeekNote(input.dataset.weekNote) === input.value) return;
+  if (!input.dataset.noteHistory) {
+    pushHistory();
+    input.dataset.noteHistory = 'saved';
+  }
+  if (setCalendarWeekNote(input.dataset.weekNote, input.value)) {
+    input.closest('.cal-week-note').querySelector('.cal-week-note-status').textContent = '已保存';
+  }
+});
+document.getElementById('calendar')?.addEventListener('focusout', event => {
+  if (event.target.matches('textarea[data-week-note]')) delete event.target.dataset.noteHistory;
+});
+
 function renderCalendar() {
   // 3.1.1: agenda 模式(日程列表)优先于网格模式,既给移动端用也给桌面用
   const calMode = document.body.dataset.calMode || 'grid';
@@ -20806,14 +20873,16 @@ function renderCalendar() {
 
   // v5.163: 手机大格小字 — 更高行、每格少显示几条
   const isMobileCal = !!(window.matchMedia && window.matchMedia('(max-width: 767px)').matches);
-  const rowMin = isMobileCal ? 78 : 72;
+  const rowMin = 108;
   const maxVisible = isMobileCal ? 3 : 5;
   cal.innerHTML = `
+    <div class="cal-month-scroll">
     <div class="cal-weekdays">
+      <div>本周笔记</div>
       ${weekdays.map(w => `<div>${w}</div>`).join('')}
     </div>
     <div class="cal-grid" style="grid-template-rows: repeat(${rowsNeeded}, minmax(${rowMin}px, 1fr));">
-      ${cells.map(c => {
+      ${cells.map((c, index) => {
         const dateStr = localDateStr(c.date);
         const tasks = tasksByDate[dateStr] || [];
         const isToday = dateStr === todayStr;
@@ -20821,6 +20890,7 @@ function renderCalendar() {
         const isWeekend = wd === 0 || wd === 6;  // 0=日 6=六
         const visibleTasks = tasks.slice(0, maxVisible);
         return `
+          ${index % 7 === 0 ? renderCalendarWeekNote(c.date) : ''}
           <div class="cal-cell ${c.current ? '' : 'other-month'} ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}" data-date="${dateStr}">
             <div class="cal-date">${c.date.getDate()}</div>
             <div class="cal-tasks">
@@ -20873,6 +20943,7 @@ function renderCalendar() {
           </div>
         `;
       }).join('')}
+    </div>
     </div>
     <div class="cal-unscheduled">
       ${inboxFilterBar}
@@ -25475,6 +25546,7 @@ document.getElementById('importFile').addEventListener('change', e => {
       const data = JSON.parse(ev.target.result);
       if (data && data.boards && typeof data.boards === 'object') {
         // v1.5 新 schema 备份:整体覆盖
+        if (Object.hasOwn(data, 'calendarWeekNotes')) validateCalendarWeekNotesData(data.calendarWeekNotes);
         const count = Object.keys(data.boards).length;
         if (confirm(`这是 v1.5 多板备份(共 ${count} 块板),将覆盖你当前所有数据,确认?`)) {
           store = data;
@@ -26591,7 +26663,18 @@ let manualRemoteSnapshot = null;
 let manualPendingAction = null;
 let manualSyncBusy = false;
 let manualPreviewRevision = 0;
-const SYNC_EXTRA_DEFAULTS = { litigationReminders: [], timesheetDayNotes: {}, tsDescByTaskId: {}, termLibraries: {} };
+const SYNC_EXTRA_DEFAULTS = { litigationReminders: [], calendarWeekNotes: {}, timesheetDayNotes: {}, tsDescByTaskId: {}, termLibraries: {} };
+
+function validateCalendarWeekNotesData(notes) {
+  const fail = () => { throw new Error('同步数据格式错误：本周笔记。未修改本机数据。'); };
+  if (!notes || typeof notes !== 'object' || Array.isArray(notes)) fail();
+  for (const [week, note] of Object.entries(notes)) {
+    if (typeof note !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(week)) fail();
+    const date = new Date(week + 'T12:00:00');
+    if (!Number.isFinite(date.getTime()) || date.getDay() !== 1 || localDateStr(date) !== week) fail();
+  }
+  return notes;
+}
 
 function validateBusinessData(data) {
   const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -26613,9 +26696,10 @@ function validateBusinessData(data) {
   for (const field of ['timeEntries', 'litigationRecords', 'learningCards', 'litigationReminders']) {
     if (data[field]?.some(row => !object(row))) fail(field);
   }
-  for (const field of ['archive', 'habits', 'timesheetDayNotes', 'tsDescByTaskId', 'termLibraries']) {
+  for (const field of ['archive', 'habits', 'calendarWeekNotes', 'timesheetDayNotes', 'tsDescByTaskId', 'termLibraries']) {
     if (data[field] !== undefined && !object(data[field])) fail(field);
   }
+  if (data.calendarWeekNotes !== undefined) validateCalendarWeekNotesData(data.calendarWeekNotes);
   for (const rows of Object.values(data.archive || {})) {
     if (!Array.isArray(rows) || rows.some(row => !object(row))) fail('归档工时');
   }
@@ -26678,7 +26762,7 @@ function syncHash(value) {
 }
 
 function summarizeBusinessData(data) {
-  const summary = { boards: 0, projects: 0, activeTasks: 0, archivedTasks: 0, timeEntries: 0, litigation: 0, learningCards: 0, habits: 0, habitLogs: 0 };
+  const summary = { boards: 0, projects: 0, activeTasks: 0, archivedTasks: 0, timeEntries: 0, litigation: 0, learningCards: 0, habits: 0, habitLogs: 0, calendarWeekNotes: 0 };
   const boards = data && data.boards && typeof data.boards === 'object' ? data.boards : {};
   summary.boards = Object.keys(boards).length;
   for (const board of Object.values(boards)) {
@@ -26691,6 +26775,7 @@ function summarizeBusinessData(data) {
   summary.timeEntries = Array.isArray(data && data.timeEntries) ? data.timeEntries.length : 0;
   summary.litigation = Array.isArray(data && data.litigationRecords) ? data.litigationRecords.length : 0;
   summary.learningCards = Array.isArray(data && data.learningCards) ? data.learningCards.length : 0;
+  summary.calendarWeekNotes = Object.values(data?.calendarWeekNotes || {}).filter(note => typeof note === 'string' && note.trim()).length;
   const habits = data && data.habits && typeof data.habits === 'object' ? data.habits : null;
   summary.habits = Array.isArray(habits && habits.items) ? habits.items.length : 0;
   if (habits && habits.logs && typeof habits.logs === 'object') {
@@ -26703,11 +26788,11 @@ function summarizeBusinessData(data) {
 }
 
 function syncSummaryText(summary) {
-  return `${summary.projects} 个项目 · ${summary.totalTasks} 个任务\n${summary.timeEntries} 条工时 · ${summary.litigation} 条诉讼记录 · ${summary.learningCards || 0} 个学习词汇 · ${summary.habits || 0} 个习惯`;
+  return `${summary.projects} 个项目 · ${summary.totalTasks} 个任务\n${summary.timeEntries} 条工时 · ${summary.litigation} 条诉讼记录 · ${summary.learningCards || 0} 个学习词汇 · ${summary.habits || 0} 个习惯 · ${summary.calendarWeekNotes || 0} 周笔记`;
 }
 
 function hasMeaningfulBusinessData(summary) {
-  return summary.projects > 0 || summary.totalTasks > 0 || summary.timeEntries > 0 || summary.litigation > 0 || summary.learningCards > 0 || summary.habits > 0 || summary.habitLogs > 0;
+  return summary.projects > 0 || summary.totalTasks > 0 || summary.timeEntries > 0 || summary.litigation > 0 || summary.learningCards > 0 || summary.habits > 0 || summary.habitLogs > 0 || summary.calendarWeekNotes > 0;
 }
 
 function currentDeviceLabel() {
@@ -26758,7 +26843,7 @@ function buildSyncMarkdown(envelope, kind = '主同步文件') {
     '',
     `- 更新时间：${new Date(envelope.updatedAt).toLocaleString('zh-CN')}`,
     `- 来源设备：${envelope.sourceDevice}`,
-    `- 内容：${summary.projects} 个项目、${summary.totalTasks} 个任务、${summary.timeEntries} 条工时、${summary.litigation} 条诉讼记录、${summary.learningCards || 0} 个学习词汇、${summary.habits || 0} 个习惯（${summary.habitLogs || 0} 条打卡）`,
+    `- 内容：${summary.projects} 个项目、${summary.totalTasks} 个任务、${summary.timeEntries} 条工时、${summary.litigation} 条诉讼记录、${summary.learningCards || 0} 个学习词汇、${summary.habits || 0} 个习惯（${summary.habitLogs || 0} 条打卡）、${summary.calendarWeekNotes || 0} 周笔记`,
     '',
     MANUAL_SYNC_START,
     '```json',
